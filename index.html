@@ -57,9 +57,21 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 /* Intro ciné (démarre 2s après via .intro-text-start) */
 .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:20px;z-index:5}
 .slide{position:relative;max-width:980px;width:100%;min-height:60vh;display:flex;align-items:center;justify-content:center}
-.slide p{position:absolute;width:min(92%,900px);margin:0;text-align:center;
-  font-size:clamp(22px,4vw,34px);line-height:1.6;color:#d4af37; /* or doré */ text-shadow:0 2px 6px rgba(0,0,0,.8), 0 0 12px rgba(212,175,55,.5);
-        opacity:0;transform:translateY(8px)}
+.slide p {
+  position:absolute;
+  width:min(92%,900px);
+  margin:0;
+  text-align:center;
+  font-size:clamp(22px,4vw,34px);
+  line-height:1.6;
+  color:#fff; /* blanc lumineux */
+  text-shadow:
+    0 0 4px rgba(212,175,55,0.9),   /* halo doré serré */
+    0 0 8px rgba(212,175,55,0.6),   /* halo doré plus large */
+    0 0 12px rgba(0,0,0,0.9);       /* contour sombre pour le contraste */
+  opacity:0;
+  transform:translateY(8px);
+}
 @keyframes onebyone{0%{opacity:0;transform:translateY(8px)}10%{opacity:1;transform:none}90%{opacity:1}100%{opacity:0;transform:translateY(-6px)}}
 .intro-text-start .slide p{animation:onebyone var(--per) ease-in-out both;animation-delay:calc(var(--i)*var(--per));}
 .intro-text-start .overlay{display:flex}
