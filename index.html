@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Les Traîtres — 40 ans Franck</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--fg:#fff;--mut:#cfd5dc;--per:6s;--count:15;--total:calc(var(--per)*var(--count) + 0.5s)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--fg);background:#000}
+
+/* Fallback si image manquante */
+.bg-fallback{background:radial-gradient(ellipse at center,#0a0d12 0%,#05070b 60%,#000 100%)}
+
+/* Arrière-plans */
+.bg-gate,.bg-intro{
+  position:fixed; inset:0;
+  background-size:cover; background-position:center;
+  z-index:0; filter:brightness(.7);
+  opacity:1; transition:opacity 1200ms ease; will-change:opacity;
+}
+.bg-gate{ background-image:url('photo1.jpg'); }
+.bg-intro{ background-image:url('chateau.jpg'); opacity:0; }
+.intro-started .bg-gate{ opacity:0; }
+.intro-started .bg-intro{ opacity:1; }
+.bg-intro::after{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,.20) 0%, rgba(0,0,0,.55) 60%, rgba(0,0,0,.75) 100%),
+             linear-gradient(to bottom, rgba(0,0,0,.35), rgba(0,0,0,.65));
+  opacity:.85; transition:opacity 1200ms ease;
+}
+.intro-started .bg-intro::after{ opacity:.6; }
+
+/* 3e fond : écran joueur */
+.bg-role{
+  position:fixed; inset:0;
+  background:url('rolebg.jpg') center/cover no-repeat;
+  z-index:0; display:none; filter:brightness(.7);
+}
+.player-focus .bg-role{ display:block; }
+.player-focus .bg-gate, .player-focus .bg-intro{ display:none!important; }
+
+/* UI */
+.btn{padding:12px 18px;border-radius:14px;font-size:clamp(16px,2.6vw,22px);color:#fff;text-decoration:none;cursor:pointer;
+  background:linear-gradient(180deg,rgba(212,175,55,.25),rgba(212,175,55,.12));border:1px solid rgba(212,175,55,.9);
+  box-shadow:0 0 0 2px rgba(212,175,55,.15) inset,0 10px 30px rgba(0,0,0,.45),0 0 22px rgba(212,175,55,.35);
+  transition:transform .15s ease, box-shadow .15s ease}
+.btn:hover{transform:translateY(-2px);box-shadow:0 0 0 2px rgba(212,175,55,.2) inset,0 14px 36px rgba(0,0,0,.5),0 0 28px rgba(212,175,55,.45)}
+
+/* GATE */
+#gate{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:6;padding:24px;pointer-events:auto}
+#gate .panel{background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;max-width:820px;width:92%;text-align:center;backdrop-filter:blur(2px)}
+#gate h1{font-family:Cinzel,serif;margin:0 0 8px 0;font-size:clamp(26px,5vw,40px)}
+#gate p{margin:6px 0 14px 0;font-size:clamp(16px,2.5vw,20px);color:var(--mut)}
+
+/* Intro ciné (démarre 2s après via .intro-text-start) */
+.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:20px;z-index:5}
+.slide{position:relative;max-width:980px;width:100%;min-height:60vh;display:flex;align-items:center;justify-content:center}
+.slide p{position:absolute;width:min(92%,900px);margin:0;text-align:center;
+  font-size:clamp(22px,4vw,34px);line-height:1.6;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.85);
+  opacity:0;transform:translateY(8px)}
+@keyframes onebyone{0%{opacity:0;transform:translateY(8px)}10%{opacity:1;transform:none}90%{opacity:1}100%{opacity:0;transform:translateY(-6px)}}
+.intro-text-start .slide p{animation:onebyone var(--per) ease-in-out both;animation-delay:calc(var(--i)*var(--per));}
+.intro-text-start .overlay{display:flex}
+
+/* CTA après intro */
+#ctaOverlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;opacity:0;pointer-events:none;z-index:6}
+@keyframes enableCTA{to{pointer-events:auto}}
+@keyframes fadeCTA{to{opacity:1}}
+.intro-text-start #ctaOverlay{display:flex;animation:enableCTA 0s linear var(--total) forwards,fadeCTA .8s ease var(--total) forwards}
+
+/* App */
+.app{display:none;max-width:1100px;margin:28px auto;padding:16px;position:relative;z-index:7}
+#app:target{display:block}
+.grid{display:grid;gap:16px}
+@media(min-width:980px){.grid{grid-template-columns:1fr 1fr}}
+.card{background:rgba(0,0,0,.55);padding:16px;border-radius:14px;border:1px solid rgba(255,255,255,.08)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.small{font-size:14px;color:var(--mut)} .pill{background:rgba(255,255,255,.08);padding:8px 12px;border-radius:999px}
+.inv-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between;border-top:1px solid rgba(255,255,255,.08);padding:10px 0;margin-top:4px}
+.inv-left{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.inv-actions{display:flex;gap:8px;align-items:center}
+.url-raw{font-size:12px;color:#b9c3cf;word-break:break-all}
+.centered{min-height:50vh;display:flex;align-items:center;justify-content:center;text-align:center}
+#playerIntro{font-size:clamp(20px,4vw,28px);text-align:center;margin:0 auto;line-height:1.5}
+
+/* Modale rôle */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.75);z-index:9;padding:20px}
+.modal .inner{background:#0b0f18;color:#fff;padding:24px;border-radius:16px;max-width:820px;width:100%;max-height:90vh;overflow:auto;border:1px solid rgba(255,255,255,.08)}
+.role-title{font-family:Cinzel,serif;font-size:34px;margin:6px 0;display:flex;align-items:center;justify-content:center;gap:12px}
+.role-sub{font-size:18px;color:var(--mut)} #roleExtra{font-size:16px;line-height:1.55}
+.mask-red{filter:drop-shadow(0 0 8px rgba(255,59,59,.45));color:#ff3b3b}
+.mask-blue{filter:drop-shadow(0 0 8px rgba(23,183,255,.45));color:#17b7ff}
+#app:target ~ #ctaOverlay{display:none} 
+#app:target ~ .overlay{display:none}
+#app:target ~ #gate{display:none}
+#audioUnlock{display:none;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9999;background:rgba(0,0,0,.7);color:#fff;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(3px);font-size:14px;white-space:nowrap}
+#audioUnlock button{margin-left:8px;padding:6px 10px;border-radius:10px;border:1px solid rgba(212,175,55,.9);background:linear-gradient(180deg,rgba(212,175,55,.25),rgba(212,175,55,.12));color:#fff;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="bg-gate bg-fallback" aria-hidden="true"></div>
+<div class="bg-intro bg-fallback" aria-hidden="true"></div>
+<div class="bg-role bg-fallback" aria-hidden="true"></div>
+
+<!-- GATE -->
+<div id="gate">
+  <div class="panel">
+    <h1>Vous avez été conviés par Franck…</h1>
+    <p>Un week-end pas comme les autres vous attend.<br><b>🔊 Mettez le son</b>… car chaque détail compte.</p>
+    <!-- Inline handler pour éviter tout problème de binding -->
+    <button class="btn" type="button" onclick="startIntro()">Lancez-vous</button>
+  </div>
+</div>
+
+<!-- INTRO -->
+<div class="overlay">
+  <div class="slide">
+    <p style="--i:0">Vous êtes conviés pour un petit week-end entre amis… pour célébrer les 40 ans de Franck.</p>
+    <p style="--i:1">Un week-end d’amitié, de rires, de bons repas… bref, une fête comme vous l’imaginez.</p>
+    <p style="--i:2">Mais derrière cette fête se cache un jeu… discret, mais omniprésent.</p>
+    <p style="--i:3">Tout le monde se connaît depuis plusieurs années…</p>
+    <p style="--i:4">Certains traînent toujours des travaux jamais terminés.</p>
+    <p style="--i:5">D’autres savent vendre des surgelés… même trop longtemps restés au congélateur.</p>
+    <p style="--i:6">Il y en a dont les sourcils s’agitent quand le stress monte.</p>
+    <p style="--i:7">Et d’autres ont cette rigueur implacable : les règles, toutes les règles, rien que les règles.</p>
+    <p style="--i:8">Il y en a qui ont l’art de contredire… même quand, au fond, c’était une bonne idée.</p>
+    <p style="--i:9">D’autres, au contraire, laissent tout glisser… rien n’est grave.</p>
+    <p style="--i:10">Et puis, il y a celui qui n’aime pas trop ce genre de jeu… mais qui, ce week-end, n’aura pas vraiment le choix.</p>
+    <p style="--i:11">Et bien sûr, des infirmières… prêtes à veiller sur chacun — mais elles aussi devront se méfier ; personne n’est vraiment à l’abri.</p>
+    <p style="--i:12">Parmi vous se cachent des Traîtres. À chaque repas, un conseil décidera d’un destin.</p>
+    <p style="--i:13">Restez discrets, restez vigilants…</p>
+    <p style="--i:14">Que la partie commence…</p>
+  </div>
+</div>
+
+<!-- CTA après intro -->
+<div id="ctaOverlay"><a class="btn" href="#app">ENTRER DANS LE JEU</a></div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <div class="grid">
+    <!-- Organisateur -->
+    <div class="card" id="orgCard">
+      <h3>Créer une partie (organisateur)</h3>
+      <div class="small">Noms : un par ligne ou séparés par virgule/;</div>
+      <textarea id="names" rows="6" style="width:100%;margin-top:8px" placeholder="Franck
+Aurélie
+Nathan
+Bilou
+Arnaud"></textarea>
+      <div class="row" style="margin-top:8px">
+        <label><input type="radio" name="mode" value="pct" checked> Traîtres (%)</label>
+        <input id="pct" type="number" min="10" max="60" value="25" style="width:90px;margin-left:6px">
+        <label style="margin-left:8px"><input type="radio" name="mode" value="nb"> Traîtres (nb)</label>
+        <input id="nb" type="number" min="1" value="2" style="width:90px;margin-left:6px">
+      </div>
+      <div style="margin-top:12px">
+        <button id="genBtn" class="btn" type="button">Générer invitations</button>
+      </div>
+      <div id="invites" style="margin-top:12px"></div>
+    </div>
+
+    <!-- Joueur -->
+    <div class="card" id="playerCard">
+      <h3 id="playerName">Espace joueur</h3>
+      <div id="playerIntro" class="small">Ouvre le lien reçu de l’organisateur pour voir ton rôle.</div>
+      <div id="playerCenter" class="centered" style="display:none;margin-top:12px">
+        <button id="revealBtn" class="btn" type="button">🎭 Découvre ton rôle</button>
+      </div>
+      <div id="roleBox" style="margin-top:12px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modale rôle -->
+<div id="roleModal" class="modal" aria-hidden="true">
+  <div class="inner" id="roleInner">
+    <div class="role-title" id="roleTitle">Votre rôle</div>
+    <div class="role-sub" id="roleSub"></div>
+    <div id="roleExtra" style="margin-top:12px"></div>
+    <div style="text-align:center;margin-top:16px">
+      <button id="closeRoleBtn" class="btn" style="font-size:18px">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<audio id="introMusic" preload="auto" playsinline>
+  <source src="musique.mp3" type="audio/mpeg">
+</audio>
+<div id="audioUnlock">🔊 Le son est bloqué. <button id="unlockBtn">Activer le son</button></div>
+
+<script>
+function parseToken(){try{var p=new URLSearchParams(location.search||'');if(p.has('t')){return JSON.parse(decodeURIComponent(atob(p.get('t'))));}}catch(e){} return null;}
+var PAYLOAD=null;
+
+/* Démarrage intro */
+function startIntro(){
+  try{
+    document.documentElement.classList.add('intro-started');
+    var gate=document.getElementById('gate'); if(gate) gate.style.display='none';
+
+    // musique
+    var audio=document.getElementById('introMusic'); 
+    if(audio){
+      audio.loop = true; audio.volume = 0.35; audio.currentTime = 0;
+      const tryPlay = () => {
+        const p = audio.play();
+        if(p && typeof p.then === 'function'){
+          p.then(()=>{ var au=document.getElementById('audioUnlock'); if(au) au.style.display='none'; })
+           .catch(()=>{ var au=document.getElementById('audioUnlock'); if(au) au.style.display='block'; });
+        }
+      };
+      if(audio.readyState >= 2){ tryPlay(); }
+      else{ audio.addEventListener('canplaythrough', tryPlay, {once:true}); tryPlay(); }
+      var unlockBtn = document.getElementById('unlockBtn');
+      if (unlockBtn && !unlockBtn._bound){
+        unlockBtn._bound = true;
+        unlockBtn.addEventListener('click', function(){
+          audio.play().then(function(){ var au=document.getElementById('audioUnlock'); if(au) au.style.display='none'; }).catch(function(){});
+        });
+      }
+    }
+
+    // lancer le texte après 2s
+    setTimeout(function(){
+      document.documentElement.classList.add('intro-text-start');
+    }, 2000);
+  }catch(e){ console.error(e); alert('Erreur de démarrage'); }
+}
+
+/* Mode joueur */
+function onEnterApp(){
+  try{
+    if (PAYLOAD){
+      document.documentElement.classList.add('player-focus');
+      var cta=document.getElementById('ctaOverlay'); if(cta) cta.style.display='none';
+      var org=document.getElementById('orgCard'); if(org) org.style.display='none';
+      var pIntro=document.getElementById('playerIntro'); 
+      if(pIntro && PAYLOAD.name){
+        pIntro.innerHTML = "<b>"+PAYLOAD.name+"</b>, es-tu prêt ? Quand tu es seul, découvre ta carte.<br>" +
+                           "<span style='color:#ccc;font-size:14px'>Petit secret : c’est bien Franck qui a eu l’idée et qui a même créé ce jeu 😉… mais rassurez-vous, il ne connaît pas vos rôles.</span>";
+      }
+      var playerName=document.getElementById('playerName'); if(playerName && PAYLOAD.name){ playerName.textContent = PAYLOAD.name; }
+      var center=document.getElementById('playerCenter'); if(center) center.style.display='flex';
+      var btn=document.getElementById('revealBtn');
+      if(btn && !btn._bound){
+        btn._bound=true;
+        btn.addEventListener('click', function(){ revealRole(PAYLOAD); });
+      }
+    }
+  }catch(e){ console.error(e); }
+}
+function onHashChange(){ if (location.hash==="#app"){ onEnterApp(); } }
+window.addEventListener('hashchange', onHashChange);
+
+/* Init + invitations */
+document.addEventListener('DOMContentLoaded', function(){
+  try{
+    PAYLOAD=parseToken();
+    if (location.hash==="#app"){ onEnterApp(); }
+
+    var b=document.getElementById('genBtn');
+    if(b){
+      b.addEventListener('click', function(){
+        var raw=(document.getElementById('names').value||'').trim();
+        var names=raw.split(/[,;\n]+/).map(function(s){return s.trim();}).filter(function(x){return x;});
+        if(names.length<4){alert('Minimum 4 joueurs');return;}
+
+        var els=document.getElementsByName('mode'); var mode='pct'; 
+        for(var i=0;i<els.length;i++){if(els[i].checked){mode=els[i].value;break;}}
+        var nT=1;
+        if(mode==='pct'){var pct=Math.max(10,Math.min(60,parseInt(document.getElementById('pct').value||'25',10)));nT=Math.max(1,Math.round(names.length*pct/100));}
+        else{var nb=Math.max(1,parseInt(document.getElementById('nb').value||'2',10));nT=Math.min(nb,names.length-1);}
+
+        var a=names.slice(); for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)); var tmp=a[i]; a[i]=a[j]; a[j]=tmp;}
+        var traitors={}; for(var k=0;k<nT;k++){ traitors[a[k]]=true; }
+
+        var QA=[
+          {q:"Quelle heure est-il ?", a:()=>{const h=String(Math.floor(Math.random()*24)).padStart(2,'0');const m=String(Math.floor(Math.random()*60)).padStart(2,'0');return h+"h"+m;}},
+          {q:"Quel jour sommes-nous ?", a:()=>["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"][Math.floor(Math.random()*7)]},
+          {q:"Quel est le mot de passe ?", a:()=>["ombre","azur","lune","piano","velours","nuit","brume","mystère"][Math.floor(Math.random()*8)]},
+          {q:"Quel est ton chiffre porte-bonheur ?", a:()=>String(Math.floor(Math.random()*90)+10)},
+          {q:"Quelle est la couleur du soir ?", a:()=>["indigo","cobalt","ardoise","saphir","nuit","prune","minuit"][Math.floor(Math.random()*7)]},
+          {q:"Quel animal te vient à l'esprit ?", a:()=>["renard","corbeau","chat","hibou","loup","lynx","chouette"][Math.floor(Math.random()*7)]},
+          {q:"Boisson du soir ?", a:()=>["thé","café","vin","eau","tisane","tonic"][Math.floor(Math.random()*6)]},
+          {q:"Ville secrète ?", a:()=>["Rome","Londres","Berlin","Porto","Lyon","Nice","Séville"][Math.floor(Math.random()*7)]},
+          {q:"Premier instrument qui te vient ?", a:()=>["piano","violon","harpe","flûte","guitare","tambour"][Math.floor(Math.random()*6)]},
+          {q:"Un mot en 5 lettres ?", a:()=>["ombre","velin","plume","noble","clave","trace"][Math.floor(Math.random()*6)]},
+          {q:"Nord, Sud, Est ou Ouest ?", a:()=>["Nord","Sud","Est","Ouest"][Math.floor(Math.random()*4)]},
+          {q:"Pair ou impair ?", a:()=>["pair","impair"][Math.floor(Math.random()*2)]},
+          {q:"Pierre, feuille ou ciseaux ?", a:()=>["pierre","feuille","ciseaux"][Math.floor(Math.random()*3)]},
+          {q:"Un mois de l'année ?", a:()=>["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"][Math.floor(Math.random()*12)]},
+          {q:"Un fruit ?", a:()=>["pomme","poire","raisin","figue","mûre","prune"][Math.floor(Math.random()*6)]},
+          {q:"Un numéro de 1 à 9 ?", a:()=>String(Math.floor(Math.random()*9)+1)},
+          {q:"Un métal ?", a:()=>["or","argent","cuivre","fer","plomb","étain"][Math.floor(Math.random()*6)]},
+          {q:"Jour ou nuit ?", a:()=>["jour","nuit"][Math.floor(Math.random()*2)]},
+          {q:"Silence ou musique ?", a:()=>["silence","musique"][Math.floor(Math.random()*2)]},
+          {q:"Clair ou obscur ?", a:()=>["clair","obscur"][Math.floor(Math.random()*2)]},
+          {q:"Un code simple ?", a:()=>String(100+Math.floor(Math.random()*900))}
+        ];
+        var pick=QA[Math.floor(Math.random()*QA.length)]; var secretQ=pick.q, secretA=pick.a();
+
+        var invites=document.getElementById('invites'); invites.innerHTML='';
+        var header=document.createElement('div'); header.className='small'; header.textContent='Invitations :'; invites.appendChild(header);
+
+        var origin=(location.origin || (location.protocol+'//'+location.host));
+        var path=location.pathname.replace(/[^\\/]*$/,''); 
+        var filename=location.pathname.split('/').pop() || 'index.html';
+
+        for(var n=0;n<names.length;n++){
+          var name=names[n];
+          var role=traitors[name]?'TRAITRE':'LOYAL';
+          var payload={v:1,name:name,role:role};
+          if(role==='TRAITRE'){payload.codeQ=secretQ;payload.codeA=secretA;}
+          var token=btoa(encodeURIComponent(JSON.stringify(payload)));
+
+          var url=origin+path+filename+'?t='+encodeURIComponent(token);
+
+          var row=document.createElement('div'); row.className='inv-row';
+          var left=document.createElement('div'); left.className='inv-left';
+          var pill=document.createElement('div'); pill.className='pill'; pill.textContent=name;
+          left.appendChild(pill);
+
+          var actions=document.createElement('div'); actions.className='inv-actions';
+          var openA=document.createElement('a'); openA.className='btn'; openA.href=url; openA.target='_blank'; openA.rel='noopener'; openA.textContent='Ouvrir';
+          var copyBtn=document.createElement('button'); copyBtn.className='btn'; copyBtn.type='button'; copyBtn.textContent='Copier';
+          (function(u){
+            copyBtn.addEventListener('click', function(){
+              try{ if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(u).then(function(){alert('Lien copié');}).catch(function(){throw 0;}); } else { throw 0; } }
+              catch(e){ var tmp=document.createElement('textarea'); tmp.value=u; document.body.appendChild(tmp); tmp.select(); try{document.execCommand('copy');}catch(e2){} document.body.removeChild(tmp); alert('Lien copié'); }
+            });
+          })(url);
+          actions.appendChild(openA); actions.appendChild(copyBtn);
+
+          row.appendChild(left); row.appendChild(actions);
+          invites.appendChild(row);
+
+          var rawLine=document.createElement('div'); rawLine.className='url-raw'; rawLine.textContent=url;
+          invites.appendChild(rawLine);
+        }
+      });
+    }
+  }catch(e){ console.error(e); }
+});
+
+/* Modale rôle */
+function revealRole(payload){
+  var modal=document.getElementById('roleModal'); var inner=document.getElementById('roleInner'); var title=document.getElementById('roleTitle'); var sub=document.getElementById('roleSub'); var extra=document.getElementById('roleExtra');
+  modal.style.display='flex';
+  if(payload.role==='TRAITRE'){
+    inner.style.background='linear-gradient(180deg,#4a0b0b,#220606)';
+    title.innerHTML='<span class="mask-red">🎭</span> TRAÎTRE'; title.style.color='#fff';
+    var q=payload.codeQ||"Quelle heure est-il ?"; var a=payload.codeA||"11h23";
+    sub.innerHTML='Ton objectif est d’éliminer les Loyaux sans te faire démasquer.<br><br>' +
+      'Pour reconnaître tes alliés traîtres, tu disposes d’une <b>consigne secrète</b> :<br>' +
+      '<b>Question :</b> « '+q+' »<br>' +
+      '<b>Réponse :</b> « '+a+' » (même si c’est faux).<br><br>' +
+      '👉 Tu peux soit <b>poser toi-même la question</b> pour tester quelqu’un,<br>' +
+      '👉 soit <b>répondre avec le code</b> si on te la pose.';
+    extra.innerHTML='<ul style="margin:6px 0 8px 18px">\
+<li><b>Conseils (après repas)</b> : débats + vote → 1 joueur éliminé.</li>\
+<li><b>Nuits (ven & sam)</b> : les traîtres éliminent un Loyal.</li>\
+<li><b>Jeu</b> : reste crédible, évite les certitudes trop rapides.</li>\
+<li><b>Discrétion</b> : ne révèle jamais ton rôle ni ton écran.</li>\
+</ul>\
+<div style="margin-top:6px;color:#f2b3b3"><b>⚠️ Ne révèle jamais ton code directement, utilise-le subtilement.</b></div>';
+  } else {
+    inner.style.background='linear-gradient(180deg,#0b1f4a,#061022)';
+    title.innerHTML='<span class="mask-blue">🎭</span> LOYAL'; title.style.color='#fff';
+    sub.innerHTML='Ton rôle : observer, discuter et <b>démasquer les traîtres</b>.';
+    extra.innerHTML='<ul style="margin:6px 0 0 18px">\
+<li><b>Conseils (après repas)</b> : débats + vote → 1 éliminé.</li>\
+<li><b>Nuits</b> : seuls les traîtres agissent (élimination d’un Loyal).</li>\
+<li><b>Indices</b> : incohérences, alliances soudaines, votes étranges…</li>\
+<li><b>Stratégie</b> : construis une histoire cohérente, ne te fie pas qu’aux apparences.</li>\
+</ul>';
+  }
+  document.getElementById('closeRoleBtn').onclick=function(){ modal.style.display='none'; };
+}
+</script>
+</body>
+</html>
