@@ -129,6 +129,57 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 .secret-fixed:hover{ opacity:.38; transform:scale(1.03); }
 .app-shown .secret-fixed{ display:none !important; }
 
+
+/* --- When app is shown, force-hide intro layers --- */
+.app-shown .intro,
+.app-shown #intro,
+.app-shown .intro-screen,
+.app-shown .landing,
+.app-shown .splash,
+.app-shown .cover,
+.app-shown .intro-container,
+.app-shown [data-intro],
+.app-shown .scrolling-intro,
+.app-shown .hero,
+.app-shown .bg-landing { display:none !important; }
+
+/* Ensure the app section is interactable */
+.app-shown #app { opacity:1 !important; pointer-events:auto !important; visibility:visible !important; }
+
+
+/* --- Role Welcome Overlay --- */
+.role-welcome-wrap{
+  position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+  z-index:10000; background:rgba(0,0,0,.70); padding:16px;
+}
+.role-welcome{
+  width:min(92%,900px);
+  background:linear-gradient(180deg,rgba(10,14,22,.96),rgba(7,10,16,.95));
+  border:1px solid rgba(212,175,55,.25);
+  border-radius:18px; color:#eaf0f8; padding:18px 18px 16px;
+  box-shadow:0 18px 60px rgba(0,0,0,.65), 0 0 24px rgba(212,175,55,.22) inset;
+  animation: rwPop .35s ease-out both;
+}
+.role-welcome h2{
+  margin:0 0 6px; font-size:clamp(24px,4.2vw,34px);
+  color:#ffd98a; text-align:center; font-family:Cinzel,serif;
+  text-shadow:0 0 10px rgba(212,175,55,.25);
+}
+.role-welcome p{ margin:6px 0; font-size:clamp(15px,2.5vw,17px); color:#d5dbea; line-height:1.55 }
+.role-welcome .grid{ display:grid; gap:12px; margin-top:10px }
+@media(min-width:760px){ .role-welcome .grid{ grid-template-columns:1fr 1fr } }
+.rw-card{
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10);
+  border-radius:14px; padding:12px;
+}
+.rw-title{ color:#ffd98a; font-weight:700; margin:0 0 6px }
+.rw-list{ margin:6px 0 0 16px }
+.rw-list li{ margin:5px 0; }
+.rw-note{ margin-top:10px; font-size:14px; color:#cfd5dc; text-align:center }
+.rw-actions{ text-align:center; margin-top:12px }
+.rw-btn{ padding:10px 14px; border-radius:12px; border:none; background:#d4af37; color:#000; font-weight:800; cursor:pointer }
+@keyframes rwPop{ from{ transform:translateY(8px); opacity:0 } to{ transform:none; opacity:1 } }
+
 </style>
 </head>
 <body>
@@ -413,6 +464,28 @@ function revealRole(payload){
   }
   document.getElementById('closeRoleBtn').onclick=function(){ modal.style.display='none'; };
 }
+
+/* --- Role Welcome show logic --- */
+(function(){
+  var KEY='lt_role_welcome_shown';
+  function show(){ var w=document.getElementById('roleWelcomeWrap'); if(w) w.style.display='flex'; }
+  function hide(){ var w=document.getElementById('roleWelcomeWrap'); if(w) w.style.display='none'; }
+  // show when entering app for the first time
+  function maybeShow(){
+    if(localStorage.getItem(KEY)!=='1'){ show(); }
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    var ok=document.getElementById('rwOk');
+    if(ok && !ok._b){ ok._b=true; ok.addEventListener('click', function(){ localStorage.setItem(KEY,'1'); hide(); }); }
+  });
+  // Hook: when hash is #app (entering the game view), show once
+  function onHash(){ if(location.hash==="#app"){ setTimeout(maybeShow, 250); } }
+  window.addEventListener('hashchange', onHash);
+  if(location.hash==="#app"){ setTimeout(maybeShow, 300); }
+  // Optional hook if app exposes a callback after role reveal:
+  var _old = window.onRoleRevealed;
+  window.onRoleRevealed = function(){ try{ if(typeof _old==='function') _old(); }finally{ maybeShow(); } }
+})();
 </script>
 <script>
 /* --- Secret skip-intro logic (robust) --- */
@@ -422,7 +495,17 @@ function revealRole(payload){
   function go(){
     try { location.hash = '#app'; } catch(e){}
     document.documentElement.classList.add('app-shown');
-  }
+  
+  // Force-hide any intro-like layers immediately
+  try{
+    var sels = ['.intro','#intro','.intro-screen','.landing','.splash','.cover','.intro-container','[data-intro]','.scrolling-intro','.hero','.bg-landing'];
+    for(var i=0;i<sels.length;i++){
+      var nodes = document.querySelectorAll(sels[i]);
+      nodes.forEach ? nodes.forEach(function(n){ n.style.display='none'; }) :
+        Array.prototype.forEach.call(nodes, function(n){ n.style.display='none'; });
+    }
+  }catch(e){}
+}
   var t;
   dot.addEventListener('click', go);
   dot.addEventListener('touchstart', function(){ t=setTimeout(go,600); }, {passive:true});
@@ -432,5 +515,40 @@ function revealRole(payload){
   });
   if(location.hash==="#app"){ document.documentElement.classList.add('app-shown'); }
 })();</script>
+
+<!-- Bienvenue / Règles & planning -->
+<div id="roleWelcomeWrap" class="role-welcome-wrap" aria-hidden="true">
+  <div class="role-welcome">
+    <h2>Bienvenue dans le week‑end 🎉</h2>
+    <p>Tu viens de découvrir ton rôle. Voici comment va se dérouler l’expérience — on est entre amis, le but est de s’amuser 😉</p>
+    <div class="grid">
+      <div class="rw-card">
+        <h3 class="rw-title">🗓️ Le petit planning</h3>
+        <ul class="rw-list">
+          <li><b>Vendredi soir</b> : conseil et vote d’élimination.</li>
+          <li><b>Nuit ven → sam</b> : les Traîtres choisissent discrètement une victime via leur lien.</li>
+          <li><b>Samedi midi</b> : nouveau conseil et vote.</li>
+          <li><b>Samedi soir</b> : conseil et vote.</li>
+          <li><b>Nuit sam → dim</b> : les Traîtres éliminent à nouveau via leur lien.</li>
+          <li><b>Dimanche matin</b> : annonce au groupe de la victime de la nuit.</li>
+        </ul>
+      </div>
+      <div class="rw-card">
+        <h3 class="rw-title">🎭 Esprit & règles</h3>
+        <ul class="rw-list">
+          <li>Les Traîtres jouent <b>en secret</b> via un lien privé (personne ne sait qui ils sont).</li>
+          <li>Les Loyaux observent, discutent et votent avec stratégie.</li>
+          <li>Pas besoin de technologie compliquée : <b>tout est affiché au groupe</b> au bon moment.</li>
+          <li>On garde la <b>bonne entente</b> : pas d’attaques perso, on reste fun & fair‑play.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="rw-note">Astuce : si tu es Traître, garde ton lien sous la main pour voter la nuit. Si tu es Loyal, reste attentif aux détails…</p>
+    <div class="rw-actions">
+      <button id="rwOk" class="rw-btn" type="button">J’ai compris</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
