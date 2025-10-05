@@ -23,6 +23,11 @@
 <body>
   <div class="wrap">
     <h1>Annonces du matin</h1>
+    <div id="ver" class="small" style="margin-top:4px;color:#9fd29f">
+      Version: <b>announce_auto v2 (corrigée)</b> — si vous ne voyez pas cette ligne, vous n'ouvrez pas le bon fichier.
+    </div>
+    <div id="fbStatus" class="small" style="margin-top:6px;"></div>
+
     <div class="small">Clique sur <b>Afficher</b> pour lire la dernière nuit (ou précise une date). Tu peux activer le <b>rafraîchissement auto</b>.</div>
 
     <div class="row">
@@ -45,7 +50,20 @@
   </div>
 
   <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js">
+  // --- Affiche l'état de la config Firebase pour diagnostic ---
+  (function(){
+    var el = document.getElementById('fbStatus');
+    if(!el) return;
+    try {
+      if (db) { el.textContent = 'Firebase: configuré ✔︎'; el.style.color = '#8be28b'; }
+      else { el.textContent = 'Firebase: non configuré (collez votre firebaseConfig)'; el.style.color = '#e2a48b'; }
+    } catch(e) {
+      el.textContent = 'Firebase: erreur d'initialisation'; el.style.color = '#e2a48b';
+    }
+  })();
+
+</script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <script>
   // ---------- CONFIG FIREBASE ----------
