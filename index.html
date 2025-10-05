@@ -116,9 +116,24 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 #app:target ~ #gate{display:none}
 #audioUnlock{display:none;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9999;background:rgba(0,0,0,.7);color:#fff;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(3px);font-size:14px;white-space:nowrap}
 #audioUnlock button{margin-left:8px;padding:6px 10px;border-radius:10px;border:1px solid rgba(212,175,55,.9);background:linear-gradient(180deg,rgba(212,175,55,.25),rgba(212,175,55,.12));color:#fff;cursor:pointer}
+
+/* --- Secret skip-intro button --- */
+.secret-fixed{
+  position:fixed; top:10px; left:12px;
+  width:18px; height:18px; border-radius:50%;
+  z-index:1111; cursor:pointer; opacity:.25;
+  background:radial-gradient(circle at 30% 30%, rgba(212,175,55,.95) 0%, rgba(212,175,55,.45) 45%, rgba(0,0,0,0) 60%);
+  box-shadow:0 0 12px rgba(212,175,55,.5), 0 0 24px rgba(212,175,55,.35);
+  transition:opacity .25s ease, transform .15s ease;
+}
+.secret-fixed:hover{ opacity:.35; transform:scale(1.02); }
+.app-shown .secret-fixed{ display:none; }
+
 </style>
 </head>
 <body>
+<div id="secretFixed" class="secret-fixed" title="Passer l'intro"></div>
+>
 <div class="bg-gate bg-fallback" aria-hidden="true"></div>
 <div class="bg-intro bg-fallback" aria-hidden="true"></div>
 <div class="bg-role bg-fallback" aria-hidden="true"></div>
@@ -399,6 +414,27 @@ function revealRole(payload){
   }
   document.getElementById('closeRoleBtn').onclick=function(){ modal.style.display='none'; };
 }
+
+/* --- Secret skip-intro logic --- */
+(function(){
+  var dot = document.getElementById('secretFixed');
+  if(!dot) return;
+  function go(){
+    try { location.hash = '#app'; } catch(e){}
+    document.documentElement.classList.add('app-shown');
+  }
+  var timer;
+  dot.addEventListener('click', go);
+  dot.addEventListener('touchstart', function(){ timer=setTimeout(go,600); }, {passive:true});
+  dot.addEventListener('touchend', function(){ clearTimeout(timer); }, {passive:true});
+  window.addEventListener('hashchange', function(){
+    if(location.hash==="#app"){ document.documentElement.classList.add('app-shown'); }
+  });
+  // If already on #app at load, hide it
+  document.addEventListener('DOMContentLoaded', function(){
+    if(location.hash==="#app"){ document.documentElement.classList.add('app-shown'); }
+  });
+})();
 </script>
 </body>
 </html>
