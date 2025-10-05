@@ -64,6 +64,7 @@
 
     // --------- Utilitaires ---------
       /* --------- CONFIGURATION FIREBASE (compat) --------- */
+    /* --------- CONFIGURATION FIREBASE (compat) --------- */
   const firebaseConfig = {
     apiKey: "AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
     authDomain: "ans-de-franck.firebaseapp.com",
@@ -71,11 +72,13 @@
     projectId: "ans-de-franck",
     storageBucket: "ans-de-franck.firebasestorage.app",
     messagingSenderId: "1063437612417",
-    appId: "1:1063437612417:web:812e847dfcd990c6922480",
+    appId: "1:1063437612417:web:812e847dfcd990c6922480"
   };
 
   try { firebase.initializeApp(firebaseConfig); } catch(e) { /* already initialized */ }
   var db = null;
+  try { db = firebase.database(); } catch(e) { db = null; }
+var db = null;
   try { db = firebase.database(); } catch(e) { db = null; }
 
 function parseToken(){
