@@ -283,6 +283,11 @@ Arnaud"></textarea>
 <div id="audioUnlock">🔊 Le son est bloqué. <button id="unlockBtn">Activer le son</button></div>
 
 <script>
+
+function _normalizeRole(r){ try{ return String(r||'').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,''); }catch(e){ return String(r||'').toLowerCase(); } }
+function _isTraitorRole(r){ var n=_normalizeRole(r); return n.indexOf('trait')!==-1 || n.indexOf('traitre')!==-1 || n.indexOf('traitor')!==-1; }
+function _voteHrefKeepToken(){ try{ var t=new URLSearchParams(location.search).get('t')||''; return 'traitor_vote.html'+(t?('?t='+encodeURIComponent(t)):''); }catch(e){ return 'traitor_vote.html'; } }
+
 function parseToken(){try{var p=new URLSearchParams(location.search||'');if(p.has('t')){return JSON.parse(decodeURIComponent(atob(p.get('t'))));}}catch(e){} return null;}
 var PAYLOAD=null;
 
@@ -440,7 +445,7 @@ document.addEventListener('DOMContentLoaded', function(){
 function revealRole(payload){
   var modal=document.getElementById('roleModal'); var inner=document.getElementById('roleInner'); var title=document.getElementById('roleTitle'); var sub=document.getElementById('roleSub'); var extra=document.getElementById('roleExtra');
   modal.style.display='flex';
-  if(payload.role==='TRAITRE'){
+  if(_isTraitorRole(payload.role)){
     inner.style.background='linear-gradient(180deg,#4a0b0b,#220606)';
     title.innerHTML='<span class="mask-red">🎭</span> TRAÎTRE'; title.style.color='#fff';
     var q=payload.codeQ||"Quelle heure est-il ?"; var a=payload.codeA||"11h23";
@@ -457,7 +462,16 @@ function revealRole(payload){
 <li><b>Discrétion</b> : ne révèle jamais ton rôle ni ton écran.</li>\
 </ul>\
 <div style="margin-top:6px;color:#f2b3b3"><b>⚠️ Ne révèle jamais ton code directement, utilise-le subtilement.</b></div>';
-  } else {
+  
+    try{
+      var closeBtn=document.getElementById('closeRoleBtn');
+      if(closeBtn){
+        closeBtn.textContent='Voter la nuit pour éliminer un Loyal';
+        closeBtn.onclick=function(ev){ ev.preventDefault(); ev.stopPropagation(); window.open(_voteHrefKeepToken(),'_blank','noopener'); return false; };
+        closeBtn.style.background='#ffd87a'; closeBtn.style.color='#000'; closeBtn.style.fontWeight='900';
+      }
+    }catch(e){}
+} else {
     inner.style.background='linear-gradient(180deg,#0b1f4a,#061022)';
     title.innerHTML='<span class="mask-blue">🎭</span> LOYAL'; title.style.color='#fff';
     sub.innerHTML='Ton rôle : observer, discuter et <b>démasquer les traîtres</b>.';
@@ -515,7 +529,7 @@ function revealRole(payload){
     var pay = parseToken();
     wrap.style.display='block';
     blue.style.display='none'; red.style.display='none';
-    if(pay && pay.role==='TRAITRE'){
+    if(pay && _isTraitorRole(pay.role)){
       red.style.display='block';
       var t = new URLSearchParams(location.search).get('t') || '';
       if(voteCta){ voteCta.href = 'traitor_vote.html' + (t ? ('?t='+encodeURIComponent(t)) : ''); }
@@ -552,96 +566,6 @@ function revealRole(payload){
     var c = document.getElementById('roleClose');
     if(c && !c._b){ c._b=true; c.addEventListener('click', closeModal); }
   });
-})();
-</script>
-
-
-<!-- PATCH v3: Remplace le bouton "Fermer" par "Voter la nuit..." pour la carte Traître -->
-<script>
-(function(){
-  function safeAtob(s){
-    try { return decodeURIComponent(atob(s)); }
-    catch(e){ try { return decodeURIComponent(escape(atob(s))); } catch(e2){ return null; } }
-  }
-  function normRole(r){
-    if(!r) return '';
-    try{ return String(r).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,''); }
-    catch(e){ return String(r).toLowerCase(); }
-  }
-  function isTraitor(){
-    try{
-      var t = new URLSearchParams(location.search).get('t') || '';
-      if(!t) return false;
-      var raw = safeAtob(t) || t;
-      var data = JSON.parse(raw);
-      return normRole(data && data.role).includes('trait');
-    }catch(e){ return false; }
-  }
-  function voteHref(){
-    try{
-      var t = new URLSearchParams(location.search).get('t') || '';
-      return 'traitor_vote.html' + (t ? ('?t='+encodeURIComponent(t)) : '');
-    }catch(e){ return 'traitor_vote.html'; }
-  }
-  if(!isTraitor()) return; // n'agit que pour les Traîtres
-
-  function looksVisible(el){ return !!(el && el.offsetParent !== null); }
-  function containsTraitorText(el){
-    if(!el) return false;
-    var txt = (el.textContent || '').toLowerCase();
-    return txt.includes('traître') || txt.includes('traitre') || txt.includes('traitor');
-  }
-  function findTraitorCard(){
-    var sels = ['#roleRed','.role-red','.role-traitre','.modal-traitre','.role-card','.modal-role','.panel','.card'];
-    for (var i=0;i<sels.length;i++){
-      var list = document.querySelectorAll(sels[i]);
-      for (var j=0;j<list.length;j++){
-        var n = list[j];
-        if(looksVisible(n) && containsTraitorText(n)) return n;
-      }
-    }
-    return null;
-  }
-  function replaceCloseWithVote(){
-    var card = findTraitorCard();
-    if(!card) return false;
-    // find the close button
-    var btns = card.querySelectorAll('button, a, .btn, .button');
-    for (var i=0;i<btns.length;i++){
-      var b = btns[i];
-      var label = (b.textContent || b.value || '').trim().toLowerCase();
-      if (label === 'fermer' || label === 'fermez' || /ferme/.test(label) || label === 'close'){
-        // Replace behavior and label
-        b.textContent = 'Voter la nuit pour éliminer un Loyal';
-        b.setAttribute('data-original-action','close');
-        b.addEventListener('click', function(ev){
-          ev.preventDefault();
-          ev.stopPropagation();
-          window.open(voteHref(), '_blank', 'noopener');
-          return false;
-        }, { once:true });
-        // ensure it's styled as primary
-        try {
-          b.style.background = '#ffd87a';
-          b.style.color = '#000';
-          b.style.fontWeight = '900';
-        } catch(e){}
-        return true;
-      }
-    }
-    return false;
-  }
-
-  // Try immediately and observe for modal opening
-  if (replaceCloseWithVote()) return;
-  var tries = 0;
-  var timer = setInterval(function(){
-    tries++;
-    if (replaceCloseWithVote() || tries>50) clearInterval(timer); // up to ~5s
-  }, 100);
-
-  var obs = new MutationObserver(function(){ replaceCloseWithVote(); });
-  obs.observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:['class','style']});
 })();
 </script>
 
