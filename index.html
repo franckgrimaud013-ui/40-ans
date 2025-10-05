@@ -556,30 +556,27 @@ function revealRole(payload){
 </script>
 
 
-<!-- PATCH: vote CTA for Traitors (non-intrusive) -->
+<!-- PATCH v2: CTA "Voter la nuit" pour carte Traître (attend l'ouverture réelle) -->
 <script>
 (function(){
-  // Decode token ?t=... safely
   function safeAtob(s){
     try { return decodeURIComponent(atob(s)); }
     catch(e){ try { return decodeURIComponent(escape(atob(s))); } catch(e2){ return null; } }
-  }
-  function decodeToken(){
-    try{
-      var t = new URLSearchParams(location.search).get('t') || '';
-      if(!t) return null;
-      var raw = safeAtob(t) || t;
-      return JSON.parse(raw);
-    }catch(e){ return null; }
   }
   function normalizeRole(r){
     if(!r) return '';
     try{ return String(r).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,''); }
     catch(e){ return String(r).toLowerCase(); }
   }
-  function isTraitorRole(r){
-    var n = normalizeRole(r||'');
-    return n.includes('trait') || n.includes('traitre') || n.includes('traitor');
+  function isTraitorFromToken(){
+    try{
+      var t = new URLSearchParams(location.search).get('t') || '';
+      if(!t) return false;
+      var raw = safeAtob(t) || t;
+      var data = JSON.parse(raw);
+      var n = normalizeRole(data && data.role);
+      return n.includes('trait'); // couvre traître/traitre/traitor
+    }catch(e){ return false; }
   }
   function voteHref(){
     try{
@@ -588,31 +585,47 @@ function revealRole(payload){
     }catch(e){ return 'traitor_vote.html'; }
   }
 
-  var token = new URLSearchParams(location.search).get('t') || '';
-  var data = decodeToken();
-  if(!data || !isTraitorRole(data.role)) return; // Only for traitors
+  if(!isTraitorFromToken()) return; // n'injecte rien pour les Loyaux
 
-  // If a pre-existing CTA with id="voteCta" exists, just wire it
-  var existing = document.getElementById('voteCta');
-  if(existing){ existing.href = voteHref(); return; }
-
+  function looksVisible(el){
+    return !!(el && el.offsetParent !== null);
+  }
+  function containsTraitorText(el){
+    if(!el) return false;
+    var txt = (el.textContent || '').toLowerCase();
+    return txt.includes('traître') || txt.includes('traitre') || txt.includes('traitor');
+  }
+  function findTraitorCard(){
+    var selectors = [
+      '#roleRed', '.role-red', '.role-traitre', '.modal-traitre', '.role-card', '.modal-role', '.card', '.panel', '.modal'
+    ];
+    for (var i=0;i<selectors.length;i++){
+      var nodes = document.querySelectorAll(selectors[i]);
+      for (var j=0;j<nodes.length;j++){
+        var n = nodes[j];
+        if (looksVisible(n) && containsTraitorText(n)) return n;
+      }
+    }
+    return null;
+  }
+  function findCloseButton(container){
+    if(!container) return null;
+    var btns = container.querySelectorAll('button, a, .btn, .button');
+    for (var i=0;i<btns.length;i++){
+      var b = btns[i];
+      var label = (b.textContent || b.value || '').trim().toLowerCase();
+      if (label === 'fermer' || label === 'fermez' || label === 'close') return b;
+      // tolérance : contient "fermer" ou "fermez"
+      if (/ferme/.test(label)) return b;
+    }
+    return null;
+  }
   function ensureCTA(){
-    // Find the traitor role card/panel that is visible
-    var candidates = document.querySelectorAll(
-      '#roleRed, .role-red, .role-traitre, .modal-traitre, .role-card, .card-traitre, .modal-role, .role'
-    );
-    var card = null;
-    candidates.forEach(function(el){
-      if(card) return;
-      var text = (el.textContent || '').toLowerCase();
-      var looksTraitor = text.includes('traître') || text.includes('traitre') || text.includes('traitor');
-      if(looksTraitor && el.offsetParent !== null){ card = el; }
-    });
-    if(!card) return;
+    var card = findTraitorCard();
+    if(!card) return false;
+    if(document.getElementById('voteCtaPatch')) return true;
 
-    if(document.getElementById('voteCtaPatch')) return; // already added
-
-    // Create CTA
+    // Crée le bouton
     var wrap = document.createElement('div');
     wrap.style.textAlign = 'center';
     wrap.style.marginTop = '14px';
@@ -630,31 +643,39 @@ function revealRole(payload){
     a.style.fontWeight = '900';
     a.style.textDecoration = 'none';
     a.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
-
     wrap.appendChild(a);
 
-    // Insert just above the close/fermez button if possible
-    var allButtons = card.querySelectorAll('button, a.button, .close, .fermer');
-    var placed = false;
-    for(var i=0;i<allButtons.length;i++){
-      var btn = allButtons[i];
-      var label = (btn.textContent || btn.value || '').toLowerCase();
-      if(/ferme/.test(label) || /close/.test(label)){
-        btn.parentNode.insertBefore(wrap, btn);
-        placed = true;
-        break;
-      }
+    var closeBtn = findCloseButton(card);
+    if (closeBtn && closeBtn.parentNode) {
+      closeBtn.parentNode.insertBefore(wrap, closeBtn);
+    } else {
+      card.appendChild(wrap);
     }
-    if(!placed) card.appendChild(wrap);
+    return true;
   }
 
-  // Try immediately, after discover click, and observe DOM changes
-  ensureCTA();
-  var discover = document.getElementById('discoverBtn') || document.querySelector('[data-action="discover-role"]');
-  if(discover) discover.addEventListener('click', function(){ setTimeout(ensureCTA, 100); });
+  // 1) Essaye tout de suite
+  if (ensureCTA()) return;
 
-  var obs = new MutationObserver(function(){ ensureCTA(); });
-  obs.observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:['style','class']});
+  // 2) Après clic “Découvre ton rôle” si présent
+  var discover = document.getElementById('discoverBtn') || document.querySelector('[data-action="discover-role"]');
+  if(discover){
+    discover.addEventListener('click', function(){
+      setTimeout(ensureCTA, 150); // laisse la modale s'ouvrir
+    });
+  }
+
+  // 3) Observe le DOM pour placer le bouton dès que la carte apparaît
+  var tries = 0;
+  var timer = setInterval(function(){
+    tries++;
+    if (ensureCTA() || tries > 40) clearInterval(timer); // 4s max
+  }, 100);
+
+  var obs = new MutationObserver(function(){
+    ensureCTA();
+  });
+  obs.observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:['class','style']});
 })();
 </script>
 
