@@ -180,6 +180,42 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 .rw-btn{ padding:10px 14px; border-radius:12px; border:none; background:#d4af37; color:#000; font-weight:800; cursor:pointer }
 @keyframes rwPop{ from{ transform:translateY(8px); opacity:0 } to{ transform:none; opacity:1 } }
 
+
+/* --- One-page Welcome (inline) --- */
+.role-welcome-wrap{ display:none !important; } /* disable overlay version */
+.welcome-section{
+  margin: 20px auto;
+  width: min(92%, 960px);
+  background: linear-gradient(180deg, rgba(10,14,22,.96), rgba(7,10,16,.95));
+  border: 1px solid rgba(212,175,55,.20);
+  border-radius: 18px;
+  color: #eaf0f8;
+  padding: 18px;
+  box-shadow: 0 12px 44px rgba(0,0,0,.5), 0 0 18px rgba(212,175,55,.18) inset;
+}
+.welcome-section h2{
+  margin: 0 0 6px;
+  font-size: clamp(24px, 4.2vw, 34px);
+  color:#ffd98a;
+  text-align:center;
+  font-family:Cinzel,serif;
+  text-shadow:0 0 10px rgba(212,175,55,.18);
+}
+.welcome-grid{ display:grid; gap:12px; margin-top:10px }
+@media(min-width:760px){ .welcome-grid{ grid-template-columns:1fr 1fr } }
+.wc-card{
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 14px;
+  padding: 12px;
+}
+.wc-title{ color:#ffd98a; font-weight:700; margin:0 0 6px }
+.wc-list{ margin:6px 0 0 16px }
+.wc-list li{ margin:5px 0 }
+.wc-note{ margin-top:10px; font-size:14px; color:#cfd5dc; text-align:center }
+.wc-actions{ text-align:center; margin-top:12px }
+.wc-btn{ padding:12px 16px; border-radius:12px; border:none; background:#d4af37; color:#000; font-weight:800; cursor:pointer }
+
 </style>
 </head>
 <body>
@@ -224,6 +260,38 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 
 <!-- APP -->
 <div class="app" id="app">
+  <!-- One-page Welcome Section -->
+  <section id="welcomeSection" class="welcome-section">
+    <h2>Bienvenue dans le week-end 🎉</h2>
+    <p>Tu viens de découvrir ton rôle. Voici comment va se dérouler l’expérience — on est entre amis, le but est de s’amuser 😉</p>
+    <div class="welcome-grid">
+      <div class="wc-card">
+        <h3 class="wc-title">🗓️ Le petit planning</h3>
+        <ul class="wc-list">
+          <li><b>Vendredi soir</b> : conseil et vote d’élimination.</li>
+          <li><b>Nuit ven → sam</b> : les Traîtres choisissent discrètement une victime via leur lien.</li>
+          <li><b>Samedi midi</b> : nouveau conseil et vote.</li>
+          <li><b>Samedi soir</b> : conseil et vote.</li>
+          <li><b>Nuit sam → dim</b> : les Traîtres éliminent à nouveau via leur lien.</li>
+          <li><b>Dimanche matin</b> : annonce au groupe de la victime de la nuit.</li>
+        </ul>
+      </div>
+      <div class="wc-card">
+        <h3 class="wc-title">🎭 Esprit & règles</h3>
+        <ul class="wc-list">
+          <li>Les Traîtres jouent <b>en secret</b> via un lien privé (personne ne sait qui ils sont).</li>
+          <li>Les Loyaux observent, discutent et votent avec stratégie.</li>
+          <li>Pas de prise de tête : les écrans clés s’affichent au bon moment pour le groupe.</li>
+          <li>On garde la <b>bonne entente</b> : pas d’attaques perso, on reste fun & fair-play.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="wc-note">Astuce : si tu es Traître, garde ton lien sous la main pour voter la nuit. Si tu es Loyal, reste attentif aux détails…</p>
+    <div class="wc-actions">
+      <button id="gotoReveal" class="wc-btn" type="button">🔍 Découvre ton rôle</button>
+    </div>
+  </section>
+
   <div class="grid">
     <!-- Organisateur -->
     <div class="card" id="orgCard">
@@ -485,6 +553,35 @@ function revealRole(payload){
   // Optional hook if app exposes a callback after role reveal:
   var _old = window.onRoleRevealed;
   window.onRoleRevealed = function(){ try{ if(typeof _old==='function') _old(); }finally{ maybeShow(); } }
+})();
+
+/* --- One-page welcome: 'Découvre ton rôle' button behavior --- */
+(function(){
+  function openRole(){
+    // Try various hooks in case of different implementations
+    try{
+      // 1) If a dedicated button exists
+      var btnIds = ['openRole','roleOpenBtn','discoverRoleBtn'];
+      for(var i=0;i<btnIds.length;i++){
+        var b=document.getElementById(btnIds[i]);
+        if(b){ b.click(); return; }
+      }
+      // 2) Try common modal triggers
+      var q=document.querySelector('[data-open="role"], [data-modal="role"], .btn-open-role');
+      if(q){ q.click(); return; }
+      // 3) If a function is exposed
+      if(typeof window.openRole==='function'){ window.openRole(); return; }
+      if(typeof window.showRole==='function'){ window.showRole(); return; }
+      // 4) Fallback: navigate to a hash the app listens to
+      location.hash = '#role';
+      // 5) If nothing else, scroll to a section with id=role
+      var sec=document.getElementById('role'); if(sec){ sec.scrollIntoView({behavior:'smooth'}); }
+    }catch(e){ location.hash='#role'; }
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    var g=document.getElementById('gotoReveal');
+    if(g && !g._b){ g._b=true; g.addEventListener('click', openRole); }
+  });
 })();
 </script>
 <script>
