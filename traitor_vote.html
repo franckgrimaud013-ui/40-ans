@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Vote des Traîtres — mode secours intégré</title>
+  <title>Vote des Traîtres — simple</title>
+  <!-- Firebase compat SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <style>
@@ -12,27 +13,24 @@
     body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding:28px 12px}
     h1{margin:0 0 6px;color:var(--gold)}
     .mut{color:var(--mut)}
-    .panel{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:16px;margin-top:12px;max-width:880px}
+    .panel{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:16px;margin-top:12px;max-width:780px}
     .btn{background:var(--gold);color:#000;border:none;border-radius:10px;padding:10px 16px;font-weight:900;cursor:pointer}
-    select,input,textarea{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#fff;width:100%}
-    textarea{min-height:84px;resize:vertical}
-    .row{display:grid;gap:10px;grid-template-columns:1fr 1fr} @media(max-width:680px){ .row{grid-template-columns:1fr} }
+    input{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#fff;width:100%}
+    .row{display:grid;gap:10px;grid-template-columns:1fr 1fr} @media(max-width:560px){ .row{grid-template-columns:1fr} }
     #fbStatus{font-size:14px;margin-top:4px}
     #fbStatus.ok{color:#8be28b} #fbStatus.err{color:#e2a48b}
     #diag{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;color:#9fd29f;margin-top:8px}
-    .hidden{display:none}
-    .warn{color:#ffd87a}
   </style>
 </head>
 <body>
   <h1>Vote des Traîtres</h1>
-  <div class="mut">Version: traitor_vote_fixed5 (sélecteur + champ texte secours)</div>
+  <div class="mut">Version: traitor_vote_simple</div>
   <div id="fbStatus" class="mut">Vérification de Firebase…</div>
   <div id="diag"></div>
 
   <div class="panel" id="guard">Chargement…</div>
 
-  <div id="voteUI" class="panel hidden">
+  <div id="voteUI" class="panel" style="display:none">
     <div class="row">
       <div>
         <div class="mut">Traître :</div>
@@ -44,34 +42,15 @@
       </div>
     </div>
 
-    <div id="victimArea" style="margin-top:12px">
-      <label class="mut">Choisir la victime :</label><br>
-      <select id="victimSel"></select>
-      <div id="emptyNote" class="warn hidden" style="margin-top:6px">Liste vide ? Utilise le champ texte juste en dessous.</div>
-      <div id="victimTextWrap" class="hidden" style="margin-top:8px">
-        <label class="mut">Ou saisir la victime (secours) :</label>
-        <input id="victimText" type="text" placeholder="Tape le prénom exact…">
-      </div>
+    <div style="margin-top:12px">
+      <label class="mut">Victime à éliminer cette nuit (prénom exact)</label>
+      <input id="victimText" type="text" placeholder="Ex. Aurélie">
     </div>
 
     <div style="margin-top:12px">
-      <button id="send" class="btn">Voter maintenant</button>
+      <button id="send" class="btn">Envoyer le vote</button>
     </div>
     <div id="msg" style="margin-top:10px" class="mut"></div>
-  </div>
-
-  <div id="fallbackPanel" class="panel hidden">
-    <h3 style="margin:0 0 8px">Secours joueurs (si le menu est vide)</h3>
-    <p class="mut" style="margin:6px 0 10px">
-      Si la liste des joueurs n’est pas incluse dans ton lien, colle‑la ici (prénoms séparés par des virgules).<br>
-      Elle sera mémorisée pour les prochains votes sur cet appareil.
-    </p>
-    <textarea id="playersInput" placeholder="Franck, Aurélie, Antony, Arnaud, Léa, Paul"></textarea>
-    <div class="row" style="margin-top:10px">
-      <button id="savePlayers" class="btn">Enregistrer la liste</button>
-      <button id="loadFromFirebase" class="btn">Charger depuis Firebase (si dispo)</button>
-    </div>
-    <div id="fallbackMsg" class="mut" style="margin-top:8px"></div>
   </div>
 
   <script>
@@ -126,36 +105,9 @@
       return y+'-'+m+'-'+d;
     }
 
-    function setHidden(id, hide){ document.getElementById(id).classList.toggle('hidden', !!hide); }
-    function normalizeNames(arr){ return (arr||[]).map(p=>String(p||'').trim()).filter(Boolean); }
-
-    const GAME_ID = 'default';
-    async function tryLoadPlayersFromFirebase(){
-      if(!db) return null;
-      try{
-        const snap = await db.ref('/games/'+GAME_ID+'/players').once('value');
-        if(snap.exists()){
-          const v = snap.val();
-          if(Array.isArray(v)) return normalizeNames(v);
-          if(v && typeof v==='object') return normalizeNames(Object.values(v));
-        }
-      }catch(e){}
-      return null;
-    }
-
-    function fillVictims(list, me){
-      const sel = document.getElementById('victimSel');
-      const filtered = normalizeNames(list).filter(n => n.toLowerCase() !== String(me||'').toLowerCase());
-      sel.innerHTML = filtered.map(p => '<option>'+p+'</option>').join('');
-      const empty = filtered.length===0;
-      setHidden('emptyNote', !empty);
-      setHidden('victimTextWrap', !empty); // show text input when empty
-    }
-
-    async function start(){
+    function start(){
       const guard = document.getElementById('guard');
       const ui = document.getElementById('voteUI');
-      const fbk = document.getElementById('fallbackPanel');
       const token = parseToken();
       if(!token){
         guard.textContent = 'Accès refusé. Ce lien est réservé aux Traîtres (token manquant).';
@@ -163,43 +115,8 @@
       }
       document.getElementById('traitorName').textContent = token.name || '—';
       document.getElementById('dateInput').value = todayISO();
-
-      let players = [];
-      if (Array.isArray(token.players) && token.players.length) {
-        players = token.players.slice();
-      } else {
-        const saved = (localStorage.getItem('players_list_global')||'').split(',').map(s=>s.trim()).filter(Boolean);
-        if(saved.length) players = saved;
-        else {
-          const fbPlayers = await tryLoadPlayersFromFirebase();
-          if (fbPlayers && fbPlayers.length) players = fbPlayers;
-        }
-      }
-      fillVictims(players, token.name);
-
-      guard.classList.add('hidden');
-      ui.classList.remove('hidden');
-      fbk.classList.remove('hidden');
-
-      document.getElementById('savePlayers').addEventListener('click', ()=>{
-        const raw = document.getElementById('playersInput').value.trim();
-        const arr = normalizeNames(raw.split(','));
-        if(arr.length===0){ document.getElementById('fallbackMsg').textContent = 'Renseigne au moins un prénom.'; return; }
-        localStorage.setItem('players_list_global', arr.join(','));
-        fillVictims(arr, token.name);
-        document.getElementById('fallbackMsg').textContent = '✅ Liste enregistrée pour cet appareil.';
-      });
-      document.getElementById('loadFromFirebase').addEventListener('click', async ()=>{
-        const arr = await tryLoadPlayersFromFirebase();
-        if(arr && arr.length){
-          localStorage.setItem('players_list_global', arr.join(','));
-          document.getElementById('playersInput').value = arr.join(', ');
-          fillVictims(arr, token.name);
-          document.getElementById('fallbackMsg').textContent = '✅ Liste chargée depuis Firebase.';
-        }else{
-          document.getElementById('fallbackMsg').textContent = '❌ Impossible de charger depuis Firebase (clé absente).';
-        }
-      });
+      guard.style.display='none';
+      ui.style.display='block';
     }
 
     document.addEventListener('DOMContentLoaded', start);
@@ -207,20 +124,17 @@
     // ---- Send vote ----
     document.getElementById('send').addEventListener('click', function(){
       const date = document.getElementById('dateInput').value.trim();
-      const sel = document.getElementById('victimSel');
-      const victim = sel.value;
-      const victimText = document.getElementById('victimText').value.trim();
-      const chosen = victim || victimText; // fallback to text input
+      const victim = document.getElementById('victimText').value.trim();
       const msg = document.getElementById('msg');
 
       if(!db) { msg.textContent = '❌ Firebase non configuré (db null). Vérifie les 2 scripts SDK + la config.'; return; }
       if(!date) { msg.textContent = 'Indique la date (AAAA-MM-JJ).'; return; }
-      if(!chosen) { msg.textContent = 'Choisis ou saisis une victime.'; return; }
+      if(!victim) { msg.textContent = 'Saisis la victime (prénom).'; return; }
 
       const path = '/nights/'+date+'/votes';
       msg.textContent = 'Envoi en cours…';
-      db.ref(path).push({ victim: chosen, ts: Date.now() }).then(function(){
-        msg.textContent = '✅ Vote envoyé pour '+chosen+'.';
+      db.ref(path).push({ victim: victim, ts: Date.now() }).then(function(){
+        msg.textContent = '✅ Vote enregistré, les Traîtres peuvent se reposer maintenant.';
       }).catch(function(e){
         msg.textContent = '❌ Erreur: ' + (e && e.message || e);
       });
@@ -228,3 +142,4 @@
   </script>
 </body>
 </html>
+
