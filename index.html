@@ -556,9 +556,10 @@ function revealRole(payload){
 </script>
 
 
-<!-- PATCH v5: remplace le bouton "Fermer" par un vrai lien vote (supprime tout handler qui ferme la modale) -->
+<!-- PATCH v7: remplace #closeRoleBtn par un lien "Voter la nuit..." pour les Traîtres -->
 <script>
 (function(){
+  // Helpers
   function safeAtob(s){
     try { return decodeURIComponent(atob(s)); }
     catch(e){ try { return decodeURIComponent(escape(atob(s))); } catch(e2){ return null; } }
@@ -574,7 +575,7 @@ function revealRole(payload){
       if(!t) return false;
       var raw = safeAtob(t) || t;
       var data = JSON.parse(raw);
-      return normRole(data && data.role).includes('trait');
+      return normRole(data && data.role).includes('trait'); // traître/traitre/traitor
     }catch(e){ return false; }
   }
   function voteHref(){
@@ -583,49 +584,21 @@ function revealRole(payload){
       return 'traitor_vote.html' + (t ? ('?t='+encodeURIComponent(t)) : '');
     }catch(e){ return 'traitor_vote.html'; }
   }
-  if(!isTraitor()) return;
 
-  function looksVisible(el){ return !!(el && el.offsetParent !== null); }
-  function containsTraitorText(el){
-    if(!el) return false;
-    var txt = (el.textContent || '').toLowerCase();
-    return txt.includes('traître') || txt.includes('traitre') || txt.includes('traitor');
-  }
-  function findTraitorCard(){
-    var sels = ['#roleRed','.role-red','.role-traitre','.modal-traitre','.role-card','.modal-role','.panel','.card','.modal'];
-    for (var i=0;i<sels.length;i++){
-      var list = document.querySelectorAll(sels[i]);
-      for (var j=0;j<list.length;j++){
-        var n = list[j];
-        if(looksVisible(n) && containsTraitorText(n)) return n;
-      }
-    }
-    return null;
-  }
-  function replaceClose(){
-    var card = findTraitorCard();
-    if(!card) return false;
+  if(!isTraitor()) return; // n'agit que pour les Traîtres
 
-    // Repère le bouton "Fermer/Fermez"
-    var btns = card.querySelectorAll('button, a, .btn, .button');
-    var closeBtn = null;
-    for (var i=0;i<btns.length;i++){
-      var b = btns[i];
-      var label = (b.textContent || b.value || '').trim().toLowerCase();
-      if (label === 'fermer' || label === 'fermez' || /ferme/.test(label) || label === 'close'){
-        closeBtn = b; break;
-      }
-    }
-    if(!closeBtn) return false;
+  function replaceBtn(){
+    var btn = document.getElementById('closeRoleBtn');
+    if(!btn || btn.dataset.__votedone) return false;
 
-    // Créé un NOUVEAU <a> pour éviter tous les écouteurs existants
+    // Crée un <a> à la place du bouton, style doré
     var a = document.createElement('a');
     a.textContent = 'Voter la nuit pour éliminer un Loyal';
     a.href = voteHref();
     a.target = '_blank'; a.rel = 'noopener';
-    // Copie quelques classes/styles du bouton existant si besoin
-    a.className = closeBtn.className || '';
-    // Styles "or" si pas de classe
+
+    // Conserver classes pour ton style, sinon appliquer un style or
+    a.className = btn.className || '';
     if(!a.className){
       a.style.display = 'inline-block';
       a.style.padding = '10px 16px';
@@ -635,31 +608,37 @@ function revealRole(payload){
       a.style.fontWeight = '900';
       a.style.textDecoration = 'none';
       a.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
+    } else {
+      // Si classe .btn dorée, force couleurs or/noir
+      try{
+        a.style.background = '#ffd87a';
+        a.style.color = '#000';
+        a.style.fontWeight = '900';
+      }catch(e){}
     }
-    // Stopper toute fermeture via propagation
-    a.addEventListener('click', function(ev){
-      ev.stopPropagation();
-      // on laisse le navigateur ouvrir le lien _blank naturellement
-    });
 
-    // Remplacer proprement le noeud
-    closeBtn.parentNode.replaceChild(a, closeBtn);
+    // Neutraliser toute fermeture via propagation
+    a.addEventListener('click', function(ev){ ev.stopPropagation(); });
+
+    // Remplacer le noeud (évite les anciens listeners)
+    btn.parentNode.replaceChild(a, btn);
+    a.dataset.__votedone = "1";
     return true;
   }
 
-  // Essais répétitifs + observer jusqu'à réussite
-  if (replaceClose()) return;
+  // Essaye immédiatement, puis surveille jusqu'à ce que le bouton existe
+  if (replaceBtn()) return;
+
   var tries = 0;
-  var timer = setInterval(function(){
+  var tmr = setInterval(function(){
     tries++;
-    if (replaceClose() || tries>60) clearInterval(timer); // jusqu'à 6s
+    if (replaceBtn() || tries>80) clearInterval(tmr); // ~8s
   }, 100);
 
-  var obs = new MutationObserver(function(){ replaceClose(); });
+  var obs = new MutationObserver(function(){ replaceBtn(); });
   obs.observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:['class','style']});
 })();
 </script>
 
 </body>
 </html>
-
