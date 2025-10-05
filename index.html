@@ -577,6 +577,72 @@ function revealRole(payload){
   });
 })();
 </script>
+<script>
+(function(){
+  try {
+    // Vérifie si on est sur la page principale avec carte de rôle
+    const params = new URLSearchParams(location.search);
+    const token = params.get('t') || '';
+    if(!token) return;
+
+    // Tente de décoder le token
+    function safeAtob(s){
+      try { return decodeURIComponent(atob(s)); }
+      catch(e){ try { return decodeURIComponent(escape(atob(s))); } catch(e2){ return null; } }
+    }
+    let data = null;
+    try { data = JSON.parse(safeAtob(token)); } catch(e){}
+
+    // Vérifie le rôle
+    function normalizeRole(r){
+      if(!r) return '';
+      try{ return r.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,''); }
+      catch(e){ return r.toLowerCase(); }
+    }
+    const isTraitor = data && normalizeRole(data.role||'').includes('trait');
+
+    if(!isTraitor) return; // n'ajoute rien pour les Loyaux
+
+    // Cherche la carte Traître (celle qui contient le bouton "Fermez")
+    const card = document.querySelector('.role-card, .card-traitre, .modal-traitre, .role-red, .role-traitor');
+    if(!card) return;
+
+    // Vérifie qu'on n'a pas déjà ajouté le bouton
+    if(document.getElementById('voteCta')) return;
+
+    // Crée le bouton
+    const wrap = document.createElement('div');
+    wrap.style.textAlign = 'center';
+    wrap.style.marginTop = '14px';
+
+    const btn = document.createElement('a');
+    btn.id = 'voteCta';
+    btn.textContent = 'Voter la nuit pour éliminer un Loyal';
+    btn.href = 'traitor_vote.html' + (token ? ('?t='+encodeURIComponent(token)) : '');
+    btn.target = '_blank';
+    btn.rel = 'noopener';
+    btn.style.display = 'inline-block';
+    btn.style.padding = '10px 16px';
+    btn.style.borderRadius = '12px';
+    btn.style.background = '#ffd87a';
+    btn.style.color = '#000';
+    btn.style.fontWeight = '900';
+    btn.style.textDecoration = 'none';
+    btn.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
+
+    wrap.appendChild(btn);
+
+    // Ajoute le bouton juste au-dessus de "Fermez"
+    const closeBtn = card.querySelector('button, .close, .fermer');
+    if (closeBtn && closeBtn.parentNode) {
+      closeBtn.parentNode.insertBefore(wrap, closeBtn);
+    } else {
+      card.appendChild(wrap);
+    }
+
+  } catch(e){ console.warn('Erreur patch bouton vote:', e); }
+})();
+</script>
 
 </body>
 </html>
