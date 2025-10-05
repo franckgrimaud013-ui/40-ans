@@ -3,8 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Vote des Traîtres — avec secours joueurs</title>
-  <!-- Firebase compat SDKs -->
+  <title>Vote des Traîtres — mode secours intégré</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <style>
@@ -22,11 +21,12 @@
     #fbStatus.ok{color:#8be28b} #fbStatus.err{color:#e2a48b}
     #diag{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;color:#9fd29f;margin-top:8px}
     .hidden{display:none}
+    .warn{color:#ffd87a}
   </style>
 </head>
 <body>
   <h1>Vote des Traîtres</h1>
-  <div class="mut">Version: traitor_vote_fixed4 (avec secours joueurs)</div>
+  <div class="mut">Version: traitor_vote_fixed5 (sélecteur + champ texte secours)</div>
   <div id="fbStatus" class="mut">Vérification de Firebase…</div>
   <div id="diag"></div>
 
@@ -47,7 +47,11 @@
     <div id="victimArea" style="margin-top:12px">
       <label class="mut">Choisir la victime :</label><br>
       <select id="victimSel"></select>
-      <div id="fallbackHint" class="mut hidden" style="margin-top:6px">Liste vide ? Utilise l’onglet “Secours joueurs” ci‑dessous.</div>
+      <div id="emptyNote" class="warn hidden" style="margin-top:6px">Liste vide ? Utilise le champ texte juste en dessous.</div>
+      <div id="victimTextWrap" class="hidden" style="margin-top:8px">
+        <label class="mut">Ou saisir la victime (secours) :</label>
+        <input id="victimText" type="text" placeholder="Tape le prénom exact…">
+      </div>
     </div>
 
     <div style="margin-top:12px">
@@ -123,15 +127,9 @@
     }
 
     function setHidden(id, hide){ document.getElementById(id).classList.toggle('hidden', !!hide); }
+    function normalizeNames(arr){ return (arr||[]).map(p=>String(p||'').trim()).filter(Boolean); }
 
-    // Try to load players from:
-    // 1) token.players
-    // 2) localStorage ('players_list_global')
-    // 3) Firebase /games/default/players (if available)
     const GAME_ID = 'default';
-    function normalizeNames(arr){
-      return (arr||[]).map(p=>String(p||'').trim()).filter(Boolean);
-    }
     async function tryLoadPlayersFromFirebase(){
       if(!db) return null;
       try{
@@ -149,11 +147,9 @@
       const sel = document.getElementById('victimSel');
       const filtered = normalizeNames(list).filter(n => n.toLowerCase() !== String(me||'').toLowerCase());
       sel.innerHTML = filtered.map(p => '<option>'+p+'</option>').join('');
-      if(filtered.length===0){
-        setHidden('fallbackHint', false);
-      }else{
-        setHidden('fallbackHint', true);
-      }
+      const empty = filtered.length===0;
+      setHidden('emptyNote', !empty);
+      setHidden('victimTextWrap', !empty); // show text input when empty
     }
 
     async function start(){
@@ -165,11 +161,9 @@
         guard.textContent = 'Accès refusé. Ce lien est réservé aux Traîtres (token manquant).';
         return;
       }
-      // name + date
       document.getElementById('traitorName').textContent = token.name || '—';
       document.getElementById('dateInput').value = todayISO();
 
-      // load players
       let players = [];
       if (Array.isArray(token.players) && token.players.length) {
         players = token.players.slice();
@@ -182,12 +176,11 @@
         }
       }
       fillVictims(players, token.name);
-      // Show UI
+
       guard.classList.add('hidden');
       ui.classList.remove('hidden');
-      fbk.classList.remove('hidden'); // laisser le panneau secours visible (pratique)
+      fbk.classList.remove('hidden');
 
-      // Wire fallback save
       document.getElementById('savePlayers').addEventListener('click', ()=>{
         const raw = document.getElementById('playersInput').value.trim();
         const arr = normalizeNames(raw.split(','));
@@ -216,16 +209,18 @@
       const date = document.getElementById('dateInput').value.trim();
       const sel = document.getElementById('victimSel');
       const victim = sel.value;
+      const victimText = document.getElementById('victimText').value.trim();
+      const chosen = victim || victimText; // fallback to text input
       const msg = document.getElementById('msg');
 
       if(!db) { msg.textContent = '❌ Firebase non configuré (db null). Vérifie les 2 scripts SDK + la config.'; return; }
       if(!date) { msg.textContent = 'Indique la date (AAAA-MM-JJ).'; return; }
-      if(!victim) { msg.textContent = 'Choisis une victime (ou renseigne la liste ci-dessous).'; return; }
+      if(!chosen) { msg.textContent = 'Choisis ou saisis une victime.'; return; }
 
       const path = '/nights/'+date+'/votes';
       msg.textContent = 'Envoi en cours…';
-      db.ref(path).push({ victim: victim, ts: Date.now() }).then(function(){
-        msg.textContent = '✅ Vote envoyé pour '+victim+'.';
+      db.ref(path).push({ victim: chosen, ts: Date.now() }).then(function(){
+        msg.textContent = '✅ Vote envoyé pour '+chosen+'.';
       }).catch(function(e){
         msg.textContent = '❌ Erreur: ' + (e && e.message || e);
       });
@@ -233,4 +228,3 @@
   </script>
 </body>
 </html>
-
