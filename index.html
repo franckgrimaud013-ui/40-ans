@@ -36,13 +36,10 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 .bg-role{
   position:fixed; inset:0;
   background:url('rolebg.jpg') center/cover no-repeat;
-  z-index:0; filter:brightness(.7);
-  opacity:0; transition:opacity 1200ms ease; will-change:opacity;
-  display:block;
-
+  z-index:0; display:none; filter:brightness(.7);
 }
-.player-focus .bg-role{ opacity:1; }
-.player-focus .bg-gate, .player-focus .bg-intro{ opacity:0; }
+.player-focus .bg-role{ display:block; }
+.player-focus .bg-gate, .player-focus .bg-intro{ display:none!important; }
 
 /* UI */
 .btn{padding:12px 18px;border-radius:14px;font-size:clamp(16px,2.6vw,22px);color:#fff;text-decoration:none;cursor:pointer;
@@ -119,20 +116,6 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 #app:target ~ #gate{display:none}
 #audioUnlock{display:none;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9999;background:rgba(0,0,0,.7);color:#fff;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(3px);font-size:14px;white-space:nowrap}
 #audioUnlock button{margin-left:8px;padding:6px 10px;border-radius:10px;border:1px solid rgba(212,175,55,.9);background:linear-gradient(180deg,rgba(212,175,55,.25),rgba(212,175,55,.12));color:#fff;cursor:pointer}
-
-/* Secret dot — petit bouton discret sur le texte défilant */
-.secret-dot{
-  display:inline-block;
-  width:18px;height:18px;border-radius:50%;
-  margin-left:8px; vertical-align:middle; cursor:pointer;
-  background:radial-gradient(circle at 30% 30%, rgba(212,175,55,.95) 0%, rgba(212,175,55,.45) 45%, rgba(0,0,0,0) 60%);
-  box-shadow:0 0 10px rgba(212,175,55,.25), 0 0 18px rgba(212,175,55,.18);
-  opacity:.08; transition:opacity .25s ease, transform .15s ease;
-}
-.secret-dot:hover, .secret-dot:focus{opacity:.6; outline:none}
-.secret-dot:active{transform:scale(.96)}
-.secret-hint{position:absolute; bottom:12px; right:14px; font-size:12px; color:rgba(255,255,255,.35); display:none}
-@media (hover:none){ .secret-hint{ display:block } }
 </style>
 </head>
 <body>
@@ -152,11 +135,11 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 
 <!-- INTRO -->
 <div class="overlay">
-  <div class="slide"><div class="secret-hint" aria-hidden="true"></div>
+  <div class="slide">
     <p style="--i:0">Vous êtes conviés pour un petit week-end entre amis… pour célébrer les 40 ans de Franck.</p>
     <p style="--i:1">Un week-end d’amitié, de rires, de bons repas… bref, une fête comme vous l’imaginez.</p>
     <p style="--i:2">Mais derrière cette fête se cache un jeu… discret, mais omniprésent.</p>
-    <p style="--i:3">Tout le monde se connaît depuis plusieurs années…<span class="secret-dot" tabindex="0" role="button" aria-label="Accès secret" onclick="secretEnter(event)" onkeydown="if(event.key==='Enter'||event.key===' ') secretEnter(event)"></span></p>
+    <p style="--i:3">Tout le monde se connaît depuis plusieurs années…</p>
     <p style="--i:4">Certains traînent toujours des travaux jamais terminés.</p>
     <p style="--i:5">D’autres savent vendre des surgelés… même trop longtemps restés au congélateur.</p>
     <p style="--i:6">Il y en a dont les sourcils tombent quand le stress monte.</p>
@@ -193,7 +176,8 @@ Arnaud"></textarea>
         <input id="nb" type="number" min="1" value="2" style="width:90px;margin-left:6px">
       </div>
       <div style="margin-top:12px">
-        <button id="genBtn" class="btn" type="button">Générer invitations</button>
+        <div style="margin-top:8px"><label class="small">Nuit ciblée : </label> <select id="nightIdSelect" style="margin-left:8px;padding:6px;border-radius:8px"><option value="ven_nuit">ven_nuit</option><option value="sam_nuit">sam_nuit</option><option value="dim_nuit">dim_nuit</option><option value="">(aucune / automatique)</option></select></div>
+<button id="genBtn" class="btn" type="button">Générer invitations</button>
       </div>
       <div id="invites" style="margin-top:12px"></div>
     </div>
@@ -276,7 +260,7 @@ function onEnterApp(){
       var pIntro=document.getElementById('playerIntro'); 
       if(pIntro && PAYLOAD.name){
         pIntro.innerHTML = "<b>"+PAYLOAD.name+"</b>, es-tu prêt ? Quand tu es seul, découvre ta carte.<br>" +
-                           "<span style='color:#ddd;font-size:18px;text-shadow:0 0 6px rgba(212,175,55,.4)'>Petit secret : c’est bien Franck qui a eu l’idée et qui a même créé ce jeu 😉… mais rassurez-vous, il ne connaît pas vos rôles.</span>";
+                           "<span style='color:#ccc;font-size:14px'>Petit secret : c’est bien Franck qui a eu l’idée et qui a même créé ce jeu 😉… mais rassurez-vous, il ne connaît pas vos rôles.</span>";
       }
       var playerName=document.getElementById('playerName'); if(playerName && PAYLOAD.name){ playerName.textContent = PAYLOAD.name; }
       var center=document.getElementById('playerCenter'); if(center) center.style.display='flex';
@@ -348,7 +332,7 @@ document.addEventListener('DOMContentLoaded', function(){
         for(var n=0;n<names.length;n++){
           var name=names[n];
           var role=traitors[name]?'TRAITRE':'LOYAL';
-          var payload={v:1,name:name,role:role};
+          var playersList = names.slice(); var nightSel = (document.getElementById('nightIdSelect') && document.getElementById('nightIdSelect').value) ? document.getElementById('nightIdSelect').value : null; var payload={v:1,name:name,role:role,players:playersList,nightId:nightSel};
           if(role==='TRAITRE'){payload.codeQ=secretQ;payload.codeA=secretA;}
           var token=btoa(encodeURIComponent(JSON.stringify(payload)));
 
@@ -415,39 +399,6 @@ function revealRole(payload){
   }
   document.getElementById('closeRoleBtn').onclick=function(){ modal.style.display='none'; };
 }
-
-/* Secret access */
-(function(){
-  window.secretEnter = function(e){
-    try{
-      // Assure l'état "intro" est lancé (au cas où)
-      document.documentElement.classList.add('intro-started','intro-text-start');
-      // Va directement dans l'app (mode organisateur visible si aucun token)
-      location.hash = '#app';
-    }catch(err){ console.error(err); }
-  };
-  // Long press on the dot (>=600ms) for mobile
-  document.addEventListener('DOMContentLoaded', function(){
-    var dot = document.querySelector('.secret-dot');
-    if(!dot) return;
-    var pressTimer, startX=0, startY=0;
-    dot.addEventListener('touchstart', function(ev){
-      try{
-        var t = ev.touches && ev.touches[0]; 
-        startX = t ? t.clientX : 0; startY = t ? t.clientY : 0;
-      }catch(_){}
-      pressTimer = setTimeout(function(){ secretEnter(); }, 600);
-    }, {passive:true});
-    dot.addEventListener('touchend', function(){ clearTimeout(pressTimer); }, {passive:true});
-    dot.addEventListener('touchmove', function(ev){
-      var t = ev.touches && ev.touches[0];
-      if(!t) return;
-      if (Math.abs(t.clientX-startX) > 10 || Math.abs(t.clientY-startY) > 10){
-        clearTimeout(pressTimer);
-      }
-    }, {passive:true});
-  });
-})();
 </script>
 </body>
 </html>
