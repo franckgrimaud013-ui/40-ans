@@ -145,29 +145,6 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 .cta-traitor{display:inline-block;padding:10px 14px;border-radius:12px;background:#ffd87a;color:#000;font-weight:900}
 
 </style>
-
-<!-- PATCH HELPERS -->
-<script>
-function _normalizeRole(r){
-  if(!r) return '';
-  try{
-    var s = String(r).toLowerCase();
-    if (s.normalize) s = s.normalize('NFKD').replace(/[\u0300-\u036f]/g,'');
-    return s;
-  }catch(e){ return String(r).toLowerCase(); }
-}
-function _isTraitor(r){
-  var n = _normalizeRole(r);
-  return n.includes('trait') || n.includes('traitre') || n.includes('traitor');
-}
-function _voteHrefKeepToken(){
-  try{
-    var t = new URLSearchParams(location.search).get('t') || '';
-    return 'traitor_vote.html' + (t ? ('?t='+encodeURIComponent(t)) : '');
-  }catch(e){ return 'traitor_vote.html'; }
-}
-</script>
-
 </head>
 <body>
 <div id="secretFixed" class="secret-fixed" title="Passer l\'intro"></div>
@@ -463,7 +440,7 @@ document.addEventListener('DOMContentLoaded', function(){
 function revealRole(payload){
   var modal=document.getElementById('roleModal'); var inner=document.getElementById('roleInner'); var title=document.getElementById('roleTitle'); var sub=document.getElementById('roleSub'); var extra=document.getElementById('roleExtra');
   modal.style.display='flex';
-  if(_isTraitor(payload.role)){
+  if(payload.role==='TRAITRE'){
     inner.style.background='linear-gradient(180deg,#4a0b0b,#220606)';
     title.innerHTML='<span class="mask-red">🎭</span> TRAÎTRE'; title.style.color='#fff';
     var q=payload.codeQ||"Quelle heure est-il ?"; var a=payload.codeA||"11h23";
@@ -538,10 +515,10 @@ function revealRole(payload){
     var pay = parseToken();
     wrap.style.display='block';
     blue.style.display='none'; red.style.display='none';
-    if(pay && _isTraitor(pay.role)){
+    if(pay && pay.role==='TRAITRE'){
       red.style.display='block';
       var t = new URLSearchParams(location.search).get('t') || '';
-      if(voteCta){ voteCta.href = _voteHrefKeepToken(); }
+      if(voteCta){ voteCta.href = 'traitor_vote.html' + (t ? ('?t='+encodeURIComponent(t)) : ''); }
     } else if(pay && pay.role){
       blue.style.display='block';
     } else {
@@ -577,74 +554,110 @@ function revealRole(payload){
   });
 })();
 </script>
+
+
+<!-- PATCH: vote CTA for Traitors (non-intrusive) -->
 <script>
 (function(){
-  try {
-    // Vérifie si on est sur la page principale avec carte de rôle
-    const params = new URLSearchParams(location.search);
-    const token = params.get('t') || '';
-    if(!token) return;
+  // Decode token ?t=... safely
+  function safeAtob(s){
+    try { return decodeURIComponent(atob(s)); }
+    catch(e){ try { return decodeURIComponent(escape(atob(s))); } catch(e2){ return null; } }
+  }
+  function decodeToken(){
+    try{
+      var t = new URLSearchParams(location.search).get('t') || '';
+      if(!t) return null;
+      var raw = safeAtob(t) || t;
+      return JSON.parse(raw);
+    }catch(e){ return null; }
+  }
+  function normalizeRole(r){
+    if(!r) return '';
+    try{ return String(r).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,''); }
+    catch(e){ return String(r).toLowerCase(); }
+  }
+  function isTraitorRole(r){
+    var n = normalizeRole(r||'');
+    return n.includes('trait') || n.includes('traitre') || n.includes('traitor');
+  }
+  function voteHref(){
+    try{
+      var t = new URLSearchParams(location.search).get('t') || '';
+      return 'traitor_vote.html' + (t ? ('?t='+encodeURIComponent(t)) : '');
+    }catch(e){ return 'traitor_vote.html'; }
+  }
 
-    // Tente de décoder le token
-    function safeAtob(s){
-      try { return decodeURIComponent(atob(s)); }
-      catch(e){ try { return decodeURIComponent(escape(atob(s))); } catch(e2){ return null; } }
-    }
-    let data = null;
-    try { data = JSON.parse(safeAtob(token)); } catch(e){}
+  var token = new URLSearchParams(location.search).get('t') || '';
+  var data = decodeToken();
+  if(!data || !isTraitorRole(data.role)) return; // Only for traitors
 
-    // Vérifie le rôle
-    function normalizeRole(r){
-      if(!r) return '';
-      try{ return r.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,''); }
-      catch(e){ return r.toLowerCase(); }
-    }
-    const isTraitor = data && normalizeRole(data.role||'').includes('trait');
+  // If a pre-existing CTA with id="voteCta" exists, just wire it
+  var existing = document.getElementById('voteCta');
+  if(existing){ existing.href = voteHref(); return; }
 
-    if(!isTraitor) return; // n'ajoute rien pour les Loyaux
-
-    // Cherche la carte Traître (celle qui contient le bouton "Fermez")
-    const card = document.querySelector('.role-card, .card-traitre, .modal-traitre, .role-red, .role-traitor');
+  function ensureCTA(){
+    // Find the traitor role card/panel that is visible
+    var candidates = document.querySelectorAll(
+      '#roleRed, .role-red, .role-traitre, .modal-traitre, .role-card, .card-traitre, .modal-role, .role'
+    );
+    var card = null;
+    candidates.forEach(function(el){
+      if(card) return;
+      var text = (el.textContent || '').toLowerCase();
+      var looksTraitor = text.includes('traître') || text.includes('traitre') || text.includes('traitor');
+      if(looksTraitor && el.offsetParent !== null){ card = el; }
+    });
     if(!card) return;
 
-    // Vérifie qu'on n'a pas déjà ajouté le bouton
-    if(document.getElementById('voteCta')) return;
+    if(document.getElementById('voteCtaPatch')) return; // already added
 
-    // Crée le bouton
-    const wrap = document.createElement('div');
+    // Create CTA
+    var wrap = document.createElement('div');
     wrap.style.textAlign = 'center';
     wrap.style.marginTop = '14px';
 
-    const btn = document.createElement('a');
-    btn.id = 'voteCta';
-    btn.textContent = 'Voter la nuit pour éliminer un Loyal';
-    btn.href = 'traitor_vote.html' + (token ? ('?t='+encodeURIComponent(token)) : '');
-    btn.target = '_blank';
-    btn.rel = 'noopener';
-    btn.style.display = 'inline-block';
-    btn.style.padding = '10px 16px';
-    btn.style.borderRadius = '12px';
-    btn.style.background = '#ffd87a';
-    btn.style.color = '#000';
-    btn.style.fontWeight = '900';
-    btn.style.textDecoration = 'none';
-    btn.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
+    var a = document.createElement('a');
+    a.id = 'voteCtaPatch';
+    a.textContent = 'Voter la nuit pour éliminer un Loyal';
+    a.href = voteHref();
+    a.target = '_blank'; a.rel = 'noopener';
+    a.style.display = 'inline-block';
+    a.style.padding = '10px 16px';
+    a.style.borderRadius = '12px';
+    a.style.background = '#ffd87a';
+    a.style.color = '#000';
+    a.style.fontWeight = '900';
+    a.style.textDecoration = 'none';
+    a.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
 
-    wrap.appendChild(btn);
+    wrap.appendChild(a);
 
-    // Ajoute le bouton juste au-dessus de "Fermez"
-    const closeBtn = card.querySelector('button, .close, .fermer');
-    if (closeBtn && closeBtn.parentNode) {
-      closeBtn.parentNode.insertBefore(wrap, closeBtn);
-    } else {
-      card.appendChild(wrap);
+    // Insert just above the close/fermez button if possible
+    var allButtons = card.querySelectorAll('button, a.button, .close, .fermer');
+    var placed = false;
+    for(var i=0;i<allButtons.length;i++){
+      var btn = allButtons[i];
+      var label = (btn.textContent || btn.value || '').toLowerCase();
+      if(/ferme/.test(label) || /close/.test(label)){
+        btn.parentNode.insertBefore(wrap, btn);
+        placed = true;
+        break;
+      }
     }
+    if(!placed) card.appendChild(wrap);
+  }
 
-  } catch(e){ console.warn('Erreur patch bouton vote:', e); }
+  // Try immediately, after discover click, and observe DOM changes
+  ensureCTA();
+  var discover = document.getElementById('discoverBtn') || document.querySelector('[data-action="discover-role"]');
+  if(discover) discover.addEventListener('click', function(){ setTimeout(ensureCTA, 100); });
+
+  var obs = new MutationObserver(function(){ ensureCTA(); });
+  obs.observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:['style','class']});
 })();
 </script>
 
 </body>
 </html>
-
 
