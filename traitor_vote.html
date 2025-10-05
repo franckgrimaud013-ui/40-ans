@@ -30,6 +30,9 @@
 <body>
   <div class="wrap">
     <h1>Vote des Traîtres</h1>
+  <div id="ver" class="small" style="margin-top:8px;color:#9fd29f">Version: traitor_vote (corrigé)</div>
+  <div id="fbStatus" class="small" style="margin-top:6px;color:#e2a48b"></div>
+
     <div id="guard" class="card small">Chargement…</div>
     <div id="main" class="card" style="display:none">
       <p class="small">Un seul geste : appuyez sur le bouton, choisissez la victime, validez. Votre vote est anonyme.</p>
@@ -55,37 +58,27 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <script>
-    /* --------- CONFIGURATION FIREBASE ---------
-       Remplace tout l'objet ci-dessous par ton firebaseConfig
-       copié depuis la console Firebase (Paramètres du projet > Général > SDK de configuration).
-    */
-    const firebaseConfig = {
-      // Import the functions you need from the SDKs you need
-
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
-  authDomain: "ans-de-franck.firebaseapp.com",
-  databaseURL: "https://ans-de-franck-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "ans-de-franck",
-  storageBucket: "ans-de-franck.firebasestorage.app",
-  messagingSenderId: "1063437612417",
-  appId: "1:1063437612417:web:812e847dfcd990c6922480"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-// Initialize Firebase
-
     };
     firebase.
     const db = firebase.database();
 
     // --------- Utilitaires ---------
-    function parseToken(){
+      /* --------- CONFIGURATION FIREBASE (compat) --------- */
+  const firebaseConfig = {
+    apiKey: "AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
+    authDomain: "ans-de-franck.firebaseapp.com",
+    databaseURL: "https://ans-de-franck-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "ans-de-franck",
+    storageBucket: "ans-de-franck.firebasestorage.app",
+    messagingSenderId: "1063437612417",
+    appId: "1:1063437612417:web:812e847dfcd990c6922480",
+  };
+
+  try { firebase.initializeApp(firebaseConfig); } catch(e) { /* already initialized */ }
+  var db = null;
+  try { db = firebase.database(); } catch(e) { db = null; }
+
+function parseToken(){
       try {
         const p = new URLSearchParams(location.search);
         if(p.has('t')) return JSON.parse(decodeURIComponent(atob(p.get('t'))));
@@ -140,5 +133,16 @@ const db = firebase.database();
       }
     }
   </script>
+
+  <script>
+    (function(){
+      var el = document.getElementById('fbStatus');
+      try {
+        if (typeof db !== 'undefined' && db) { el.textContent = 'Firebase: configuré ✔︎'; el.style.color = '#8be28b'; }
+        else { el.textContent = 'Firebase: non configuré (vérifiez config)'; el.style.color = '#e2a48b'; }
+      } catch(e) { el.textContent = 'Firebase: erreur'; el.style.color = '#e2a48b'; }
+    })();
+  </script>
+
 </body>
 </html>
