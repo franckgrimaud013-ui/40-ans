@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Les Traîtres — Expérience</title>
+<link rel="preconnect" href="https://www.gstatic.com">
+<style>
+:root{
+  --bg:#070c16; --ink:#eaf0f8; --mut:#cfd5dc; --gold:#ffd87a; --gold2:#d4af37;
+  --blue:#0e1a30; --red:#2a0e12;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; overflow:hidden}
+a{color:var(--gold)}
+
+.bg{position:fixed; inset:0; pointer-events:none; background:
+ radial-gradient(1200px 600px at 50% -10%, rgba(255,216,122,.18), transparent 60%),
+ radial-gradient(700px 700px at 10% 90%, rgba(122,167,255,.12), transparent 65%),
+ radial-gradient(800px 900px at 90% 80%, rgba(255,154,122,.10), transparent 60%)
+}
+.overlay{position:fixed; inset:0; background:linear-gradient(180deg, rgba(7,12,22,.15), rgba(7,12,22,.85))}
+
+.page{position:absolute; inset:0; display:none; padding:24px 14px; overflow:auto; -webkit-overflow-scrolling:touch}
+.page.active{display:block}
+
+.wrap{max-width:980px; margin:0 auto}
+.center{text-align:center}
+.hero{font-size: clamp(28px, 5vw, 48px); font-weight:900; line-height:1.05; letter-spacing:.5px;
+  text-shadow:0 0 18px rgba(255,216,122,.22)}
+.sub{font-size:clamp(16px, 2.4vw, 20px); color:var(--mut)}
+.mt{margin-top:16px}
+
+.btn{display:inline-block; background:var(--gold); color:#000; border:none; padding:12px 18px;
+  border-radius:14px; font-weight:900; cursor:pointer; text-decoration:none; font-size:16px; box-shadow:0 6px 22px rgba(0,0,0,.25)}
+.btn:active{transform:translateY(1px)}
+.btn-ghost{background:transparent; border:1px solid rgba(255,255,255,.2); color:var(--ink)}
+
+.panel{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:16px}
+.grid{display:grid; gap:12px}
+@media(min-width:860px){ .grid.two{grid-template-columns:1fr 1fr} }
+
+.notice h3{margin:.2rem 0; color:var(--gold)}
+
+.role-card{max-width:720px; margin:18px auto 64px; padding:0; overflow:hidden; border-radius:16px;
+  border:1px solid rgba(255,255,255,.16)}
+.role-header{padding:14px 16px; font-weight:900; letter-spacing:.5px}
+.role-body{padding:16px}
+.role-footer{padding:12px 16px; border-top:1px solid rgba(255,255,255,.12); text-align:right}
+.role-loyal .role-header{background:linear-gradient(90deg, #0e2a52, #16345f)}
+.role-traitor .role-header{background:linear-gradient(90deg, #4a1018, #6b0f1a)}
+
+.small{color:var(--mut); font-size:13px}
+.hidden{display:none !important}
+
+/* secret skip button */
+.secret-fixed{
+  position:fixed; top:10px; left:10px; width:18px; height:18px; border-radius:50%;
+  z-index:9999; cursor:pointer; opacity:.35;
+  background:radial-gradient(circle at 30% 30%, rgba(212,175,55,.95) 0%, rgba(212,175,55,.45) 45%, rgba(0,0,0,0) 60%);
+  box-shadow:0 0 14px rgba(212,175,55,.55), 0 0 28px rgba(212,175,55,.35);
+  transition:opacity .25s ease;
+}
+.secret-fixed:hover{opacity:.55}
+.app-shown .secret-fixed{display:none}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="overlay"></div>
+
+<!-- Secret skip button -->
+<div id="secretFixed" class="secret-fixed" title="Passer l’intro"></div>
+
+<!-- Page 1: accueil -->
+<section id="p1" class="page active">
+  <div class="wrap center" style="margin-top:16vh">
+    <div class="hero">Vous avez été conviés par Franck…</div>
+    <p class="sub mt">Un week‑end pas comme les autres vous attend.<br>🔊 Mettez le son… chaque détail compte.</p>
+    <div class="mt">
+      <button id="startBtn" class="btn">Lancez‑vous</button>
+    </div>
+  </div>
+</section>
+
+<!-- Page 2: intro / règles résumées -->
+<section id="p2" class="page">
+  <div class="wrap" style="margin-top:8vh">
+    <div class="panel">
+      <h2 class="center" style="margin:0 0 8px">Tu vas bientôt découvrir ton rôle…</h2>
+      <p class="center sub">On est entre amis — le but est de s’amuser 😉</p>
+      <div class="grid two mt">
+        <div class="panel notice">
+          <h3>🗓️ Le petit planning</h3>
+          <ul>
+            <li><b>Vendredi soir</b> : conseil et vote.</li>
+            <li><b>Nuit ven→sam</b> : les Traîtres éliminent secrètement un Loyal via leur lien.</li>
+            <li><b>Samedi matin</b> : annonce au groupe du résultat de la nuit.</li>
+            <li><b>Samedi midi</b> : nouveau vote.</li>
+            <li><b>Samedi soir</b> : vote.</li>
+            <li><b>Nuit sam→dim</b> : les Traîtres éliminent à nouveau.</li>
+            <li><b>Dimanche matin</b> : annonce finale.</li>
+          </ul>
+        </div>
+        <div class="panel notice">
+          <h3>🎭 Esprit & règles</h3>
+          <ul>
+            <li>Les Traîtres jouent <b>en secret</b> via un lien privé.</li>
+            <li>Les Loyaux observent, discutent et votent.</li>
+            <li>Fun & fair‑play à tout moment.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="center mt">
+        <button id="enterBtn" class="btn">Entrer dans le jeu</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Page 3: planning + Découvre ton rôle -->
+<section id="p3" class="page">
+  <div class="wrap" style="margin: 6vh auto 10vh">
+    <div class="panel">
+      <h2 class="center" style="margin:0 0 10px; color:var(--gold)">Déroulé & Découverte</h2>
+      <p class="center small">Tu vas découvrir ton rôle à l’instant.</p>
+      <div class="center" style="margin-top:10px">
+        <button id="discoverBtn" class="btn">Découvre ton rôle</button>
+      </div>
+    </div>
+
+    <div id="roleMount" class="role-card hidden role-loyal">
+      <div class="role-header">Ton rôle</div>
+      <div class="role-body" id="roleBody"></div>
+      <div class="role-footer" id="roleFooter"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Firebase SDK (compat) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+<script>
+/*** Firebase config fournie ***/
+const firebaseConfig = {
+  apiKey: "AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
+  authDomain: "ans-de-franck.firebaseapp.com",
+  databaseURL: "https://ans-de-franck-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ans-de-franck",
+  storageBucket: "ans-de-franck.firebasestorage.app",
+  messagingSenderId: "1063437612417",
+  appId: "1:1063437612417:web:812e847dfcd990c6922480"
+};
+try{ firebase.initializeApp(firebaseConfig); }catch(e){}
+const db = firebase.database();
+
+/*** helpers ***/
+const qs = sel => document.querySelector(sel);
+function safeAtob(s){ try { return decodeURIComponent(atob(s)); } catch(e){ try{ return decodeURIComponent(escape(atob(s))); }catch(e2){ return null; } } }
+function parseToken(){
+  const p = new URLSearchParams(location.search||'');
+  if(!p.has('t')) return null;
+  const raw = p.get('t')||'';
+  const txt = safeAtob(raw) || raw;
+  try { return JSON.parse(txt); } catch(e){ return null; }
+}
+function setPage(i){
+  ['#p1','#p2','#p3'].forEach((id,idx)=>{
+    const el = qs(id); if(!el) return;
+    if(idx===i){ el.classList.add('active'); } else { el.classList.remove('active'); }
+  });
+  if(i===2) document.documentElement.classList.add('app-shown');
+}
+function voteHrefKeepToken(){
+  const t = new URLSearchParams(location.search).get('t') || '';
+  return 'traitor_vote.html' + (t ? ('?t='+encodeURIComponent(t)) : '');
+}
+function normRole(r){
+  if(!r) return '';
+  try{ return String(r).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,''); }
+  catch(e){ return String(r).toLowerCase(); }
+}
+/*** Secret button ***/
+(function(){
+  const dot = document.getElementById('secretFixed');
+  function go(){ setPage(2); }
+  dot.addEventListener('click', go);
+  dot.addEventListener('touchstart', ()=>{ this._t = setTimeout(go, 600); }, {passive:true});
+  dot.addEventListener('touchend', ()=> clearTimeout(this._t), {passive:true});
+})();
+
+/*** Nav ***/
+qs('#startBtn').addEventListener('click', ()=> setPage(1));
+qs('#enterBtn').addEventListener('click', ()=> setPage(2));
+
+/*** Tirage auto via Firebase ***/
+const GAME_ID = 'default';
+const TOTAL_LOYAUX = 10;
+const TOTAL_TRAITRES = 2;
+
+async function ensureGamePool(){
+  const ref = db.ref('/games/'+GAME_ID+'/rolesRemaining');
+  await ref.transaction(cur=>{
+    if (cur) return cur;
+    return { loyaux: TOTAL_LOYAUX, traitres: TOTAL_TRAITRES };
+  });
+}
+function assignRoleOnce(playerName){
+  const assignRef = db.ref('/games/'+GAME_ID+'/assignments/'+playerName);
+  return assignRef.transaction(current=>{
+    if (current) return current; // déjà assigné -> ne pas changer
+    return null;
+  }).then(async res=>{
+    if (res.committed && res.snapshot.val()) return res.snapshot.val();
+    const poolRef = db.ref('/games/'+GAME_ID+'/rolesRemaining');
+    let decided = 'LOYAL';
+    await poolRef.transaction(pool=>{
+      if (!pool) pool = { loyaux: TOTAL_LOYAUX, traitres: TOTAL_TRAITRES };
+      const total = (pool.loyaux||0) + (pool.traitres||0);
+      if (total<=0) return pool;
+      const pick = Math.random()*total;
+      decided = (pick < (pool.traitres||0)) ? 'TRAITRE' : 'LOYAL';
+      if (decided==='TRAITRE' && pool.traitres>0) pool.traitres--;
+      else if (decided==='LOYAL' && pool.loyaux>0) pool.loyaux--;
+      return pool;
+    });
+    await assignRef.set(decided);
+    return decided;
+  });
+}
+async function getOrAssignRole(playerName){
+  await ensureGamePool();
+  const snap = await db.ref('/games/'+GAME_ID+'/assignments/'+playerName).once('value');
+  if (snap.exists()) return snap.val();
+  return assignRoleOnce(playerName);
+}
+
+/*** Découvrir le rôle ***/
+qs('#discoverBtn').addEventListener('click', async ()=>{
+  const token = parseToken();
+  if(!token || !token.name){
+    alert("Lien invalide (nom manquant). Rouvre ton lien d’invitation personnel.");
+    return;
+  }
+  const yourName = token.name;
+  // assigne ou récupère
+  let role = 'LOYAL';
+  try{ role = await getOrAssignRole(yourName); }catch(e){ console.warn(e); }
+
+  const traitor = normRole(role).includes('trait');
+  // Monte la carte
+  const mount = qs('#roleMount');
+  const body = qs('#roleBody');
+  const foot = qs('#roleFooter');
+  mount.classList.remove('role-loyal','role-traitor','hidden');
+  if (traitor){
+    mount.classList.add('role-traitor');
+    body.innerHTML = `<h2 style="margin:.2rem 0;color:#ffd87a">TRAÎTRE</h2>
+    <p>Tu fais partie des Traîtres. Ta mission : rester discret, influencer les votes, et <b>éliminer un Loyal</b> chaque nuit avec tes complices.</p>
+    <p class="small">Garde le secret absolu sur ton rôle.</p>`;
+    foot.innerHTML = '';
+    const a = document.createElement('a');
+    a.className = 'btn';
+    a.textContent = 'Voter la nuit pour éliminer un Loyal';
+    a.href = voteHrefKeepToken();
+    a.target = '_blank'; a.rel = 'noopener';
+    foot.appendChild(a);
+  } else {
+    mount.classList.add('role-loyal');
+    body.innerHTML = `<h2 style="margin:.2rem 0;color:#a4c8ff">LOYAL</h2>
+    <p>Tu es Loyal. Observe, discute et vote avec stratégie pour démasquer les Traîtres.</p>
+    <p class="small">Ne révèle pas ton rôle. Le but est de s’amuser 😉</p>`;
+    foot.innerHTML = '<button class="btn btn-ghost" onclick="this.closest(\'.role-card\').classList.add(\'hidden\')">Fermer</button>';
+  }
+});
+</script>
+</body>
+</html>
