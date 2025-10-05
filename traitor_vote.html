@@ -3,149 +3,146 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Vote des Traîtres</title>
+  <title>Vote des Traîtres — connecté Firebase</title>
+  <!-- Compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <style>
-    :root { --gold:#d4af37; --bg:#071021; --mut:#cfd5dc; }
-    * { box-sizing:border-box; }
-    body { margin:0; background:var(--bg); color:#fff; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
-    .wrap { max-width:860px; margin:0 auto; padding:20px; }
-    h1 { margin:0 0 12px; color:#ffd87a; font-weight:800; letter-spacing:.2px; }
-    .card { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:16px; }
-    .btn { display:inline-block; padding:14px 18px; border-radius:12px; background:var(--gold); color:#000; border:none; cursor:pointer; font-weight:800; font-size:16px; }
-    .btn:active { transform:translateY(1px); }
-    .small { color:var(--mut); }
-    .center { text-align:center; }
-    .spacer { height:12px; }
-    /* Modal */
-    .modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.7); z-index:10; padding:16px; }
-    .box { background:#0b0f18; border:1px solid rgba(255,255,255,.15); border-radius:16px; padding:16px; width:min(92%,760px); }
-    .box h2 { margin:0 0 8px; color:#ffd87a; }
-    .list { max-height:52vh; overflow:auto; margin-top:8px; padding:8px; border-radius:12px;
-            background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); }
-    label { display:block; padding:10px; border-radius:10px; }
-    input[type=radio] { margin-right:8px; }
-    .row { display:flex; gap:10px; flex-wrap:wrap; }
+    :root{ --bg:#0b0f18; --text:#fff; --mut:#b7c0cf; --gold:#ffd87a; }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding:28px 12px}
+    h1{margin:0 0 6px;color:var(--gold)}
+    .mut{color:var(--mut)}
+    .panel{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:16px;margin-top:12px;max-width:780px}
+    .btn{background:var(--gold);color:#000;border:none;border-radius:10px;padding:10px 16px;font-weight:900;cursor:pointer}
+    select,input{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#fff}
+    .row{display:grid;gap:10px;grid-template-columns:1fr 1fr} @media(max-width:560px){ .row{grid-template-columns:1fr} }
+    #fbStatus{font-size:14px;margin-top:4px}
+    #fbStatus.ok{color:#8be28b} #fbStatus.err{color:#e2a48b}
+    #diag{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;color:#9fd29f;margin-top:8px}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>Vote des Traîtres</h1>
-  <div id="ver" class="small" style="margin-top:8px;color:#9fd29f">Version: traitor_vote (corrigé)</div>
-  <div id="fbStatus" class="small" style="margin-top:6px;color:#e2a48b"></div>
+  <h1>Vote des Traîtres</h1>
+  <div id="ver" class="mut">Version: traitor_vote_fixed3</div>
+  <div id="fbStatus" class="mut">Vérification de Firebase…</div>
+  <div id="diag"></div>
 
-    <div id="guard" class="card small">Chargement…</div>
-    <div id="main" class="card" style="display:none">
-      <p class="small">Un seul geste : appuyez sur le bouton, choisissez la victime, validez. Votre vote est anonyme.</p>
-      <div class="spacer"></div>
-      <div class="center"><button id="voteBtn" class="btn" type="button">🗳️ Voter pour éliminer un Loyal</button></div>
-    </div>
-  </div>
+  <div class="panel" id="guard">Chargement…</div>
 
-  <!-- Modal choix de la victime -->
-  <div id="voteModal" class="modal" aria-hidden="true">
-    <div class="box">
-      <h2>Choisir la victime</h2>
-      <div id="players" class="list"></div>
-      <div class="spacer"></div>
-      <div class="row">
-        <button id="sendBtn" class="btn" type="button">Valider le vote</button>
-        <button id="closeBtn" class="btn" type="button">Annuler</button>
+  <div id="voteUI" class="panel" style="display:none">
+    <div class="row">
+      <div>
+        <div class="mut">Traître :</div>
+        <div id="traitorName">—</div>
+      </div>
+      <div>
+        <div class="mut">Date :</div>
+        <input id="dateInput" type="text" placeholder="AAAA-MM-JJ">
       </div>
     </div>
+    <div style="margin-top:12px">
+      <label class="mut">Choisir la victime :</label><br>
+      <select id="victimSel"></select>
+    </div>
+    <div style="margin-top:12px">
+      <button id="send" class="btn">Voter maintenant</button>
+    </div>
+    <div id="msg" style="margin-top:10px" class="mut"></div>
   </div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <script>
+    // ---- CONFIG FIREBASE (compat) ----
+    const firebaseConfig = {
+      apiKey: "AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
+      authDomain: "ans-de-franck.firebaseapp.com",
+      databaseURL: "https://ans-de-franck-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "ans-de-franck",
+      storageBucket: "ans-de-franck.firebasestorage.app",
+      messagingSenderId: "1063437612417",
+      appId: "1:1063437612417:web:812e847dfcd990c6922480"
     };
-    firebase.
-    const db = firebase.database();
 
-    // --------- Utilitaires ---------
-      /* --------- CONFIGURATION FIREBASE (compat) --------- */
-    /* --------- CONFIGURATION FIREBASE (compat) --------- */
-  const firebaseConfig = {
-    apiKey: "AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
-    authDomain: "ans-de-franck.firebaseapp.com",
-    databaseURL: "https://ans-de-franck-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "ans-de-franck",
-    storageBucket: "ans-de-franck.firebasestorage.app",
-    messagingSenderId: "1063437612417",
-    appId: "1:1063437612417:web:812e847dfcd990c6922480"
-  };
+    let app = null, db = null;
+    try { app = firebase.initializeApp(firebaseConfig); } catch(e) { /* ignore if already init */ }
+    try { db = firebase.database(); } catch(e) { db = null; }
 
-  try { firebase.initializeApp(firebaseConfig); } catch(e) { /* already initialized */ }
-  var db = null;
-  try { db = firebase.database(); } catch(e) { db = null; }
-var db = null;
-  try { db = firebase.database(); } catch(e) { db = null; }
-
-function parseToken(){
+    (function checkFb(){
+      const s = document.getElementById('fbStatus');
+      const d = document.getElementById('diag');
       try {
-        const p = new URLSearchParams(location.search);
-        if(p.has('t')) return JSON.parse(decodeURIComponent(atob(p.get('t'))));
-      } catch(e) {}
-      return null;
-    }
-    function openModal(){ document.getElementById('voteModal').style.display='flex'; }
-    function closeModal(){ document.getElementById('voteModal').style.display='none'; }
-
-    const PAY = parseToken();
-    const guard = document.getElementById('guard');
-    const main  = document.getElementById('main');
-    const voteBtn = document.getElementById('voteBtn');
-    const playersBox = document.getElementById('players');
-
-    if(!PAY || PAY.role !== 'TRAITRE'){
-      guard.textContent = "Accès refusé. Ce lien est réservé aux Traîtres.";
-    } else {
-      const players = Array.isArray(PAY.players) ? PAY.players.slice() : [];
-      // Pas de 'nuit ciblée' : on utilise simplement la date AAAA-MM-JJ
-      const nightId = new Date().toISOString().slice(0,10);
-
-      if(players.length === 0){
-        guard.textContent = "Aucune liste de joueurs dans le lien. Regénère les invitations depuis l'application.";
-      } else {
-        // Afficher l'interface
-        guard.style.display = 'none';
-        main.style.display = 'block';
-
-        // Construire la liste quand on clique
-        voteBtn.addEventListener('click', () => {
-          playersBox.innerHTML = '';
-          players.forEach(n => {
-            const lab = document.createElement('label');
-            lab.innerHTML = '<input type=\"radio\" name=\"victim\" value=\"'+encodeURIComponent(n)+'\"> '+n;
-            playersBox.appendChild(lab);
-          });
-          openModal();
-        });
-
-        document.getElementById('closeBtn').addEventListener('click', closeModal);
-
-        document.getElementById('sendBtn').addEventListener('click', () => {
-          const sel = document.querySelector('input[name=\"victim\"]:checked');
-          if(!sel){ alert('Choisissez une personne'); return; }
-          const victim = decodeURIComponent(sel.value);
-          const path = '/nights/' + nightId + '/votes';
-          db.ref(path).push({ victim, ts: Date.now() })
-            .then(() => { alert('✅ Vote envoyé. Merci.'); closeModal(); })
-            .catch(e => { alert('Erreur: ' + (e && e.message || e)); });
-        });
+        const ok = !!(firebase && firebase.apps && firebase.apps.length && db);
+        if (ok) { s.textContent = 'Firebase: configuré ✔︎'; s.className='ok'; }
+        else { s.textContent = 'Firebase: non configuré ❌'; s.className='err'; }
+        d.textContent = 'apps=' + (firebase.apps?firebase.apps.length:0) + ', db=' + (!!db) + '\n' +
+                        'databaseURL=' + (firebaseConfig.databaseURL||'(vide)');
+      } catch(e) {
+        s.textContent = 'Firebase: erreur ❌'; s.className='err';
+        d.textContent = String(e && e.message || e);
       }
-    }
-  </script>
-
-  <script>
-    (function(){
-      var el = document.getElementById('fbStatus');
-      try {
-        if (typeof db !== 'undefined' && db) { el.textContent = 'Firebase: configuré ✔︎'; el.style.color = '#8be28b'; }
-        else { el.textContent = 'Firebase: non configuré (vérifiez config)'; el.style.color = '#e2a48b'; }
-      } catch(e) { el.textContent = 'Firebase: erreur'; el.style.color = '#e2a48b'; }
     })();
-  </script>
 
+    // ---- Token helpers ----
+    function safeAtob(s){
+      try { return decodeURIComponent(atob(s)); }
+      catch(e){ try { return decodeURIComponent(escape(atob(s))); } catch(e2){ return null; } }
+    }
+    function parseToken(){
+      const p = new URLSearchParams(location.search||'');
+      if(!p.has('t')) return null;
+      const raw = p.get('t')||'';
+      let json = safeAtob(raw) || raw;
+      try { return JSON.parse(json); } catch(e) { return null; }
+    }
+
+    function todayISO(){
+      const dt = new Date();
+      const y = dt.getFullYear();
+      const m = String(dt.getMonth()+1).padStart(2,'0');
+      const d = String(dt.getDate()).padStart(2,'0');
+      return y+'-'+m+'-'+d;
+    }
+
+    function start(){
+      const guard = document.getElementById('guard');
+      const ui = document.getElementById('voteUI');
+      const token = parseToken();
+      if(!token){
+        guard.textContent = 'Accès refusé. Ce lien est réservé aux Traîtres (token manquant).';
+        return;
+      }
+      // Fill traitor name + players
+      document.getElementById('traitorName').textContent = token.name || '—';
+      document.getElementById('dateInput').value = todayISO();
+      const sel = document.getElementById('victimSel');
+      const me = (token.name||'').toLowerCase();
+      const list = Array.isArray(token.players) ? token.players.filter(p => (p||'').toLowerCase()!==me) : [];
+      sel.innerHTML = list.map(p => '<option>'+p+'</option>').join('');
+      guard.style.display='none';
+      ui.style.display='block';
+    }
+
+    document.addEventListener('DOMContentLoaded', start);
+
+    // ---- Send vote ----
+    document.getElementById('send').addEventListener('click', function(){
+      const date = document.getElementById('dateInput').value.trim();
+      const sel = document.getElementById('victimSel');
+      const victim = sel.value;
+      const msg = document.getElementById('msg');
+
+      if(!db) { msg.textContent = '❌ Firebase non configuré (db null). Vérifiez la config dans ce fichier.'; return; }
+      if(!date) { msg.textContent = 'Indique la date (AAAA-MM-JJ).'; return; }
+      if(!victim) { msg.textContent = 'Choisis une victime.'; return; }
+
+      const path = '/nights/'+date+'/votes';
+      msg.textContent = 'Envoi en cours…';
+      db.ref(path).push({ victim: victim, ts: Date.now() }).then(function(){
+        msg.textContent = '✅ Vote envoyé pour '+victim+'.';
+      }).catch(function(e){
+        msg.textContent = '❌ Erreur: ' + (e && e.message || e);
+      });
+    });
+  </script>
 </body>
 </html>
