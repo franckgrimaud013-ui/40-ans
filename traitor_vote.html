@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Vote des Traîtres</title>
+  <style>
+    :root { --gold:#d4af37; --bg:#071021; --mut:#cfd5dc; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:#fff; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
+    .wrap { max-width:860px; margin:0 auto; padding:20px; }
+    h1 { margin:0 0 12px; color:#ffd87a; font-weight:800; letter-spacing:.2px; }
+    .card { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:16px; }
+    .btn { display:inline-block; padding:14px 18px; border-radius:12px; background:var(--gold); color:#000; border:none; cursor:pointer; font-weight:800; font-size:16px; }
+    .btn:active { transform:translateY(1px); }
+    .small { color:var(--mut); }
+    .center { text-align:center; }
+    .spacer { height:12px; }
+    /* Modal */
+    .modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.7); z-index:10; padding:16px; }
+    .box { background:#0b0f18; border:1px solid rgba(255,255,255,.15); border-radius:16px; padding:16px; width:min(92%,760px); }
+    .box h2 { margin:0 0 8px; color:#ffd87a; }
+    .list { max-height:52vh; overflow:auto; margin-top:8px; padding:8px; border-radius:12px;
+            background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); }
+    label { display:block; padding:10px; border-radius:10px; }
+    input[type=radio] { margin-right:8px; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Vote des Traîtres</h1>
+    <div id="guard" class="card small">Chargement…</div>
+    <div id="main" class="card" style="display:none">
+      <p class="small">Un seul geste : appuyez sur le bouton, choisissez la victime, validez. Votre vote est anonyme.</p>
+      <div class="spacer"></div>
+      <div class="center"><button id="voteBtn" class="btn" type="button">🗳️ Voter pour éliminer un Loyal</button></div>
+    </div>
+  </div>
+
+  <!-- Modal choix de la victime -->
+  <div id="voteModal" class="modal" aria-hidden="true">
+    <div class="box">
+      <h2>Choisir la victime</h2>
+      <div id="players" class="list"></div>
+      <div class="spacer"></div>
+      <div class="row">
+        <button id="sendBtn" class="btn" type="button">Valider le vote</button>
+        <button id="closeBtn" class="btn" type="button">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script>
+    /* --------- CONFIGURATION FIREBASE ---------
+       Remplace tout l'objet ci-dessous par ton firebaseConfig
+       copié depuis la console Firebase (Paramètres du projet > Général > SDK de configuration).
+    */
+    const firebaseConfig = {
+      // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
+  authDomain: "ans-de-franck.firebaseapp.com",
+  databaseURL: "https://ans-de-franck-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ans-de-franck",
+  storageBucket: "ans-de-franck.firebasestorage.app",
+  messagingSenderId: "1063437612417",
+  appId: "1:1063437612417:web:812e847dfcd990c6922480"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // --------- Utilitaires ---------
+    function parseToken(){
+      try {
+        const p = new URLSearchParams(location.search);
+        if(p.has('t')) return JSON.parse(decodeURIComponent(atob(p.get('t'))));
+      } catch(e) {}
+      return null;
+    }
+    function openModal(){ document.getElementById('voteModal').style.display='flex'; }
+    function closeModal(){ document.getElementById('voteModal').style.display='none'; }
+
+    const PAY = parseToken();
+    const guard = document.getElementById('guard');
+    const main  = document.getElementById('main');
+    const voteBtn = document.getElementById('voteBtn');
+    const playersBox = document.getElementById('players');
+
+    if(!PAY || PAY.role !== 'TRAITRE'){
+      guard.textContent = "Accès refusé. Ce lien est réservé aux Traîtres.";
+    } else {
+      const players = Array.isArray(PAY.players) ? PAY.players.slice() : [];
+      // Pas de 'nuit ciblée' : on utilise simplement la date AAAA-MM-JJ
+      const nightId = new Date().toISOString().slice(0,10);
+
+      if(players.length === 0){
+        guard.textContent = "Aucune liste de joueurs dans le lien. Regénère les invitations depuis l'application.";
+      } else {
+        // Afficher l'interface
+        guard.style.display = 'none';
+        main.style.display = 'block';
+
+        // Construire la liste quand on clique
+        voteBtn.addEventListener('click', () => {
+          playersBox.innerHTML = '';
+          players.forEach(n => {
+            const lab = document.createElement('label');
+            lab.innerHTML = '<input type=\"radio\" name=\"victim\" value=\"'+encodeURIComponent(n)+'\"> '+n;
+            playersBox.appendChild(lab);
+          });
+          openModal();
+        });
+
+        document.getElementById('closeBtn').addEventListener('click', closeModal);
+
+        document.getElementById('sendBtn').addEventListener('click', () => {
+          const sel = document.querySelector('input[name=\"victim\"]:checked');
+          if(!sel){ alert('Choisissez une personne'); return; }
+          const victim = decodeURIComponent(sel.value);
+          const path = '/nights/' + nightId + '/votes';
+          db.ref(path).push({ victim, ts: Date.now() })
+            .then(() => { alert('✅ Vote envoyé. Merci.'); closeModal(); })
+            .catch(e => { alert('Erreur: ' + (e && e.message || e)); });
+        });
+      }
+    }
+  </script>
+</body>
+</html>

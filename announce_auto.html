@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Annonces du matin — Auto</title>
+  <style>
+    :root{ --gold:#d4af37; --bg:#071021; --mut:#cfd5dc; }
+    *{ box-sizing:border-box }
+    body{ margin:0; background:var(--bg); color:#fff; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
+    .wrap{ max-width:980px; margin:0 auto; padding:20px; text-align:center; }
+    h1{ margin:0 0 8px; color:#ffd87a; font-weight:800 }
+    .small{ color:var(--mut) }
+    .btn{ display:inline-block; padding:12px 16px; border-radius:12px; background:var(--gold); color:#000; border:none; cursor:pointer; font-weight:800; }
+    .panel{ margin-top:16px; padding:20px; border-radius:14px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12); font-size:20px; }
+    .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:center; margin-top:12px }
+    input[type=text], select{ padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.18); background:#0b0f18; color:#fff; min-width:200px }
+    label{ display:flex; align-items:center; gap:8px }
+    .mut{ font-size:14px; color:var(--mut); margin-top:8px }
+    .meta{ font-size:13px; color:#9fb0c7; margin-top:6px }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Annonces du matin</h1>
+    <div class="small">Clique sur <b>Afficher</b> pour lire la dernière nuit (ou précise une date). Tu peux activer le <b>rafraîchissement auto</b>.</div>
+
+    <div class="row">
+      <input id="nightInput" type="text" placeholder="Nuit (ex: 2025-10-05) — optionnel">
+      <button id="showBtn" class="btn" type="button">Afficher</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label><input id="autoChk" type="checkbox"> Rafraîchir automatiquement</label>
+      <select id="intervalSel">
+        <option value="5">toutes les 5 s</option>
+        <option value="10" selected>toutes les 10 s</option>
+        <option value="15">toutes les 15 s</option>
+        <option value="30">toutes les 30 s</option>
+      </select>
+    </div>
+    <div class="mut">Si tu laisses vide, on affichera la <b>dernière nuit</b> disponible.</div>
+
+    <div id="result" class="panel">En attente…</div>
+    <div id="meta" class="meta"></div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script>
+  // ---------- CONFIG FIREBASE ----------
+  // Remplace l'objet ci-dessous par ton bloc firebaseConfig
+  // (Console Firebase > Paramètres du projet > Général > SDK de configuration)
+  const firebaseConfig = {
+    // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
+  authDomain: "ans-de-franck.firebaseapp.com",
+  databaseURL: "https://ans-de-franck-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ans-de-franck",
+  storageBucket: "ans-de-franck.firebasestorage.app",
+  messagingSenderId: "1063437612417",
+  appId: "1:1063437612417:web:812e847dfcd990c6922480"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+  };
+  // Si vous n'avez pas encore collé la configuration, la page affichera une erreur de connexion et c'est normal.
+  try { firebase.initializeApp(firebaseConfig); } catch(e){ /* ignore if already initialized */ }
+  let db;
+  try { db = firebase.database(); } catch(e){ db = null; }
+
+  function qs(id){ return document.getElementById(id); }
+  function nowStr(){
+    const d = new Date();
+    return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  }
+
+  function majorityWinner(votes){
+    if(!votes || !votes.length) return null;
+    const counts = {};
+    votes.forEach(v => { if(v && v.victim) counts[v.victim] = (counts[v.victim]||0)+1; });
+    let best = null, max = 0;
+    Object.keys(counts).forEach(k => { if(counts[k] > max){ max = counts[k]; best = k; } });
+    return best || (votes[0] && votes[0].victim) || null;
+  }
+
+  async function readNightOnce(nightId){
+    if(!db) throw new Error('Firebase non initialisé (config manquante)');
+    if(nightId){
+      const snap = await db.ref('/nights/'+nightId).once('value');
+      return [nightId, snap.exists() ? snap.val() : null];
+    } else {
+      const snap = await db.ref('/nights').limitToLast(1).once('value');
+      if(!snap.exists()) return [null, null];
+      const obj = snap.val(); const key = Object.keys(obj)[0];
+      return [key, obj[key]];
+    }
+  }
+
+  async function displayNight(nightId){
+    const out = qs('result'); const meta = qs('meta');
+    out.textContent = 'Chargement…';
+    try {
+      const [key, data] = await readNightOnce(nightId);
+      if(!data){ out.textContent = 'Aucun résultat'; meta.textContent=''; return; }
+      const votes = data.votes ? Object.values(data.votes) : [];
+      const w = majorityWinner(votes);
+      out.innerHTML = w ? ('✨ <b>'+w+'</b> a été éliminé pendant la nuit.') : 'Aucun vote reçu.';
+      meta.textContent = (key ? ('Nuit: '+key+' • ') : '') + 'Dernière mise à jour: ' + nowStr();
+    } catch(e){
+      out.textContent = 'Erreur: ' + (e && e.message || e);
+      meta.textContent = 'Vérifie la configuration Firebase.';
+    }
+  }
+
+  // Auto-refresh handling
+  let timer = null;
+  function stopAuto(){ if(timer){ clearInterval(timer); timer=null; } }
+  function startAuto(nightId){
+    stopAuto();
+    const sec = parseInt(qs('intervalSel').value, 10) || 10;
+    timer = setInterval(()=> displayNight(nightId), sec*1000);
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    const params = new URLSearchParams(location.search);
+    const nightParam = params.get('night');
+    if(nightParam){ qs('nightInput').value = nightParam; }
+
+    qs('showBtn').addEventListener('click', function(){
+      const nightId = (qs('nightInput').value || '').trim() || null;
+      displayNight(nightId);
+      if(qs('autoChk').checked){ startAuto(nightId); }
+    });
+
+    qs('autoChk').addEventListener('change', function(){
+      const nightId = (qs('nightInput').value || '').trim() || null;
+      if(this.checked){
+        startAuto(nightId);
+      } else {
+        stopAuto();
+      }
+    });
+
+    qs('intervalSel').addEventListener('change', function(){
+      if(qs('autoChk').checked){
+        const nightId = (qs('nightInput').value || '').trim() || null;
+        startAuto(nightId);
+      }
+    });
+
+    window.addEventListener('beforeunload', stopAuto);
+    // Option: auto-show last night at load without auto-refresh
+    // displayNight(null);
+  });
+  </script>
+</body>
+</html>
