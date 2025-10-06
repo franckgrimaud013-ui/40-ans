@@ -6,7 +6,7 @@
 <title>Les Traîtres — 40 ans Franck</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 <style>
-:root{--fg:#fff;--mut:#cfd5dc;--per:6s;--count:15;--total:calc(var(--per)*var(--count) + 0.5s)}
+:root{--fg:#fff;--mut:#cfd5dc;--per:6s;--count:15;--total:calc((var(--per) + 5s)*var(--count) + 0.5s)}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--fg);background:#000}
 
@@ -165,6 +165,9 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
   }
 </style>
 
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#ffd87a">
+<link rel="icon" href="/icons/icon-192.png">
 </head>
 <body>
 <div id="secretFixed" class="secret-fixed" title="Passer l\'intro"></div>
@@ -858,8 +861,17 @@ function revealRole(payload){
 })();
 </script>
 
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(console.error);
+  });
+}
+</script>
 </body>
 </html>
+
+
 
 
 
