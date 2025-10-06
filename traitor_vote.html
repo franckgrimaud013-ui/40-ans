@@ -1,64 +1,72 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Vote des Traîtres</title>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Vote secret — Traîtres</title>
+  <meta name="theme-color" content="#ffd87a">
   <style>
-    :root{ --bg:#0b0f18; --ink:#eaf0f8; --mut:#9fb0c6; --gold:#ffd87a; --stroke:rgba(255,255,255,.12); }
+    :root{
+      --bg:#071226; --card:#071827; --mut:#9fb0c6; --gold:#ffd87a; --glass: rgba(255,255,255,0.04);
+      --radius:14px; --pad:18px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
     *{box-sizing:border-box}
-    body{margin:0;background:radial-gradient(1000px 600px at 30% -10%,rgba(255,216,122,.12),transparent 60%),var(--bg);color:var(--ink);
-         font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding:28px 12px;display:flex;justify-content:center}
-    .wrap{width:100%;max-width:820px}
-    .title{margin:0 0 6px;color:var(--gold);font-size:clamp(22px,4.8vw,32px);font-weight:900;letter-spacing:.3px}
-    .mut{color:var(--mut)}
-    .card{background:rgba(255,255,255,.06);border:1px solid var(--stroke);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);
-           padding:16px;margin-top:12px}
-    .row{display:grid;gap:12px;grid-template-columns:1fr 1fr} @media(max-width:680px){.row{grid-template-columns:1fr}}
-    label{font-size:13px;color:var(--mut)}
-    input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--stroke);background:rgba(255,255,255,.05);color:#fff}
-    .btn{background:var(--gold);color:#000;border:none;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer}
-    .btn-ghost{background:transparent;border:1px solid var(--stroke);color:var(--ink)}
-    .ok{color:#9fe39f} .err{color:#ffb0a0} .warn{color:#ffd87a}
-    .footer-note{font-size:12px;color:var(--mut);margin-top:8px}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,#071226 0%, #071827 100%);color:#eaf0f8;display:flex;align-items:center;justify-content:center;padding:20px}
+    .wrap{width:100%;max-width:760px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.015)); border:1px solid rgba(255,255,255,0.04);
+          border-radius:var(--radius); padding:calc(var(--pad)); box-shadow: 0 10px 30px rgba(2,6,23,0.6)}
+    h1{margin:0 0 8px;font-size:20px;color:var(--gold);letter-spacing:0.02em}
+    p.lead{margin:0 0 14px;color:var(--mut)}
+    .instructions{background:var(--glass); padding:12px;border-radius:10px;margin:12px 0;color:#e6eef6;line-height:1.4}
+    label{display:block;font-size:13px;color:var(--mut);margin-bottom:6px}
+    input[type="text"]{width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:#fff;font-size:16px}
+    .row{display:flex;gap:10px;margin-top:12px;align-items:center}
+    .btn{background:var(--gold);color:#000;border:none;padding:12px 16px;border-radius:10px;font-weight:800;cursor:pointer}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--mut);padding:10px 14px;border-radius:10px;cursor:pointer}
+    .hint{font-size:13px;color:var(--mut);margin-top:10px}
+    .status{margin-top:12px;font-size:14px}
+    .small{font-size:13px;color:var(--mut)}
+    .center{display:flex;justify-content:center;align-items:center;gap:10px}
+    footer{margin-top:14px;font-size:13px;color:var(--mut);text-align:center}
+    @media(max-width:520px){ .row{flex-direction:column} }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1 class="title">Vote des Traîtres</h1>
-    <div id="fbStatus" class="mut">Vérification de Firebase…</div>
-    <div id="diag" class="footer-note"></div>
+    <div class="card" role="main" aria-labelledby="title">
+      <h1 id="title">Vote secret — Traîtres</h1>
+      <p class="lead">Vous êtes sur la page privée des traîtres. Ici vous choisissez ensemble la victime à éliminer cette nuit.</p>
 
-    <div class="card">
+      <div class="instructions" id="instr">
+        
+        <strong>Important — lisez avant de voter :</strong>
+        <ul>
+          <li>Discutez ensemble et <em>choisissez la même personne</em>. Si les traîtres ne votent pas la même personne, le vote peut être dispersé et ne pas aboutir.</li>
+          <li>Le vote est <strong>anonyme</strong> et sera enregistré automatiquement lorsque vous validerez.</li>
+          <li>Un seul vote par appareil. Si vous avez un doute, discutez d'abord, puis validez.</li>
+        </ul>
+      </div>
+
+      <label for="victim">Prénom de la victime (ex. Marc)</label>
+      <input id="victim" type="text" placeholder="Votre vote ici" autocomplete="off" inputmode="text" />
+
       <div class="row">
-        <div>
-          <label>Traître</label>
-          <div id="traitorName" style="font-weight:700;margin-top:6px">—</div>
-        </div>
-        <div>
-          <label>Date</label>
-          <input id="dateInput" type="date">
-        </div>
+        <button id="voteBtn" class="btn">Voter maintenant</button>
+        <button id="clearBtn" class="btn-ghost">Effacer</button>
       </div>
 
-      <div style="margin-top:12px">
-        <label>Victime à éliminer cette nuit</label>
-        <input id="victimText" type="text" placeholder="Ex. Aurélie">
-      </div>
+      <div class="status" id="status" aria-live="polite"></div>
 
-      <div style="display:flex;gap:10px;margin-top:14px">
-        <button id="send" class="btn">Envoyer le vote</button>
-        <button id="clear" class="btn btn-ghost">Effacer</button>
-      </div>
-      <div id="msg" style="margin-top:10px" class="mut"></div>
-      <div class="footer-note">Ton vote reste secret. Une confirmation apparaîtra en bas.</div>
+      <div class="hint small" id="hintText">Conseil : convenez d'un prénom précis avant d'envoyer.</div>
+
+      <footer>Si vous avez un problème technique, vous pouvez contacter l’organisateur (Franck). Sachez toutefois qu’en le contactant, il pourra se douter que vous avez consulté la page des traîtres et en déduire votre rôle.</footer>
     </div>
   </div>
 
   <script>
-    
+  // Firebase config - utilise ta config (déjà fournie)
   const firebaseConfig = {
     apiKey: "AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
     authDomain: "ans-de-franck.firebaseapp.com",
@@ -69,67 +77,84 @@
     appId: "1:1063437612417:web:812e847dfcd990c6922480"
   };
 
-    let app=null, db=null;
-    try{ app = firebase.initializeApp(firebaseConfig); }catch(e){}
-    try{ db = firebase.database(); }catch(e){ db=null; }
-
-    (function checkFb(){
-      const s = document.getElementById('fbStatus');
-      const d = document.getElementById('diag');
-      try {
-        const ok = !!(firebase && firebase.apps && firebase.apps.length && db);
-        s.textContent = ok ? 'Firebase: configuré ✔︎' : 'Firebase: non configuré ❌';
-        s.className = ok ? 'ok' : 'err';
-        d.textContent = 'databaseURL=' + (firebaseConfig.databaseURL||'(vide)');
-      } catch(e) {
-        s.textContent = 'Firebase: erreur ❌'; s.className='err'; d.textContent = String(e?.message||e);
-      }
-    })();
-
-    function safeAtob(s){
-      try { return decodeURIComponent(atob(s)); }
-      catch(e){ try { return decodeURIComponent(escape(atob(s))); } catch(e2) { return null; } }
+  // Load Firebase compat if available
+  (function(){
+    function loadFirebase(cb){
+      if(window.firebase && window.firebase.database) { cb(); return; }
+      var s1 = document.createElement('script'); s1.src = 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js'; s1.onload = function(){
+        var s2 = document.createElement('script'); s2.src = 'https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js'; s2.onload = cb; document.head.appendChild(s2);
+      }; document.head.appendChild(s1);
     }
-    function parseToken(){
-      const p = new URLSearchParams(location.search||'');
-      if(!p.has('t')) return null;
-      const raw = p.get('t')||'';
-      let json = safeAtob(raw) || raw;
-      try { return JSON.parse(json); } catch(e) { return null; }
-    }
+
+    const status = document.getElementById('status');
+    const victimInput = document.getElementById('victim');
+    const voteBtn = document.getElementById('voteBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    function safeTrim(s){ return String(s||'').trim(); }
     function todayISO(){
       const dt = new Date();
       const y = dt.getFullYear(), m = String(dt.getMonth()+1).padStart(2,'0'), d = String(dt.getDate()).padStart(2,'0');
       return y+'-'+m+'-'+d;
     }
 
-    function start(){
-      const token = parseToken();
-      const guardName = document.getElementById('traitorName');
-      if(token && token.name) guardName.textContent = token.name;
-      document.getElementById('dateInput').value = todayISO();
-    }
-    document.addEventListener('DOMContentLoaded', start);
+    loadFirebase(function(){
+      try{ firebase.initializeApp(firebaseConfig); } catch(e){}
+      const db = firebase.database();
 
-    document.getElementById('clear').addEventListener('click', ()=>{ document.getElementById('victimText').value=''; document.getElementById('msg').textContent=''; });
+      voteBtn.addEventListener('click', function(){
+        const name = safeTrim(victimInput.value);
+        if(!name){ status.textContent = 'Saisis un prénom avant de voter.'; status.style.color = '#ffd87a'; return; }
 
-    document.getElementById('send').addEventListener('click', function(){
-      const date = document.getElementById('dateInput').value.trim();
-      const victim = document.getElementById('victimText').value.trim();
-      const msg = document.getElementById('msg');
-      if(!db) { msg.textContent='❌ Firebase non configuré.'; msg.className='err'; return; }
-      if(!date) { msg.textContent='Indique la date.'; msg.className='warn'; return; }
-      if(!victim) { msg.textContent='Saisis la victime.'; msg.className='warn'; return; }
-      const path = '/nights/'+date+'/votes';
-      msg.textContent = 'Envoi…'; msg.className='mut';
-      db.ref(path).push({ victim:victim, ts:Date.now() }).then(()=>{
-        msg.textContent='✅ Vote enregistré, les Traîtres peuvent se reposer maintenant.'; msg.className='ok';
-      }).catch(e=>{
-        msg.textContent='❌ Erreur: '+(e?.message||e); msg.className='err';
+        // Give one final explicit confirmation
+        if(!confirm('Vous êtes sûr de vouloir voter pour "'+name+'"? Assurez-vous que votre co-traître vote exactement la même orthographe.')) return;
+
+        // Disable button to avoid double sends
+        voteBtn.disabled = true;
+        voteBtn.textContent = 'Envoi…';
+
+        const date = todayISO();
+        const path = '/nights/'+date+'/votes';
+
+        db.ref(path).push({ victim: name, ts: Date.now() })
+          .then(function(){
+            status.textContent = '✅ Vote enregistré. Merci — gardez le secret.';
+            status.style.color = '#9fe39f';
+            voteBtn.textContent = 'Vote envoyé';
+          })
+          .catch(function(err){
+            status.textContent = 'Erreur lors de l'envoi : ' + (err && err.message ? err.message : String(err));
+            status.style.color = '#ffb0a0';
+            voteBtn.disabled = false;
+            voteBtn.textContent = 'Voter maintenant';
+          });
       });
+
+      clearBtn.addEventListener('click', function(){
+        victimInput.value = '';
+        status.textContent = '';
+      });
+
+      // parse token t=... (optional) to show traitor name but keep page minimal
+      (function parseToken(){
+        const p = new URLSearchParams(location.search);
+        if(!p.has('t')) return;
+        try{
+          const raw = p.get('t');
+          const decoded = atob(raw);
+          const obj = JSON.parse(decoded);
+          if(obj && obj.name){
+            // show minimal greeting in status then hide
+            status.textContent = 'Bienvenue, ' + obj.name + ' — procédez au vote en secret.';
+            status.style.color = '#cfd5dc';
+            setTimeout(()=> status.textContent = '', 5000);
+          }
+        }catch(e){}
+      })();
+
     });
+
+  })();
   </script>
 </body>
 </html>
-
-
