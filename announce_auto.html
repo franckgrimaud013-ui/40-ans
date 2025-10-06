@@ -3,132 +3,101 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Annonce du matin — Reveal</title>
+  <title>Annonce — Révélation automatique</title>
+  <!-- Firebase compat SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <style>
-    :root{ --bg:#0b0f18; --ink:#eaf0f8; --mut:#9fb0c6; --gold:#ffd87a; --stroke:rgba(255,255,255,.12); }
+    :root{
+      --bg:#090e18; --ink:#eaf0f8; --mut:#b7c0cf; --gold:#ffd87a;
+      /* Remplace ces images si tu veux des photos réelles (URL absolues) */
+      --bg1: radial-gradient(1200px 700px at 30% -10%, rgba(255,216,122,.12), transparent 60%), #0b0f18;
+      --bg2: radial-gradient(1000px 600px at 70% 120%, rgba(122,180,255,.12), transparent 60%), #0a0d14;
+      --bg3: radial-gradient(1400px 800px at 50% -20%, rgba(255,122,180,.10), transparent 60%), #0a0b12;
+    }
     *{box-sizing:border-box}
-    body{margin:0;background:radial-gradient(900px 500px at 80% -10%,rgba(255,216,122,.12),transparent 60%),var(--bg);color:var(--ink);
-         font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding:28px 12px;display:flex;justify-content:center;min-height:100vh}
-    .wrap{width:100%;max-width:980px}
-    .title{margin:0 0 6px;color:var(--gold);font-size:clamp(22px,4.8vw,32px);font-weight:900;letter-spacing:.3px}
-    .mut{color:var(--mut)}
-    .card{background:rgba(255,255,255,.06);border:1px solid var(--stroke);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);
-           padding:16px;margin-top:12px}
-    .row{display:grid;gap:12px;grid-template-columns:1fr 1fr} @media(max-width:820px){.row{grid-template-columns:1fr}}
-    label{font-size:13px;color:var(--mut)}
-    input,select{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--stroke);background:rgba(255,255,255,.05);color:#fff}
-    .btn{background:var(--gold);color:#000;border:none;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer}
-    .btn-ghost{background:transparent;border:1px solid var(--stroke);color:var(--ink)}
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;border:1px solid var(--stroke);
-           background:rgba(255,255,255,.06);margin:6px 6px 0 0}
-    .count{background:rgba(255,216,122,.2);border:1px solid rgba(255,216,122,.35);color:#ffd87a;padding:2px 8px;border-radius:999px;font-weight:700}
-    .grid2{display:grid;gap:10px;grid-template-columns:1fr 1fr} @media(max-width:620px){.grid2{grid-template-columns:1fr}}
-    .ok{color:#9fe39f} .err{color:#ffb0a0} .warn{color:#ffd87a}
-    .small{font-size:12px;color:var(--mut)}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;overflow:hidden}
 
-    /* REVEAL fullscreen overlay */
-    .overlay{position:fixed;inset:0;background:radial-gradient(1200px 800px at 50% -20%,rgba(255,216,122,.08),transparent 60%),#000;display:none;
-             align-items:center;justify-content:center;z-index:99999;color:#fff; text-align:center;padding:24px}
-    .overlay.show{display:flex}
-    .overlay .inner{max-width:1000px;width:100%}
-    .bigline{font-size:clamp(22px,5vw,42px);opacity:.95;margin:0 0 10px}
-    .countdown{font-size:clamp(48px,14vw,180px);font-weight:900;letter-spacing:6px;line-height:1; margin:10px 0 16px;
-                text-shadow:0 0 40px rgba(255,216,122,.35)}
-    .name{font-size:clamp(40px,10vw,140px);font-weight:1000;letter-spacing:1px;text-transform:uppercase;margin:8px 0;
-           color:#ffd87a;text-shadow:0 0 40px rgba(255,216,122,.4)}
-    .note{color:#cfd5dc;opacity:.9}
+    /* Fullscreen overlay that runs automatically */
+    .overlay{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:9999; color:#fff; text-align:center;}
+    .overlay .inner{position:relative; width:100%; max-width:1100px; padding:24px}
+
+    /* Background crossfade (3 layers) */
+    .bgstage{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden}
+    .bgslide{position:absolute; inset:0; background-size:cover; background-position:center; opacity:0}
+    .bg1{background:var(--bg1); animation:fade 7.5s linear infinite; }
+    .bg2{background:var(--bg2); animation:fade 7.5s linear infinite 2.5s;}
+    .bg3{background:var(--bg3); animation:fade 7.5s linear infinite 5s;}
+    @keyframes fade{ 0%{opacity:0} 6%{opacity:.75} 33%{opacity:.9} 60%{opacity:.75} 100%{opacity:0} }
+
+    /* Cinematic text */
+    .prologue{position:relative; z-index:2; margin:0; font-weight:800; letter-spacing:.4px;
+      font-size:clamp(20px,3.6vw,34px); text-shadow:0 0 24px rgba(0,0,0,.45);}
+    .prologue em{color:var(--gold); font-style:normal; text-shadow:0 0 30px rgba(255,216,122,.35)}
+    .sub{color:var(--mut); font-size:clamp(16px,2.2vw,20px); margin:4px 0 10px}
+    .countdown{position:relative; z-index:2; font-size:clamp(64px,14vw,200px); line-height:.9; font-weight:1000; letter-spacing:6px; margin:10px 0 12px;
+      text-shadow:0 0 50px rgba(255,216,122,.35)}
+    .name{position:relative; z-index:2; display:none; font-size:clamp(52px,12vw,160px); line-height:.95; font-weight:1000; text-transform:uppercase;
+      color:var(--gold); letter-spacing:1px; text-shadow:0 0 55px rgba(255,216,122,.45);}
+    .tagline{position:relative; z-index:2; color:#cfd5dc; opacity:.95; margin-top:8px}
+
+    /* Small controls bar (hidden off-screen but accessible if besoin) */
+    .bar{position:fixed; left:12px; bottom:12px; z-index:10000; display:flex; gap:8px; opacity:.25}
+    .btn{background:var(--gold); color:#000; border:none; border-radius:12px; padding:10px 14px; font-weight:900; cursor:pointer}
+    .btn-ghost{background:rgba(255,255,255,.1); color:#fff; border:1px solid rgba(255,255,255,.18)}
+
+    /* Loader msg */
+    #status{position:fixed; top:10px; right:10px; font-size:13px; color:var(--mut); z-index:10001}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1 class="title">Annonce du matin</h1>
-    <div id="fbStatus" class="mut">Connexion à Firebase…</div>
-
-    <div class="card">
-      <div class="row">
-        <div>
-          <label>Date</label>
-          <input id="dateInput" type="date">
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
-          <button id="refresh" class="btn">Rafraîchir</button>
-          <button id="auto" class="btn btn-ghost">Auto ⏸</button>
-          <button id="pickTop" class="btn btn-ghost">Prendre le + voté</button>
-        </div>
-      </div>
-      <div id="msg" class="mut" style="margin-top:8px"></div>
-    </div>
-
-    <div class="card" id="results" style="display:none">
-      <h3 style="margin:0 0 8px">Votes de la nuit</h3>
-      <div id="list" style="margin-top:6px"></div>
-      <div id="none" class="warn" style="display:none;margin-top:6px">Aucun vote pour l’instant.</div>
-    </div>
-
-    <div class="card" id="announceBox" style="display:none">
-      <h3 style="margin:0 0 8px">Annonce au groupe</h3>
-      <div class="grid2">
-        <div>
-          <label>Victime à annoncer</label>
-          <input id="announceVictim" type="text" placeholder="Tape un prénom ou clique une pastille ci-dessus">
-        </div>
-        <div>
-          <label>Révélation</label>
-          <select id="revealMode">
-            <option value="manual" selected>Utiliser le champ ci-contre</option>
-            <option value="top">Automatique : le plus voté</option>
-          </select>
-        </div>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-        <button id="preview" class="btn btn-ghost">Préparer l’annonce</button>
-        <button id="reveal" class="btn">Lancer le reveal</button>
-        <button id="clear" class="btn btn-ghost">Effacer</button>
-        <button id="mark" class="btn btn-ghost">Marquer comme annoncé</button>
-      </div>
-      <div id="markMsg" class="mut small" style="margin-top:8px"></div>
-      <p class="small" style="margin-top:8px">Astuce : clique une pastille pour copier le prénom dans “Victime à annoncer”.</p>
-    </div>
+  <!-- Background crossfade -->
+  <div class="bgstage" aria-hidden="true">
+    <div class="bgslide bg1"></div>
+    <div class="bgslide bg2"></div>
+    <div class="bgslide bg3"></div>
   </div>
 
-  <!-- Fullscreen reveal overlay -->
-  <div id="revealOverlay" class="overlay" aria-live="polite">
+  <!-- Fullscreen overlay -->
+  <div id="overlay" class="overlay" aria-live="polite">
     <div class="inner">
-      <p class="bigline">Vous allez bientôt découvrir qui a été éliminé…</p>
+      <p class="prologue">Les <em>Traîtres</em> ont encore frappé cette nuit…</p>
+      <p class="sub">Vous allez bientôt découvrir qui ils ont éliminé.</p>
       <div id="cd" class="countdown">5</div>
-      <div id="name" class="name" style="display:none">—</div>
-      <p id="hint" class="note">Appuyez pour fermer quand c’est terminé</p>
+      <div id="name" class="name">—</div>
+      <p class="tagline">Touchez l’écran pour fermer la révélation.</p>
     </div>
   </div>
+
+  <!-- Hidden minimal controls (refresh / replay) -->
+  <div class="bar" aria-hidden="true">
+    <button id="replay" class="btn-ghost">Rejouer</button>
+    <button id="reload" class="btn-ghost">Rafraîchir</button>
+  </div>
+
+  <div id="status">Initialisation…</div>
 
   <script>
-    
-  const firebaseConfig = {
-    apiKey: "AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
-    authDomain: "ans-de-franck.firebaseapp.com",
-    databaseURL: "https://ans-de-franck-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "ans-de-franck",
-    storageBucket: "ans-de-franck.firebasestorage.app",
-    messagingSenderId: "1063437612417",
-    appId: "1:1063437612417:web:812e847dfcd990c6922480"
-  };
+    // ---- Firebase config (tes clés) ----
+    const firebaseConfig = {
+      apiKey: "AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
+      authDomain: "ans-de-franck.firebaseapp.com",
+      databaseURL: "https://ans-de-franck-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "ans-de-franck",
+      storageBucket: "ans-de-franck.firebasestorage.app",
+      messagingSenderId: "1063437612417",
+      appId: "1:1063437612417:web:812e847dfcd990c6922480"
+    };
 
     let app=null, db=null;
-    try{ app = firebase.initializeApp(firebaseConfig); }catch(e){}
-    try{ db = firebase.database(); }catch(e){ db=null; }
+    try { app = firebase.initializeApp(firebaseConfig); } catch(e){}
+    try { db = firebase.database(); } catch(e){ db=null; }
 
-    (function checkFb(){
-      const s = document.getElementById('fbStatus');
-      try {
-        const ok = !!(firebase && firebase.apps && firebase.apps.length && db);
-        s.textContent = ok ? 'Firebase: configuré ✔︎' : 'Firebase: non configuré ❌';
-        s.className = ok ? 'ok' : 'err';
-      } catch(e) {
-        s.textContent = 'Firebase: erreur ❌'; s.className='err';
-      }
-    })();
+    const $ = (s)=>document.querySelector(s);
+    const cd = $('#cd');
+    const nm = $('#name');
+    const statusEl = $('#status');
 
     function todayISO(){
       const dt = new Date();
@@ -146,135 +115,59 @@
       return Array.from(map.entries()).sort((a,b)=> b[1]-a[1]);
     }
 
-    async function fetchVotes(date){
-      if(!db) return [];
+    async function fetchTopName(){
+      const date = todayISO();
+      statusEl.textContent = 'Chargement des votes ('+date+')…';
+      if(!db){ statusEl.textContent = '❌ Firebase non configuré.'; return ''; }
       const snap = await db.ref('/nights/'+date+'/votes').once('value');
-      const out = [];
-      if(snap.exists()){
-        const v = snap.val();
-        Object.keys(v||{}).forEach(k=> out.push(v[k]));
-      }
-      return out;
+      if(!snap.exists()){ statusEl.textContent = 'Aucun vote pour l’instant.'; return ''; }
+      const v = snap.val();
+      const arr = Object.keys(v||{}).map(k=>v[k]);
+      const counts = groupCounts(arr);
+      statusEl.textContent = 'Prêt.';
+      return counts.length ? counts[0][0] : '';
     }
 
-    function renderList(date, votes){
-      const list = document.getElementById('list');
-      const none = document.getElementById('none');
-      list.innerHTML='';
-      const counts = groupCounts(votes);
-      window.__counts = counts; // store for reveal mode
-      if(counts.length===0){ none.style.display='block'; return; }
-      none.style.display='none';
-      counts.forEach(([name,count])=>{
-        const pill = document.createElement('div');
-        pill.className='pill';
-        pill.innerHTML = '<span>'+name+'</span><span class="count">'+count+'</span>';
-        pill.addEventListener('click', ()=>{ document.getElementById('announceVictim').value=name; });
-        list.appendChild(pill);
-      });
-      document.getElementById('results').style.display='block';
-      document.getElementById('announceBox').style.display='block';
-    }
-
-    async function refresh(){
-      const date = document.getElementById('dateInput').value.trim();
-      const msg = document.getElementById('msg');
-      msg.textContent='Chargement…';
-      try{
-        const votes = await fetchVotes(date);
-        renderList(date, votes);
-        msg.textContent = 'Dernière mise à jour : ' + new Date().toLocaleTimeString();
-      }catch(e){
-        msg.textContent='❌ Erreur: ' + (e?.message||e);
-      }
-    }
-
-    let autoTimer=null, autoOn=false;
-    function toggleAuto(){
-      autoOn = !autoOn;
-      const btn = document.getElementById('auto');
-      if(autoOn){
-        btn.textContent='Auto ▶︎';
-        autoTimer = setInterval(refresh, 5000);
-      }else{
-        btn.textContent='Auto ⏸';
-        if(autoTimer) clearInterval(autoTimer);
-      }
-    }
-
-    // Reveal helpers
-    function pickName(){
-      const mode = document.getElementById('revealMode').value;
-      if(mode === 'top'){
-        const counts = (window.__counts||[]);
-        return counts.length ? counts[0][0] : '';
-      } else {
-        return document.getElementById('announceVictim').value.trim();
-      }
-    }
-
-    function prepare(){
-      const name = pickName();
-      if(!name){ alert('Choisis ou saisis un prénom avant.'); return; }
-      const ov = document.getElementById('revealOverlay');
-      ov.classList.add('show');
-      document.getElementById('cd').style.display='block';
-      document.getElementById('name').style.display='none';
-      document.getElementById('cd').textContent = '5';
-    }
-
-    function reveal(){
-      const name = pickName();
-      if(!name){ alert('Choisis ou saisis un prénom avant.'); return; }
-      const ov = document.getElementById('revealOverlay');
-      ov.classList.add('show');
-      const cd = document.getElementById('cd');
-      const nm = document.getElementById('name');
+    function playReveal(name){
       let n = 5;
-      cd.style.display='block';
-      nm.style.display='none';
+      nm.style.display = 'none';
+      cd.style.display = 'block';
       cd.textContent = n;
       const timer = setInterval(()=>{
         n--;
-        if(n>0){ cd.textContent = n; }
-        else {
+        if(n>0){
+          cd.textContent = n;
+        } else {
           clearInterval(timer);
-          cd.style.display='none';
-          nm.textContent = name;
-          nm.style.display='block';
+          cd.style.display = 'none';
+          nm.textContent = name || '—';
+          nm.style.display = 'block';
         }
       }, 1000);
+      return timer;
     }
 
-    document.getElementById('dateInput').value = todayISO();
-    document.getElementById('refresh').addEventListener('click', refresh);
-    document.getElementById('auto').addEventListener('click', toggleAuto);
-    document.getElementById('pickTop').addEventListener('click', ()=>{
-      const counts = (window.__counts||[]);
-      if(counts.length) document.getElementById('announceVictim').value = counts[0][0];
-    });
-    document.getElementById('clear').addEventListener('click', ()=>{ document.getElementById('announceVictim').value=''; });
-    document.getElementById('mark').addEventListener('click', async ()=>{
-      const date = document.getElementById('dateInput').value.trim();
-      const name = document.getElementById('announceVictim').value.trim();
-      const m = document.getElementById('markMsg');
-      if(!db){ m.textContent='❌ Firebase non configuré.'; m.className='err small'; return; }
-      if(!name){ m.textContent='Saisis un prénom.'; m.className='warn small'; return; }
-      try{
-        await db.ref('/nights/'+date+'/announced').set({ victim:name, ts:Date.now() });
-        m.textContent='✅ Annonce enregistrée pour '+name+'.'; m.className='ok small';
-      }catch(e){
-        m.textContent='❌ Erreur: '+(e?.message||e); m.className='err small';
-      }
-    });
-    document.getElementById('preview').addEventListener('click', prepare);
-    document.getElementById('reveal').addEventListener('click', reveal);
+    async function startAuto(){
+      const top = await fetchTopName();
+      // Affiche tout de même un reveal avec "—" si pas de vote
+      playReveal(top);
+    }
 
-    document.getElementById('revealOverlay').addEventListener('click', ()=>{
-      document.getElementById('revealOverlay').classList.remove('show');
+    // Auto-run on load
+    document.addEventListener('DOMContentLoaded', startAuto);
+
+    // Close overlay on tap/click
+    $('#overlay').addEventListener('click', ()=>{
+      $('#overlay').style.display='none';
     });
 
-    refresh();
+    // Hidden helpers
+    $('#replay').addEventListener('click', async ()=>{
+      $('#overlay').style.display='flex';
+      const top = await fetchTopName();
+      playReveal(top);
+    });
+    $('#reload').addEventListener('click', ()=>location.reload());
   </script>
 </body>
 </html>
