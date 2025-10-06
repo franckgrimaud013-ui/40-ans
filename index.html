@@ -774,5 +774,89 @@ function revealRole(payload){
 })();
 </script>
 
+
+<!-- PATCH v2: strong skip ++ — masque explicitement la page #p1 et le bloc "Un week‑end..." -->
+<script id="patch-strongskip-v2">
+(function(){
+  const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
+  if(!secret) return;
+
+  function injectHideCSS(){
+    if (document.getElementById("skipHideCSSv2")) return;
+    const css = `
+      /* Masquer dur #p1 et #p2 */
+      #p1, #p2 { display:none !important; visibility:hidden !important; opacity:0 !important; }
+      /* Masquer toutes couches intro possibles */
+      .intro, .intro-layer, .bg, .bg-intro, .overlay, .overlay-intro,
+      .image-hero, .image-bg, .img-bg, .bg-img, .hero-bg,
+      .slide, .slides, .parallax, .page-bg, [data-intro] {
+        display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important;
+      }
+      video, audio { display: none !important; }
+      * { animation: none !important; transition: none !important; }
+    `;
+    const style = document.createElement("style");
+    style.id = "skipHideCSSv2";
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  function hideWelcomeBlockByText(){
+    const needles = ["Un week", "pas comme les autres", "Lancez‑vous", "Lancez-vous"];
+    const all = Array.from(document.body.querySelectorAll("*"));
+    for(const el of all){
+      const t = (el.textContent||"").trim();
+      if(!t) continue;
+      const ok = needles.every(n => t.toLowerCase().includes(n.toLowerCase()));
+      if(ok){
+        // Masquer l'élément le plus grand contenant ce texte (panel de p1)
+        let n = el;
+        for(let i=0;i<4 && n && n.parentElement;i++){ // remonte un peu pour cacher le bloc
+          n = n.parentElement;
+          if(n.classList && (n.classList.contains('panel') || n.classList.contains('wrap') || n.classList.contains('page'))){
+            n.style.display = 'none';
+            break;
+          }
+        }
+        // Sécurité : masque aussi el
+        el.style.display = 'none';
+        break;
+      }
+    }
+  }
+
+  function goToP3Strong(){
+    // Retire les .active de toutes les pages puis force p1/p2 masqués
+    document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
+    ['#p1','#p2','#intro','#welcome','.welcome','.hero-section'].forEach(sel=>{
+      document.querySelectorAll(sel).forEach(el=>{ el.style.display='none'; el.style.visibility='hidden'; el.style.opacity='0'; });
+    });
+
+    injectHideCSS();
+    hideWelcomeBlockByText();
+
+    const p3 = document.getElementById("p3");
+    // Masque tous les fixed/absolute hors p3
+    const all = Array.from(document.body.querySelectorAll("*"));
+    all.forEach(el=>{
+      const st = getComputedStyle(el);
+      if ((st.position === "fixed" || st.position === "absolute") && !p3?.contains(el)) {
+        el.style.display = "none";
+      }
+    });
+
+    if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
+    document.documentElement.classList.add("app-shown");
+    try { (document.getElementById('bgAudio')||{}).pause?.(); } catch(e){}
+  }
+
+  secret.addEventListener("click", goToP3Strong);
+  let tId;
+  secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
+  secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
+})();
+</script>
+
 </body>
 </html>
+
