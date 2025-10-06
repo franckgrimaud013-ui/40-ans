@@ -352,7 +352,7 @@ function onEnterApp(){
       var pIntro=document.getElementById('playerIntro'); 
       if(pIntro && PAYLOAD.name){
         pIntro.innerHTML = "<b>"+PAYLOAD.name+"</b>, es-tu prêt ? Quand tu es seul, découvre ta carte.<br>" +
-                           "<span style='color:#ccc;font-size:14px'>Petit secret : c’est bien Franck qui a eu l’idée et qui a même créé ce jeu 😉… mais rassurez-vous, il ne connaît pas vos rôles.</span>";
+                           "<span style='color:#ccc;font-size:18px'>Petit secret : c’est bien Franck qui a eu l’idée de ce jeu 😉… mais rassurez-vous, il ne connaît pas vos rôles.</span>";
       }
       var playerName=document.getElementById('playerName'); if(playerName && PAYLOAD.name){ playerName.textContent = PAYLOAD.name; }
       var center=document.getElementById('playerCenter'); if(center) center.style.display='flex';
