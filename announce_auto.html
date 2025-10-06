@@ -3,83 +3,90 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Annonce — Révélation automatique</title>
+  <title>Annonce — Révélation auto (médiévale + prologue)</title>
+  <!-- Fonts médiévales -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
   <!-- Firebase compat SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <style>
     :root{
-      --bg:#090e18; --ink:#eaf0f8; --mut:#b7c0cf; --gold:#ffd87a;
-      /* Remplace ces images si tu veux des photos réelles (URL absolues) */
-      --bg1: radial-gradient(1200px 700px at 30% -10%, rgba(255,216,122,.12), transparent 60%), #0b0f18;
-      --bg2: radial-gradient(1000px 600px at 70% 120%, rgba(122,180,255,.12), transparent 60%), #0a0d14;
-      --bg3: radial-gradient(1400px 800px at 50% -20%, rgba(255,122,180,.10), transparent 60%), #0a0b12;
+      --bg:#090e18; --ink:#f3efe6; --mut:#c9c2b5; --gold:#e9d28f;
+      /* Remplace par des photos si tu veux */
+      --bg1: radial-gradient(1200px 700px at 30% -10%, rgba(233,210,143,.15), transparent 60%), #0b0f18;
+      --bg2: radial-gradient(1000px 600px at 70% 120%, rgba(170,153,255,.12), transparent 60%), #0a0d14;
+      --bg3: radial-gradient(1400px 800px at 50% -20%, rgba(255,153,170,.10), transparent 60%), #0a0b12;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;overflow:hidden}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:'Cormorant Garamond', serif;overflow:hidden}
 
-    /* Fullscreen overlay that runs automatically */
+    /* Fullscreen overlay */
     .overlay{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:9999; color:#fff; text-align:center;}
     .overlay .inner{position:relative; width:100%; max-width:1100px; padding:24px}
 
     /* Background crossfade (3 layers) */
     .bgstage{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden}
     .bgslide{position:absolute; inset:0; background-size:cover; background-position:center; opacity:0}
-    .bg1{background:var(--bg1); animation:fade 7.5s linear infinite; }
-    .bg2{background:var(--bg2); animation:fade 7.5s linear infinite 2.5s;}
-    .bg3{background:var(--bg3); animation:fade 7.5s linear infinite 5s;}
-    @keyframes fade{ 0%{opacity:0} 6%{opacity:.75} 33%{opacity:.9} 60%{opacity:.75} 100%{opacity:0} }
+    .bg1{background:var(--bg1); animation:fade 9s linear infinite; }
+    .bg2{background:var(--bg2); animation:fade 9s linear infinite 3s;}
+    .bg3{background:var(--bg3); animation:fade 9s linear infinite 6s;}
+    @keyframes fade{ 0%{opacity:0} 7%{opacity:.8} 40%{opacity:.95} 70%{opacity:.8} 100%{opacity:0} }
 
-    /* Cinematic text */
-    .prologue{position:relative; z-index:2; margin:0; font-weight:800; letter-spacing:.4px;
-      font-size:clamp(20px,3.6vw,34px); text-shadow:0 0 24px rgba(0,0,0,.45);}
-    .prologue em{color:var(--gold); font-style:normal; text-shadow:0 0 30px rgba(255,216,122,.35)}
-    .sub{color:var(--mut); font-size:clamp(16px,2.2vw,20px); margin:4px 0 10px}
-    .countdown{position:relative; z-index:2; font-size:clamp(64px,14vw,200px); line-height:.9; font-weight:1000; letter-spacing:6px; margin:10px 0 12px;
-      text-shadow:0 0 50px rgba(255,216,122,.35)}
-    .name{position:relative; z-index:2; display:none; font-size:clamp(52px,12vw,160px); line-height:.95; font-weight:1000; text-transform:uppercase;
-      color:var(--gold); letter-spacing:1px; text-shadow:0 0 55px rgba(255,216,122,.45);}
-    .tagline{position:relative; z-index:2; color:#cfd5dc; opacity:.95; margin-top:8px}
+    /* Prologue (slides de texte qui s'enchaînent) */
+    .prologue-wrap{position:relative; min-height:22vh; margin:0 0 10px}
+    .slide{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .9s ease}
+    .slide.active{opacity:1}
+    .prol1{font-family:'Cinzel', serif; font-weight:900; letter-spacing:.04em; font-size:clamp(22px,3.8vw,42px); color:var(--gold);
+      text-shadow:0 0 18px rgba(233,210,143,.28)}
+    .prol2,.prol3{font-size:clamp(18px,2.8vw,28px); color:var(--ink)}
 
-    /* Small controls bar (hidden off-screen but accessible if besoin) */
+    /* Countdown + Nom */
+    .countdown{font-family:'Cinzel', serif; font-size:clamp(64px,14vw,200px); line-height:.9; font-weight:900; letter-spacing:6px;
+      margin:12px 0 16px; text-shadow:0 0 50px rgba(233,210,143,.35); display:none}
+    .name{font-family:'Cinzel', serif; display:none; font-size:clamp(52px,12vw,160px); line-height:.95; font-weight:900; text-transform:uppercase;
+      color:var(--gold); letter-spacing:.04em; text-shadow:0 0 55px rgba(233,210,143,.45)}
+
+    .note{color:var(--mut); margin-top:8px; font-size:clamp(14px,2vw,18px)}
+
+    /* Discrets boutons utilitaires (replay/refresh) */
     .bar{position:fixed; left:12px; bottom:12px; z-index:10000; display:flex; gap:8px; opacity:.25}
     .btn{background:var(--gold); color:#000; border:none; border-radius:12px; padding:10px 14px; font-weight:900; cursor:pointer}
-    .btn-ghost{background:rgba(255,255,255,.1); color:#fff; border:1px solid rgba(255,255,255,.18)}
+    .btn-ghost{background:rgba(255,255,255,.08); color:#fff; border:1px solid rgba(255,255,255,.18)}
 
-    /* Loader msg */
     #status{position:fixed; top:10px; right:10px; font-size:13px; color:var(--mut); z-index:10001}
   </style>
 </head>
 <body>
-  <!-- Background crossfade -->
+  <!-- Fond en fondu -->
   <div class="bgstage" aria-hidden="true">
     <div class="bgslide bg1"></div>
     <div class="bgslide bg2"></div>
     <div class="bgslide bg3"></div>
   </div>
 
-  <!-- Fullscreen overlay -->
+  <!-- Overlay -->
   <div id="overlay" class="overlay" aria-live="polite">
     <div class="inner">
-      <p class="prologue">Les <em>Traîtres</em> ont encore frappé cette nuit…</p>
-      <p class="sub">Vous allez bientôt découvrir qui ils ont éliminé.</p>
+      <div class="prologue-wrap" id="prologue">
+        <div class="slide" id="s1"><div class="prol1">Les Traîtres ont encore frappé cette nuit…</div></div>
+        <div class="slide" id="s2"><div class="prol2">Le château murmure des secrets.</div></div>
+        <div class="slide" id="s3"><div class="prol3">Dans un instant, vous saurez qui a été éliminé.</div></div>
+      </div>
       <div id="cd" class="countdown">5</div>
       <div id="name" class="name">—</div>
-      <p class="tagline">Touchez l’écran pour fermer la révélation.</p>
+      <p class="note">Touchez l’écran pour fermer la révélation.</p>
     </div>
   </div>
 
-  <!-- Hidden minimal controls (refresh / replay) -->
   <div class="bar" aria-hidden="true">
     <button id="replay" class="btn-ghost">Rejouer</button>
     <button id="reload" class="btn-ghost">Rafraîchir</button>
   </div>
-
   <div id="status">Initialisation…</div>
 
   <script>
-    // ---- Firebase config (tes clés) ----
+    // ---- Firebase config ----
     const firebaseConfig = {
       apiKey: "AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
       authDomain: "ans-de-franck.firebaseapp.com",
@@ -89,22 +96,20 @@
       messagingSenderId: "1063437612417",
       appId: "1:1063437612417:web:812e847dfcd990c6922480"
     };
-
     let app=null, db=null;
     try { app = firebase.initializeApp(firebaseConfig); } catch(e){}
     try { db = firebase.database(); } catch(e){ db=null; }
 
     const $ = (s)=>document.querySelector(s);
+    const statusEl = $('#status');
     const cd = $('#cd');
     const nm = $('#name');
-    const statusEl = $('#status');
 
     function todayISO(){
       const dt = new Date();
       const y = dt.getFullYear(), m = String(dt.getMonth()+1).padStart(2,'0'), d = String(dt.getDate()).padStart(2,'0');
       return y+'-'+m+'-'+d;
     }
-
     function groupCounts(votes){
       const map = new Map();
       votes.forEach(v=>{
@@ -114,7 +119,6 @@
       });
       return Array.from(map.entries()).sort((a,b)=> b[1]-a[1]);
     }
-
     async function fetchTopName(){
       const date = todayISO();
       statusEl.textContent = 'Chargement des votes ('+date+')…';
@@ -128,10 +132,26 @@
       return counts.length ? counts[0][0] : '';
     }
 
-    function playReveal(name){
+    // Slides de prologue (fade-in/out)
+    const slides = ['#s1','#s2','#s3'].map(sel=>$(sel));
+    const SLIDE_MS = 2500; // durée d'affichage de chaque slide (ms)
+
+    function runPrologue(next){
+      let i = 0;
+      function show(idx){
+        slides.forEach((el,j)=> el.classList.toggle('active', j===idx));
+      }
+      show(0);
+      const t1 = setTimeout(()=>{ show(1); }, SLIDE_MS);
+      const t2 = setTimeout(()=>{ show(2); }, SLIDE_MS*2);
+      const t3 = setTimeout(()=>{ slides[2].classList.remove('active'); next(); }, SLIDE_MS*3);
+      return [t1,t2,t3];
+    }
+
+    function playCountdown(name){
+      cd.style.display='block';
+      nm.style.display='none';
       let n = 5;
-      nm.style.display = 'none';
-      cd.style.display = 'block';
       cd.textContent = n;
       const timer = setInterval(()=>{
         n--;
@@ -139,9 +159,9 @@
           cd.textContent = n;
         } else {
           clearInterval(timer);
-          cd.style.display = 'none';
+          cd.style.display='none';
           nm.textContent = name || '—';
-          nm.style.display = 'block';
+          nm.style.display='block';
         }
       }, 1000);
       return timer;
@@ -149,23 +169,21 @@
 
     async function startAuto(){
       const top = await fetchTopName();
-      // Affiche tout de même un reveal avec "—" si pas de vote
-      playReveal(top);
+      runPrologue(()=> playCountdown(top));
     }
 
-    // Auto-run on load
     document.addEventListener('DOMContentLoaded', startAuto);
 
-    // Close overlay on tap/click
-    $('#overlay').addEventListener('click', ()=>{
-      $('#overlay').style.display='none';
-    });
+    // Fermer l'overlay au toucher/clic
+    $('#overlay').addEventListener('click', ()=>{ $('#overlay').style.display='none'; });
 
-    // Hidden helpers
+    // Outils cachés
     $('#replay').addEventListener('click', async ()=>{
       $('#overlay').style.display='flex';
+      // reset prologue state
+      slides.forEach(el=>el.classList.remove('active'));
       const top = await fetchTopName();
-      playReveal(top);
+      runPrologue(()=> playCountdown(top));
     });
     $('#reload').addEventListener('click', ()=>location.reload());
   </script>
