@@ -715,5 +715,64 @@ function revealRole(payload){
 })();
 </script>
 
+
+<!-- PATCH: strong skip — masque aussi tous les fonds/overlays d'intro -->
+<script id="patch-strongskip">
+(function(){
+  const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
+  if(!secret) return;
+
+  function injectHideCSS(){
+    if (document.getElementById("skipHideCSS")) return;
+    const css = `
+      /* cache les couches visuelles d'intro potentiellement encore visibles */
+      .intro, .intro-layer, .bg, .bg-intro, .overlay, .overlay-intro,
+      .image-hero, .image-bg, .img-bg, .bg-img, .hero-bg,
+      .slide, .slides, .parallax, .page-bg, [data-intro] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+      /* coupe les animations/vidéos éventuelles */
+      video, audio { display: none !important; }
+      * { animation: none !important; transition: none !important; }
+    `;
+    const style = document.createElement("style");
+    style.id = "skipHideCSS";
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  function goToP3Strong(){
+    // 1) désactive toutes les pages actives
+    document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
+    // 2) masque agressivement les backgrounds/overlays d'intro
+    injectHideCSS();
+
+    // 3) masque tous les éléments fixed/absolute qui ne sont pas dans p3
+    const p3 = document.getElementById("p3");
+    const rectP3 = p3 ? p3.getBoundingClientRect() : null;
+    const all = Array.from(document.body.querySelectorAll("*"));
+    all.forEach(el=>{
+      const st = getComputedStyle(el);
+      if ((st.position === "fixed" || st.position === "absolute") && !p3?.contains(el)) {
+        el.style.display = "none";
+      }
+    });
+
+    // 4) affiche la page 3 proprement
+    if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
+    document.documentElement.classList.add("app-shown");
+    try { (document.getElementById('bgAudio')||{}).pause?.(); } catch(e){}
+  }
+
+  secret.addEventListener("click", goToP3Strong);
+  let tId;
+  secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
+  secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
+})();
+</script>
+
 </body>
 </html>
