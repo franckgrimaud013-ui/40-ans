@@ -144,6 +144,27 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 .role-box-red{border-radius:14px;padding:12px;border:1px solid rgba(255,255,255,.15);background:linear-gradient(180deg,#5a0f1b,#6e1421)}
 .cta-traitor{display:inline-block;padding:10px 14px;border-radius:12px;background:#ffd87a;color:#000;font-weight:900}
 
+
+/* ==== Talking mask (above intro text) ==== */
+#maskOverlayLite{
+  position:fixed; left:50%; transform:translateX(-50%);
+  bottom:26vh; /* position just above the intro text; adjust if needed */
+  z-index:12; display:none; pointer-events:none;
+}
+#maskOverlayLite .mask-figure{
+  width:min(40vw,220px);
+  filter: drop-shadow(0 10px 26px rgba(0,0,0,.6)) drop-shadow(0 0 18px rgba(212,175,55,.25));
+  animation: maskHeadBob 5s ease-in-out infinite;
+}
+@keyframes maskHeadBob{
+  0%{ transform:translate(-50%,0) rotate(-1.1deg) }
+  50%{ transform:translate(-50%,-5px) rotate(1.1deg) }
+  100%{ transform:translate(-50%,0) rotate(-1.1deg) }
+}
+.eye-glow{ mix-blend-mode:screen; animation: eyeGlow 3.3s ease-in-out infinite }
+@keyframes eyeGlow{ 0%{opacity:.4} 50%{opacity:1} 100%{opacity:.4} }
+@media (max-width:640px){ #maskOverlayLite .mask-figure{ width:min(54vw,200px) } }
+
 </style>
 
 <!-- PATCH: lisibilité p3 (titre blanc + panneaux sombres) -->
@@ -174,6 +195,53 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 </style>
 </head>
 <body>
+
+<!-- Talking mask (lite, above intro text) -->
+<div id="maskOverlayLite" aria-hidden="true">
+  <svg id="maskSvgLite" class="mask-figure" viewBox="0 0 300 380" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="goldGlowLite" cx="50%" cy="40%" r="60%">
+        <stop offset="0%" stop-color="#ffd980" stop-opacity="1"/>
+        <stop offset="60%" stop-color="#d4af37" stop-opacity=".55"/>
+        <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="maskMetalLite" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#222a38"/>
+        <stop offset="50%" stop-color="#111826"/>
+        <stop offset="100%" stop-color="#0a0f18"/>
+      </linearGradient>
+    </defs>
+    <!-- Outer soft glow -->
+    <ellipse cx="150" cy="190" rx="140" ry="160" fill="url(#goldGlowLite)" opacity=".18"></ellipse>
+    <!-- Mask base -->
+    <path d="M150 20c-60 0-110 46-110 110 0 50 15 100 35 138 21 40 45 72 75 72s54-32 75-72c20-38 35-88 35-138 0-64-50-110-110-110z"
+          fill="url(#maskMetalLite)" stroke="#3b4a66" stroke-width="2"/>
+    <!-- Cheek highlights -->
+    <ellipse cx="95" cy="165" rx="22" ry="14" fill="#22314a" opacity=".7"/>
+    <ellipse cx="205" cy="165" rx="22" ry="14" fill="#22314a" opacity=".7"/>
+    <!-- Eyes -->
+    <g id="eyesLite">
+      <path d="M72 150c20-16 52-16 72 0" fill="none" stroke="#0b0f18" stroke-width="16" stroke-linecap="round"/>
+      <path d="M228 150c-20-16-52-16-72 0" fill="none" stroke="#0b0f18" stroke-width="16" stroke-linecap="round"/>
+      <!-- glowing pupils -->
+      <ellipse class="eye-glow" cx="116" cy="156" rx="8" ry="5" fill="#ffd980" opacity=".6"/>
+      <ellipse class="eye-glow" cx="184" cy="156" rx="8" ry="5" fill="#ffd980" opacity=".6"/>
+    </g>
+    <!-- Nose -->
+    <path d="M150 170c-5 18-5 36 0 40 5-4 5-22 0-40z" fill="#1a2334"/>
+    <!-- Mouth group: jaw animated by JS (rotate & translate) -->
+    <g id="mouthGroupLite">
+      <!-- Upper lip (static shadow) -->
+      <path d="M105 210c30 14 60 14 90 0" fill="none" stroke="#26334a" stroke-width="6" stroke-linecap="round" opacity=".9"/>
+      <!-- Lower jaw -->
+      <g id="jawLite" transform="translate(0,0)">
+        <path d="M110 220c28 16 52 16 80 0 0 0 0 0 0 0" fill="none" stroke="#3e4f6e" stroke-width="8" stroke-linecap="round"/>
+        <ellipse id="glowMouthLite" cx="150" cy="226" rx="36" ry="9" fill="#ffd980" opacity=".12"/>
+      </g>
+    </g>
+  </svg>
+</div>
+
 <div id="secretFixed" class="secret-fixed" title="Passer l\'intro"></div>
 <div class="bg-gate bg-fallback" aria-hidden="true"></div>
 <div class="bg-intro bg-fallback" aria-hidden="true"></div>
@@ -195,7 +263,7 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
     <p style="--i:0">Vous êtes conviés pour un petit week-end entre amis… pour célébrer les 40 ans de Franck.</p>
     <p style="--i:1">Un week-end d’amitié, de rires, de bons repas… bref, une fête comme vous l’imaginez.</p>
     <p style="--i:2">Mais derrière cette fête se cache un jeu… discret, mais omniprésent.</p>
-    <p style="--i:3">Franck m'a beaucoup parlé de vous...</p>
+    <p style="--i:3">On m'a beaucoup parlé de vous...</p>
     <p style="--i:4">Certains traînent toujours des travaux jamais terminés.</p>
     <p style="--i:5">D’autres savent vendre des surgelés… même trop longtemps restés au congélateur.</p>
     <p style="--i:6">Il y en a dont les sourcils tombent quand le stress monte.</p>
@@ -203,10 +271,10 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
     <p style="--i:8">Il y en a qui ont l’art de contredire… même quand, au fond, c’était une bonne idée.</p>
     <p style="--i:9">D’autres, au contraire, laissent tout glisser… rien n’est grave.</p>
     <p style="--i:10">Et puis, il y a celui qui n’aime pas ce type de jeu… mais qui, ce week-end, ne pourra pas y échapper.</p>
-    <p style="--i:11">Et bien sûr, des infirmières, prêtes à veiller sur chacun mais, elles aussi devront se méfier.Ou... devriez-vous vous mefier d'elle...</p>
+    <p style="--i:11">Et bien sûr, des infirmières, prêtes à veiller sur chacun mais elles aussi devront se méfier...ou devriez-vous vous mefier d'elle...</p>
     <p style="--i:12">Tout le monde se connaît depuis plusieurs années… Mais saurez-vous reconnaître les traîtres cachés parmi vous ?</p>
-    <p style="--i:13">À chaque repas, à chaque nuit, un vote décidera d’un destin</p>
-    <p style="--i:14">Vous allez dans quelques instants connaître votre rôles...</p>
+    <p style="--i:13">À chaque repas, à chaque nuit, un conseil décidera d’un destin</p>
+    <p style="--i:14">Vous allez dans quelques instants connaître vos rôles...</p>
     <p id="intro-last" style="--i:15">Que la partie commence…</p> 
   </div>
 </div>
@@ -498,6 +566,71 @@ function revealRole(payload){
   }
   document.getElementById('closeRoleBtn').onclick=function(){ modal.style.display='none'; };
 }
+
+/* ==== Talking mask logic (lite) + sync to intro paragraphs ==== */
+(function(){
+  var overlay = document.getElementById('maskOverlayLite');
+  var jaw = document.getElementById('jawLite');
+  var glow = document.getElementById('glowMouthLite');
+  var speaking=false, rafId=null, stepTimer=null;
+
+  function setJaw(open){
+    if(!jaw) return;
+    var ty = 8 * open;
+    var rot = -2 + 6*open;
+    jaw.setAttribute('transform','translate(0,'+ty.toFixed(2)+') rotate('+rot.toFixed(2)+',150,226)');
+    if(glow){
+      glow.setAttribute('ry', (9 + 6*open).toFixed(2));
+      glow.setAttribute('opacity', (0.12 + 0.25*open).toFixed(2));
+    }
+  }
+  function randomStep(){
+    if(!speaking) return;
+    var target = Math.random()*0.9;
+    var dur = 80 + Math.random()*220;
+    var start = performance.now();
+    var init = window.__jawOpenLite || 0;
+    function tick(now){
+      var t = (now - start)/dur;
+      if(t>=1){
+        setJaw(target); window.__jawOpenLite = target;
+        stepTimer = setTimeout(function(){ randomStep(); }, 40+Math.random()*120);
+        return;
+      }
+      var e = 1 - Math.pow(1-t,3);
+      var val = init + (target - init)*e;
+      setJaw(val); window.__jawOpenLite = val;
+      rafId = requestAnimationFrame(tick);
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+  function maskSpeak(){ if(!overlay) return; overlay.style.display='block'; if(speaking) return; speaking=true; randomStep(); }
+  function maskStop(){ speaking=false; if(rafId){ cancelAnimationFrame(rafId); rafId=null; } if(stepTimer){ clearTimeout(stepTimer); stepTimer=null; } setJaw(0); }
+  function hideMask(){ if(overlay){ overlay.style.display='none'; } }
+
+  // Sync on paragraph animations
+  document.addEventListener('DOMContentLoaded', function(){
+    try{
+      var paras = document.querySelectorAll('.slide p');
+      if(!paras || !paras.length) return;
+      paras.forEach(function(p, idx){
+        p.addEventListener('animationstart', function(){ maskSpeak(); });
+        p.addEventListener('animationend', function(){
+          maskStop();
+          if(idx === paras.length-1){ hideMask(); }
+        });
+      });
+    }catch(e){ console.error('mask sync', e); }
+  });
+
+  // If you have startIntro(), show mask immediately at intro start
+  (function(){
+    var old = window.startIntro;
+    window.startIntro = function(){
+      try{ if(typeof old==='function') old(); } finally { if(overlay) overlay.style.display='block'; }
+    };
+  })();
+})();
 </script>
 
 <script>
