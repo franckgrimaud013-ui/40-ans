@@ -181,6 +181,28 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 /* Crossfade visibility */
 #bgVideoLayer .bgv.is-active{ opacity:1 !important; }
 </style>
+
+<style>
+/* Restore paragraphs on second screen */
+.overlay .slide { white-space: normal !important; }
+.overlay .slide p { display: block !important; margin: 0.6em 0 !important; }
+.overlay .slide p.muted { opacity: .85; }
+/* Make sure overlays sit above the video */
+#bgVideoLayer{ z-index:0 !important; }
+.overlay{ position:relative !important; z-index:2 !important; }
+/* CTA button overlay */
+#ctaOverlay{
+  position: fixed; left: 0; right: 0; bottom: 6vh;
+  display: none; justify-content: center; z-index: 3;
+}
+#ctaOverlay .btn-start{
+  appearance:none;border:1px solid rgba(255,215,0,.7);
+  background:radial-gradient(120% 120% at 50% -10%, rgba(255,215,0,.18), rgba(255,215,0,.06));
+  color:#fff;padding:12px 22px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase;
+  font-weight:700;box-shadow:0 0 22px rgba(255,215,0,.22);transition:transform .15s ease, box-shadow .2s ease;cursor:pointer;
+}
+#ctaOverlay .btn-start:hover{ transform: translateY(-1px); box-shadow:0 0 28px rgba(255,215,0,.35); }
+</style>
 </head>
 <body>
   <!-- Background video layer (hidden until click) -->
@@ -989,6 +1011,79 @@ if ('serviceWorker' in navigator) {
   obs.observe(document.documentElement, {attributes:true, attributeFilter:['class']});
 })();
 </script>
+
+<script>
+(function(){
+  // When intro starts, reveal the CTA after a small delay so users can read
+  function revealCTA(){
+    var cta = document.getElementById('ctaOverlay');
+    if (cta) cta.style.display = 'flex';
+  }
+  // Try to detect when your start button was clicked by monitoring the video starting
+  var v1 = document.getElementById('bgv1');
+  if (v1){
+    v1.addEventListener('play', function onplay(){
+      v1.removeEventListener('play', onplay);
+      // Show CTA after 15 seconds (adjust if needed)
+      setTimeout(revealCTA, 15000);
+    });
+  } else {
+    // Fallback: show CTA after 15s on load
+    setTimeout(revealCTA, 15000);
+  }
+
+  // Optional: click handler to navigate to your app section if it exists
+  var enter = document.getElementById('enterBtn');
+  if (enter){
+    enter.addEventListener('click', function(e){
+      e.preventDefault();
+      // If you use a hash navigation like #app, uncomment the next line:
+      // location.hash = '#app';
+    });
+  }
+})();
+</script>
+
+<script>
+(function(){
+  function revealCTA(){ var c=document.getElementById('ctaOverlay'); if(c) c.style.display='flex'; }
+
+  // Choose target paragraph:
+  // - if a paragraph has [data-cta="true"], use it
+  // - else fallback to the last <p> inside .overlay .slide
+  var slide = document.querySelector('.overlay .slide');
+  var target = slide ? slide.querySelector('p[data-cta="true"]') : null;
+  if (!target && slide){
+    var ps = slide.querySelectorAll('p');
+    if (ps.length) target = ps[ps.length-1];
+  }
+
+  if (target && 'IntersectionObserver' in window){
+    var shown = false;
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (!shown && e.isIntersecting && e.intersectionRatio > 0.6){
+          shown = true;
+          revealCTA();
+          io.disconnect();
+        }
+      });
+    }, { root: null, threshold: [0, 0.25, 0.6, 0.9, 1] });
+    io.observe(target);
+  } else {
+    // Fallback: show CTA after 12s from video play
+    var v1 = document.getElementById('bgv1');
+    if (v1){
+      v1.addEventListener('play', function once(){ v1.removeEventListener('play', once); setTimeout(revealCTA, 12000); });
+    } else {
+      setTimeout(revealCTA, 12000);
+    }
+  }
+
+  // Optional manual override: add class 'show-cta' on <html> to force display
+  if (document.documentElement.classList.contains('show-cta')) revealCTA();
+
+})();
+</script>
 </body>
 </html>
-
