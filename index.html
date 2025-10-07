@@ -213,8 +213,22 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 }
 .btn-start:hover{ transform:translateY(-1px); box-shadow:0 0 28px rgba(255,215,0,.35); }
 </style>
+
+<style>
+/* Stage toggling */
+html.stage-1 #gateScreen,
+html.stage-1 #gateText{ display:block; }
+html.stage-1 #bgVideoLayer{ display:none; }
+
+html.stage-2 #gateScreen,
+html.stage-2 #gateText{ display:none !important; }
+html.stage-2 #bgVideoLayer{ display:block !important; }
+
+/* Prevent crowding at the very top; intro slide spacing */
+.overlay .slide { margin-top: 10vh; white-space: normal; }
+</style>
 </head>
-<body>
+<body class="stage-1">
   <!-- === Screen 1: Intro video with overlay text/button === -->
   <div id="blackVeil" aria-hidden="true" style="position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:10;transition:opacity 1000ms ease;"></div>
   <section id="gateScreen" aria-label="Accueil" style="position:fixed;inset:0;z-index:1;">
@@ -1145,6 +1159,43 @@ if ('serviceWorker' in navigator) {
   }
 
   if (startBtn) startBtn.addEventListener('click', function(e){ e.preventDefault(); startAll(); });
+})();
+</script>
+
+<script>
+(function(){
+  const veil = document.getElementById('blackVeil');
+  const gate = document.getElementById('gateScreen');
+  const gateText = document.getElementById('gateText');
+  const gateVideo = document.getElementById('gateVideo');
+  const startBtn = document.getElementById('startIntroBtn');
+  const bgLayer = document.getElementById('bgVideoLayer');
+  const music = document.getElementById('introMusic');
+
+  function startAll(){
+    // Fade to black
+    if (veil) veil.style.opacity = '1';
+
+    setTimeout(()=>{
+      // Pause and hide gate video
+      try{ gateVideo && gateVideo.pause(); }catch(e){}
+      document.documentElement.classList.remove('stage-1');
+      document.documentElement.classList.add('stage-2');
+
+      // Start bg video loop
+      if (window.__bgVideoStart) window.__bgVideoStart();
+
+      // Start music
+      if (music){ try{ music.volume = 0.35; music.currentTime = 0; music.play().catch(()=>{});}catch(e){} }
+
+      // Clear veil
+      if (veil) veil.style.opacity = '0';
+    }, 1000);
+  }
+
+  if (startBtn){
+    startBtn.addEventListener('click', function(e){ e.preventDefault(); startAll(); });
+  }
 })();
 </script>
 </body>
