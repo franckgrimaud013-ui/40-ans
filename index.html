@@ -6,7 +6,7 @@
 <title>Les Traîtres — 40 ans Franck</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 <style>
-:root{--fg:#fff;--mut:#cfd5dc;--per:6s;--count:15;--total:calc((var(--per) + 5s)*var(--count) + 0.5s)}
+:root{--fg:#fff;--mut:#cfd5dc;--per:6s;--count:15;--total:calc(var(--per)*var(--count) + 0.5s)}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--fg);background:#000}
 
@@ -116,65 +116,61 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 #app:target ~ #gate{display:none}
 #audioUnlock{display:none;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9999;background:rgba(0,0,0,.7);color:#fff;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(3px);font-size:14px;white-space:nowrap}
 #audioUnlock button{margin-left:8px;padding:6px 10px;border-radius:10px;border:1px solid rgba(212,175,55,.9);background:linear-gradient(180deg,rgba(212,175,55,.25),rgba(212,175,55,.12));color:#fff;cursor:pointer}
-
-/* === Planning & Règles (inline) + Role modal (light) + Secret skip === */
-.secret-fixed{position:fixed;top:12px;left:12px;width:20px;height:20px;border-radius:50%;z-index:9999;cursor:pointer;opacity:.25;
-  background:radial-gradient(circle at 30% 30%, rgba(212,175,55,.95) 0%, rgba(212,175,55,.45) 45%, rgba(0,0,0,0) 60%);
-  box-shadow:0 0 14px rgba(212,175,55,.55), 0 0 28px rgba(212,175,55,.35);
-}
-.app-shown .secret-fixed{display:none}
-.welcome-section{margin:14px auto;width:min(92%,960px);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:16px;color:#eaf0f8}
-.welcome-grid{display:grid;gap:12px}
-@media(min-width:760px){.welcome-grid{grid-template-columns:1fr 1fr}}
-.wc-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px}
-.wc-card h3{margin:0 0 6px;color:#ffd98a}
-.wc-card ul{margin:6px 0 0 18px}
-.wc-actions{text-align:center;margin-top:10px}
-.wc-btn{padding:12px 16px;border:none;border-radius:12px;background:#d4af37;color:#000;font-weight:800;cursor:pointer}
-/* Role modal */
-.role-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.75);z-index:12000;padding:16px}
-.role-box{background:#0b0f18;border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:18px;width:min(92%,720px);color:#eaf0f8}
-.role-box h3{margin:0 0 8px;color:#ffd98a;font-size:clamp(22px,4.2vw,28px)}
-.role-main{font-size:clamp(18px,3.5vw,24px);margin-top:6px}
-.role-actions{margin-top:12px;text-align:center}
-.role-btn{padding:10px 14px;border-radius:12px;border:none;background:#d4af37;color:#000;font-weight:800;cursor:pointer}
-/* Role panels (blue/red) */
-.role-wrap{margin-top:12px}
-.role-box-blue{border-radius:14px;padding:12px;border:1px solid rgba(255,255,255,.15);background:linear-gradient(180deg,#0e2a4d,#12345a)}
-.role-box-red{border-radius:14px;padding:12px;border:1px solid rgba(255,255,255,.15);background:linear-gradient(180deg,#5a0f1b,#6e1421)}
-.cta-traitor{display:inline-block;padding:10px 14px;border-radius:12px;background:#ffd87a;color:#000;font-weight:900}
-
 </style>
 
-<!-- PATCH: lisibilité p3 (titre blanc + panneaux sombres) -->
-<style id="patch-p3-style">
-  /* Titre blanc + halo (sera appliqué via JS en ajoutant id="p3Title") */
-  #p3Title{
-    color:#fff !important;
-    font-size:clamp(20px,3.2vw,28px) !important;
-    font-weight:900 !important;
-    line-height:1.15 !important;
-    text-shadow:0 0 14px rgba(255,255,255,.35) !important;
-    margin:0 0 10px !important;
-  }
-  /* Panneaux règles/planning : fond noir semi-transparent */
-  .panel-dark{
-    background:rgba(0,0,0,.60) !important;
-    border:1px solid rgba(255,255,255,.12) !important;
-    box-shadow:0 10px 30px rgba(0,0,0,.30) !important;
-  }
-</style>
-
-<link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#ffd87a">
-<link rel="icon" href="/icons/icon-192.png">
 <style>
-/* CTA visibility controlled by end of intro animation */
-#ctaOverlay{opacity:0;pointer-events:none;transform:translateY(6px);transition:.4s ease;}
+
+/* === Background looping video (screen #2) === */
+#bgVideoLayer{
+  position:fixed; inset:0; z-index:0; pointer-events:none; display:block;
+}
+#bgVideoLayer .bgv{
+  position:absolute; inset:0;
+  width:100%; height:100%; object-fit:cover;
+  filter:brightness(0.9);
+  opacity:0; transition:opacity 1.2s ease;
+}
+#bgVideoLayer .bgv.is-active{ opacity:1; }
+
+/* Move intro text a bit higher on screen #2 */
+.overlay .slide{ top:-8vh; }
+
+/* Ensure overlay sits above the video */
+.overlay{ position:relative; z-index:2; }
+#ctaOverlay{ position:relative; z-index:3; }
+
+</style>
+
+<style>
+
+/* === Smooth transition from first image to looping video === */
+:root{
+  --fade-dur: 2s;
+  --duck-start: 0.18;
+  --duck-normal: 0.35;
+}
+.fade-layer{
+  position: fixed;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity var(--fade-dur) ease-in-out;
+}
+.bg-gate.fade-out{
+  opacity: 0 !important;
+  transition: opacity var(--fade-dur) ease-in-out;
+}
+#bgVideoLayer.fade-in .bgv.is-active{
+  opacity: 1 !important;
+}
+
 </style>
 </head>
 <body>
-<div id="secretFixed" class="secret-fixed" title="Passer l\'intro"></div>
+<div class="fade-layer" id="introFade"></div>
+
 <div class="bg-gate bg-fallback" aria-hidden="true"></div>
 <div class="bg-intro bg-fallback" aria-hidden="true"></div>
 <div class="bg-role bg-fallback" aria-hidden="true"></div>
@@ -190,24 +186,33 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 </div>
 
 <!-- INTRO -->
+<!-- Background video layer (crossfade loop) -->
+<div id="bgVideoLayer" aria-hidden="true">
+  <video id="bgv1" class="bgv" muted playsinline preload="auto">
+    <source src="videos/fond-boucle.mp4" type="video/mp4">
+  </video>
+  <video id="bgv2" class="bgv" muted playsinline preload="auto">
+    <source src="videos/fond-boucle.mp4" type="video/mp4">
+  </video>
+</div>
+
 <div class="overlay">
   <div class="slide">
     <p style="--i:0">Vous êtes conviés pour un petit week-end entre amis… pour célébrer les 40 ans de Franck.</p>
     <p style="--i:1">Un week-end d’amitié, de rires, de bons repas… bref, une fête comme vous l’imaginez.</p>
     <p style="--i:2">Mais derrière cette fête se cache un jeu… discret, mais omniprésent.</p>
-    <p style="--i:3">Franck m'a beaucoup parlé de vous...</p>
+    <p style="--i:3">Tout le monde se connaît depuis plusieurs années…</p>
     <p style="--i:4">Certains traînent toujours des travaux jamais terminés.</p>
     <p style="--i:5">D’autres savent vendre des surgelés… même trop longtemps restés au congélateur.</p>
     <p style="--i:6">Il y en a dont les sourcils tombent quand le stress monte.</p>
-    <p style="--i:7">Et puis, il y a celle qui connaît toutes les règles du jeu… et qui aime que tout soit clair… avant de commencer.</p>
+    <p style="--i:7">Et d’autres ont cette rigueur implacable : les règles, toutes les règles, rien que les règles.</p>
     <p style="--i:8">Il y en a qui ont l’art de contredire… même quand, au fond, c’était une bonne idée.</p>
     <p style="--i:9">D’autres, au contraire, laissent tout glisser… rien n’est grave.</p>
-    <p style="--i:10">Et puis, nous avons un passionné.Son métier, les couleurs pastel et les "S" difficilement prononcé…</p>
-    <p style="--i:11">Et bien sûr, des infirmières, prêtes à veiller sur chacun mais elles aussi devront se méfier...ou devriez-vous vous méfier d'elle...</p>
-    <p style="--i:12">Tout le monde se connaît depuis plusieurs années… Mais saurez-vous reconnaître les traîtres cachés parmi vous ?</p>
-    <p style="--i:13">À chaque repas, à chaque nuit, un vote décidera d’un destin</p>
-    <p style="--i:14">Vous allez dans quelques instants connaître vos rôles...</p>
-    <p id="intro-last" style="--i:15">Que la partie commence…</p> 
+    <p style="--i:10">Et puis, il y a celui qui n’aime pas ce type de jeu… mais qui, ce week-end, ne pourra pas y échapper.</p>
+    <p style="--i:11">Et bien sûr, des infirmières… prêtes à veiller sur chacun mais elles aussi devront se méfier ; personne n’est vraiment à l’abri.</p>
+    <p style="--i:12">Vous êtes tous là. Vous vous connaissez. Mais saurez-vous reconnaître les traîtres cachés parmi vous ?</p>
+    <p style="--i:13">Parmis vous se cachent des Traîtres. À chaque repas, un conseil décidera d’un destin</p>
+    <p style="--i:14">Que la partie commence…</p>
   </div>
 </div>
 
@@ -216,49 +221,6 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 
 <!-- APP -->
 <div class="app" id="app">
-  <!-- Planning & Règles -->
-  <section id="welcomeSection" class="welcome-section">
-    <h2 style="text-align:center;color:#ffd98a;margin:0 0 6px">Le déroulé du week-end</h2>
-    <p style="text-align:center;color:#cfd5dc;margin:0 0 10px">Tu vas bientôt découvrir ton rôle. Voici comment va se dérouler l’expérience — on est entre amis, le but est de s’amuser 😉</p>
-    <div class="welcome-grid">
-      <div class="wc-card">
-        <h3>🗓️ Le planning</h3>
-        <ul>
-          <li><b>Vendredi soir</b> : conseil et vote d’élimination.</li>
-          <li><b>Nuit ven → sam</b> : les Traîtres choisissent discrètement une victime via leur lien.</li>
-          <li><b>Samedi matin</b> : annonce au groupe du résultat de la nuit.</li>
-          <li><b>Samedi midi</b> : nouveau conseil et vote.</li>
-          <li><b>Samedi soir</b> : conseil et vote.</li>
-          <li><b>Nuit sam → dim</b> : les Traîtres éliminent à nouveau via leur lien.</li>
-          <li><b>Dimanche matin</b> : annonce au groupe de la victime de la nuit.</li>
-        </ul>
-      </div>
-      <div class="wc-card">
-        <h3>🎭 Esprit & règles</h3>
-        <ul>
-          <li>Les Traîtres jouent <b>en secret</b> via un lien privé (personne ne sait qui ils sont).</li>
-          <li>Les Loyaux observent, discutent et votent avec stratégie.</li>
-          <li>Pas de prise de tête : les écrans clés s’affichent au bon moment pour le groupe.</li>
-          <li>On garde la <b>bonne entente</b> : fun & fair-play.</li>
-        </ul>
-      </div>
-    </div>
-    <!-- Role panels appear here after click -->
-    <div id="roleInline" class="role-wrap" style="display:none">
-      <div id="roleBlue" class="role-box-blue" style="display:none">
-        <h3>Ton rôle : LOYAL 🛡️</h3>
-        <p>Observe, discute, vote avec stratégie — et protège le groupe.</p>
-      </div>
-      <div id="roleRed" class="role-box-red" style="display:none">
-        <h3>Ton rôle : TRAÎTRE 🕵️‍♂️</h3>
-        <p>Joue en secret. Garde ton lien sous la main pour voter la nuit.</p>
-        <div style="text-align:center;margin-top:8px">
-          <a id="voteCta" class="cta-traitor" href="#" target="_blank" rel="noopener">Voter la nuit pour éliminer un Loyal</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <div class="grid">
     <!-- Organisateur -->
     <div class="card" id="orgCard">
@@ -359,7 +321,7 @@ function onEnterApp(){
       var pIntro=document.getElementById('playerIntro'); 
       if(pIntro && PAYLOAD.name){
         pIntro.innerHTML = "<b>"+PAYLOAD.name+"</b>, es-tu prêt ? Quand tu es seul, découvre ta carte.<br>" +
-                           "<span style='color:#ccc;font-size:18px'>Petit secret : c’est bien Franck qui a eu l’idée de ce jeu 😉… mais rassurez-vous, il ne connaît pas vos rôles.</span>";
+                           "<span style='color:#ccc;font-size:14px'>Petit secret : c’est bien Franck qui a eu l’idée et qui a même créé ce jeu 😉… mais rassurez-vous, il ne connaît pas vos rôles.</span>";
       }
       var playerName=document.getElementById('playerName'); if(playerName && PAYLOAD.name){ playerName.textContent = PAYLOAD.name; }
       var center=document.getElementById('playerCenter'); if(center) center.style.display='flex';
@@ -501,396 +463,126 @@ function revealRole(payload){
 </script>
 
 <script>
-// Secret skip intro: go straight to #app
+/* Crossfading loop for background video (no visible jump) */
 (function(){
-  var dot = document.getElementById('secretFixed');
-  function showApp(){
-    try{ location.hash='#app'; }catch(e){}
-    document.documentElement.classList.add('app-shown');
-    // Also try hiding typical intro layers
-    try{
-      ['.intro','#intro','.landing','.splash','.cover','.intro-container'].forEach(function(sel){
-        document.querySelectorAll(sel).forEach(function(n){ n.style.display='none'; });
-      });
-    }catch(e){}
-  }
-  if(dot){
-    var t; dot.addEventListener('click', showApp);
-    dot.addEventListener('touchstart', function(){ t=setTimeout(showApp,600); }, {passive:true});
-    dot.addEventListener('touchend', function(){ clearTimeout(t); }, {passive:true});
-  }
-  // On load, if already #app, mark visible
-  document.addEventListener('DOMContentLoaded', function(){
-    if(location.hash==='#app'){ document.documentElement.classList.add('app-shown'); }
-  });
-})();
+  const layer = document.getElementById('bgVideoLayer');
+  if(!layer) return;
+  const v1 = document.getElementById('bgv1');
+  const v2 = document.getElementById('bgv2');
+  const CROSSFADE = 1.2;
+  let active = v1, next = v2, armed = false;
 
-// Role reveal (inline first; modal fallback if no inline container)
-(function(){
-  function parseToken(){
-    try{
-      var p = new URLSearchParams(location.search||'');
-      if(p.has('t')) return JSON.parse(decodeURIComponent(atob(p.get('t'))));
-    }catch(e){}
-    return null;
-  }
-  function openInline(){
-    var wrap = document.getElementById('roleInline');
-    var blue = document.getElementById('roleBlue');
-    var red  = document.getElementById('roleRed');
-    var voteCta = document.getElementById('voteCta');
-    if(!wrap) return false;
-    var pay = parseToken();
-    wrap.style.display='block';
-    blue.style.display='none'; red.style.display='none';
-    if(pay && pay.role==='TRAITRE'){
-      red.style.display='block';
-      var t = new URLSearchParams(location.search).get('t') || '';
-      if(voteCta){ voteCta.href = 'traitor_vote.html' + (t ? ('?t='+encodeURIComponent(t)) : ''); }
-    } else if(pay && pay.role){
-      blue.style.display='block';
-    } else {
-      // No token: keep the inline panels hidden, use modal instead to show message
-      wrap.style.display='none';
-      return false;
+  function armLoop(video){
+    if (armed) return;
+    armed = true;
+    const dur = video.duration || 0;
+    if (!dur || !isFinite(dur)) {
+      video.addEventListener('loadedmetadata', ()=>{ armed=false; armLoop(video); }, {once:true});
+      return;
     }
-    // scroll to panels
-    try{ document.getElementById('roleInline').scrollIntoView({behavior:'smooth', block:'start'}); }catch(e){}
-    return true;
-  }
-  function openModal(){
-    var wrap = document.getElementById('roleModal');
-    var box  = document.getElementById('roleContent');
-    if(!wrap || !box) return;
-    var pay = parseToken();
-    if(pay && pay.role){
-      var name = pay.name || 'Joueur';
-      var role = pay.role;
-      var emoji = role==='TRAITRE' ? '🕵️‍♂️' : '🛡️';
-      box.innerHTML = '<div>'+emoji+' <b>'+name+'</b>, ton rôle est :</div><div style="margin-top:8px;font-size:1.2em"><b>'+role+'</b></div>';
-    } else {
-      box.innerHTML = "🔒 Ce lien ne contient pas ton rôle. Ouvre d’abord ton lien d’invitation personnel.<br><span style='font-size:14px;color:#cfd5dc'>L’organisateur doit d’abord créer et envoyer les invitations.</span>";
-    }
-    wrap.style.display='flex';
-  }
-  function closeModal(){ var wrap=document.getElementById('roleModal'); if(wrap) wrap.style.display='none'; }
-  document.addEventListener('DOMContentLoaded', function(){
-    var btn = document.getElementById('gotoReveal');
-    if(btn && !btn._b){ btn._b=true; btn.addEventListener('click', function(){ if(!openInline()) openModal(); }); }
-    var c = document.getElementById('roleClose');
-    if(c && !c._b){ c._b=true; c.addEventListener('click', closeModal); }
-  });
-})();
-</script>
-
-
-<!-- PATCH v7: remplace #closeRoleBtn par un lien "Voter la nuit..." pour les Traîtres -->
-<script>
-(function(){
-  // Helpers
-  function safeAtob(s){
-    try { return decodeURIComponent(atob(s)); }
-    catch(e){ try { return decodeURIComponent(escape(atob(s))); } catch(e2){ return null; } }
-  }
-  function normRole(r){
-    if(!r) return '';
-    try{ return String(r).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,''); }
-    catch(e){ return String(r).toLowerCase(); }
-  }
-  function isTraitor(){
-    try{
-      var t = new URLSearchParams(location.search).get('t') || '';
-      if(!t) return false;
-      var raw = safeAtob(t) || t;
-      var data = JSON.parse(raw);
-      return normRole(data && data.role).includes('trait'); // traître/traitre/traitor
-    }catch(e){ return false; }
-  }
-  function voteHref(){
-    try{
-      var t = new URLSearchParams(location.search).get('t') || '';
-      return 'traitor_vote.html' + (t ? ('?t='+encodeURIComponent(t)) : '');
-    }catch(e){ return 'traitor_vote.html'; }
-  }
-
-  if(!isTraitor()) return; // n'agit que pour les Traîtres
-
-  function replaceBtn(){
-    var btn = document.getElementById('closeRoleBtn');
-    if(!btn || btn.dataset.__votedone) return false;
-
-    // Crée un <a> à la place du bouton, style doré
-    var a = document.createElement('a');
-    a.textContent = 'Voter la nuit pour éliminer un Loyal';
-    a.href = voteHref();
-    a.target = '_blank'; a.rel = 'noopener';
-
-    // Conserver classes pour ton style, sinon appliquer un style or
-    a.className = btn.className || '';
-    if(!a.className){
-      a.style.display = 'inline-block';
-      a.style.padding = '10px 16px';
-      a.style.borderRadius = '12px';
-      a.style.background = '#ffd87a';
-      a.style.color = '#000';
-      a.style.fontWeight = '900';
-      a.style.textDecoration = 'none';
-      a.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
-    } else {
-      // Si classe .btn dorée, force couleurs or/noir
-      try{
-        a.style.background = '#ffd87a';
-        a.style.color = '#000';
-        a.style.fontWeight = '900';
-      }catch(e){}
-    }
-
-    // Neutraliser toute fermeture via propagation
-    a.addEventListener('click', function(ev){ ev.stopPropagation(); });
-
-    // Remplacer le noeud (évite les anciens listeners)
-    btn.parentNode.replaceChild(a, btn);
-    a.dataset.__votedone = "1";
-    return true;
-  }
-
-  // Essaye immédiatement, puis surveille jusqu'à ce que le bouton existe
-  if (replaceBtn()) return;
-
-  var tries = 0;
-  var tmr = setInterval(function(){
-    tries++;
-    if (replaceBtn() || tries>80) clearInterval(tmr); // ~8s
-  }, 100);
-
-  var obs = new MutationObserver(function(){ replaceBtn(); });
-  obs.observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:['class','style']});
-})();
-</script>
-
-
-<!-- PATCH: auto-tag p3 title, darken panels, and fix secret skip -->
-<script id="patch-p3-script">
-(function(){
-  function textIncludes(node, needles){
-    const t = (node.textContent||"").toLowerCase();
-    return needles.some(n=>t.includes(n));
-  }
-  function tagP3Title(){
-    // Try to find a heading on page 3 that mentions Franck/créé/jeu
-    const candidates = document.querySelectorAll("h1,h2,h3,h4");
-    const needles = ["franck", "créé", "cree", "jeu", "week-end", "week end"];
-    for(const el of candidates){
-      if(textIncludes(el, needles)){
-        el.id = "p3Title";
-        break;
+    const tick = () => {
+      if (video.paused || video.ended) return;
+      const t = video.currentTime;
+      if (dur - t <= CROSSFADE + 0.05) {
+        next.currentTime = 0;
+        next.play().catch(()=>{});
+        active.classList.remove('is-active');
+        next.classList.add('is-active');
+        const old = active; active = next; next = old;
+        armed = false;
+        armLoop(active);
+      } else {
+        requestAnimationFrame(tick);
       }
-    }
-  }
-  function darkenPanels(){
-    // Add panel-dark to likely rule/planning containers on page 3
-    const sel = [
-      ".panel", ".rules", ".planning", ".notice", ".card", ".bloc", ".section"
-    ];
-    const needles = ["règle","regle","planning","déroulé","deroule","week-end","week end"];
-    const nodes = document.querySelectorAll(sel.join(","));
-    nodes.forEach(el => {
-      if(textIncludes(el, needles)){
-        el.classList.add("panel-dark");
-      }
-    });
-  }
-  function fixSecretSkip(){
-    const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
-    if(!secret) return;
-    function goToP3(){
-      // Only toggle .page visibility to avoid breaking background layers
-      document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
-      const p3 = document.getElementById("p3") || document.querySelector("[data-page='3']") || document.querySelector(".page:nth-of-type(3)");
-      if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
-      document.documentElement.classList.add("app-shown");
-    }
-    secret.addEventListener("click", goToP3);
-    let tId;
-    secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3, 500); }, {passive:true});
-    secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId);   }, {passive:true});
-  }
-  if(document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", ()=>{ tagP3Title(); darkenPanels(); fixSecretSkip(); });
-  }else{
-    tagP3Title(); darkenPanels(); fixSecretSkip();
-  }
-})();
-</script>
-
-
-<!-- PATCH: strong skip — masque aussi tous les fonds/overlays d'intro -->
-<script id="patch-strongskip">
-(function(){
-  const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
-  if(!secret) return;
-
-  function injectHideCSS(){
-    if (document.getElementById("skipHideCSS")) return;
-    const css = `
-      /* cache les couches visuelles d'intro potentiellement encore visibles */
-      .intro, .intro-layer, .bg, .bg-intro, .overlay, .overlay-intro,
-      .image-hero, .image-bg, .img-bg, .bg-img, .hero-bg,
-      .slide, .slides, .parallax, .page-bg, [data-intro] {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-      }
-      /* coupe les animations/vidéos éventuelles */
-      video, audio { display: none !important; }
-      * { animation: none !important; transition: none !important; }
-    `;
-    const style = document.createElement("style");
-    style.id = "skipHideCSS";
-    style.textContent = css;
-    document.head.appendChild(style);
+    };
+    requestAnimationFrame(tick);
   }
 
-  function goToP3Strong(){
-    // 1) désactive toutes les pages actives
-    document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
-    // 2) masque agressivement les backgrounds/overlays d'intro
-    injectHideCSS();
-
-    // 3) masque tous les éléments fixed/absolute qui ne sont pas dans p3
-    const p3 = document.getElementById("p3");
-    const rectP3 = p3 ? p3.getBoundingClientRect() : null;
-    const all = Array.from(document.body.querySelectorAll("*"));
-    all.forEach(el=>{
-      const st = getComputedStyle(el);
-      if ((st.position === "fixed" || st.position === "absolute") && !p3?.contains(el)) {
-        el.style.display = "none";
-      }
-    });
-
-    // 4) affiche la page 3 proprement
-    if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
-    document.documentElement.classList.add("app-shown");
-    try { (document.getElementById('bgAudio')||{}).pause?.(); } catch(e){}
+  function start(){
+    v1.classList.add('is-active');
+    v1.currentTime = 0; v2.currentTime = 0;
+    v1.play().catch(()=>{});
+    v2.load();
+    armLoop(v1);
   }
 
-  secret.addEventListener("click", goToP3Strong);
-  let tId;
-  secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
-  secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
-})();
-</script>
-
-
-<!-- PATCH v2: strong skip ++ — masque explicitement la page #p1 et le bloc "Un week‑end..." -->
-<script id="patch-strongskip-v2">
-(function(){
-  const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
-  if(!secret) return;
-
-  function injectHideCSS(){
-    if (document.getElementById("skipHideCSSv2")) return;
-    const css = `
-      /* Masquer dur #p1 et #p2 */
-      #p1, #p2 { display:none !important; visibility:hidden !important; opacity:0 !important; }
-      /* Masquer toutes couches intro possibles */
-      .intro, .intro-layer, .bg, .bg-intro, .overlay, .overlay-intro,
-      .image-hero, .image-bg, .img-bg, .bg-img, .hero-bg,
-      .slide, .slides, .parallax, .page-bg, [data-intro] {
-        display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important;
-      }
-      video, audio { display: none !important; }
-      * { animation: none !important; transition: none !important; }
-    `;
-    const style = document.createElement("style");
-    style.id = "skipHideCSSv2";
-    style.textContent = css;
-    document.head.appendChild(style);
+  function hideOnApp(){
+    // Hide layer when navigating to #app
+    const onHash = ()=>{
+      if (location.hash === '#app') layer.style.display='none';
+      else layer.style.display='block';
+    };
+    window.addEventListener('hashchange', onHash);
+    onHash();
   }
 
-  function hideWelcomeBlockByText(){
-    const needles = ["Un week", "pas comme les autres", "Lancez‑vous", "Lancez-vous"];
-    const all = Array.from(document.body.querySelectorAll("*"));
-    for(const el of all){
-      const t = (el.textContent||"").trim();
-      if(!t) continue;
-      const ok = needles.every(n => t.toLowerCase().includes(n.toLowerCase()));
-      if(ok){
-        // Masquer l'élément le plus grand contenant ce texte (panel de p1)
-        let n = el;
-        for(let i=0;i<4 && n && n.parentElement;i++){ // remonte un peu pour cacher le bloc
-          n = n.parentElement;
-          if(n.classList && (n.classList.contains('panel') || n.classList.contains('wrap') || n.classList.contains('page'))){
-            n.style.display = 'none';
-            break;
-          }
-        }
-        // Sécurité : masque aussi el
-        el.style.display = 'none';
-        break;
-      }
-    }
-  }
+  // Autoplay fix for mobile: start on first user interaction if needed
+  document.addEventListener('click', ()=>{ 
+    if (v1.paused) start();
+  }, {once:true});
 
-  function goToP3Strong(){
-    // Retire les .active de toutes les pages puis force p1/p2 masqués
-    document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
-    ['#p1','#p2','#intro','#welcome','.welcome','.hero-section'].forEach(sel=>{
-      document.querySelectorAll(sel).forEach(el=>{ el.style.display='none'; el.style.visibility='hidden'; el.style.opacity='0'; });
-    });
-
-    injectHideCSS();
-    hideWelcomeBlockByText();
-
-    const p3 = document.getElementById("p3");
-    // Masque tous les fixed/absolute hors p3
-    const all = Array.from(document.body.querySelectorAll("*"));
-    all.forEach(el=>{
-      const st = getComputedStyle(el);
-      if ((st.position === "fixed" || st.position === "absolute") && !p3?.contains(el)) {
-        el.style.display = "none";
-      }
-    });
-
-    if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
-    document.documentElement.classList.add("app-shown");
-    try { (document.getElementById('bgAudio')||{}).pause?.(); } catch(e){}
-  }
-
-  secret.addEventListener("click", goToP3Strong);
-  let tId;
-  secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
-  secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
-})();
-</script>
-
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(console.error);
-  });
-}
-</script>
-
-<script>
-(function(){
-  var cta = document.getElementById('ctaOverlay');
-  if(!cta) return;
-  function showCTA(){
-    cta.style.opacity = '1';
-    cta.style.pointerEvents = 'auto';
-    cta.style.transform = 'none';
-  }
-  var last = document.getElementById('intro-last');
-  if (last) {
-    last.addEventListener('animationend', showCTA, { once: true });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ()=>{ start(); hideOnApp(); });
   } else {
-    // Fallback: if not found, reveal after 35s
-    setTimeout(showCTA, 35000);
+    start(); hideOnApp();
   }
 })();
 </script>
 
+<script>
+(function(){
+  const fadeLayer = document.getElementById('introFade');
+  const bgGate = document.querySelector('.bg-gate');
+  const bgLayer = document.getElementById('bgVideoLayer');
+  const v1 = document.getElementById('bgv1');
+  const v2 = document.getElementById('bgv2');
+  const bgMusic = document.getElementById('introMusic');
+  const FADE_MS = 2000;
+  const VOL_LOW = 0.18, VOL_HIGH = 0.35;
+
+  function lerp(a,b,t){ return a + (b-a)*t; }
+
+  function duckVolume(down=true){
+    if(!bgMusic) return;
+    const start = performance.now();
+    const from = down ? VOL_HIGH : VOL_LOW;
+    const to   = down ? VOL_LOW : VOL_HIGH;
+    (function step(now){
+      const t = Math.min(1, (now-start)/FADE_MS);
+      bgMusic.volume = lerp(from, to, t);
+      if(t<1) requestAnimationFrame(step);
+    })(start);
+  }
+
+  function handleIntroStart(){
+    duckVolume(true);
+    if (fadeLayer){ fadeLayer.style.opacity = "0.35"; }
+    if (bgGate){ bgGate.classList.add('fade-out'); }
+    try{
+      if (v1 && v1.paused) v1.play().catch(()=>{});
+      if (v2 && v2.paused) v2.load();
+    }catch(e){}
+    if (bgLayer){ bgLayer.classList.add('fade-in'); }
+    setTimeout(()=>{
+      if (fadeLayer){ fadeLayer.style.opacity = "0"; }
+      duckVolume(false);
+    }, FADE_MS);
+  }
+
+  const obs = new MutationObserver(()=>{
+    if(document.documentElement.classList.contains('intro-text-start')){
+      handleIntroStart(); obs.disconnect();
+    }
+  });
+  obs.observe(document.documentElement, {attributes:true, attributeFilter:['class']});
+
+  document.addEventListener('click', (e)=>{
+    const t = e.target;
+    if (t && (t.id === 'startIntroBtn' || t.matches('[data-action=\"start-intro\"]'))) {
+      handleIntroStart();
+    }
+  }, true);
+})();
+</script>
 </body>
 </html>
