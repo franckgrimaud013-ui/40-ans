@@ -995,5 +995,32 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 
+
+<script>
+// === Robust intro video start ===
+(function(){
+  const gateVideo = document.getElementById('gateVideo');
+  if (!gateVideo) return;
+  gateVideo.muted = true;
+  gateVideo.playsInline = true;
+  function forcePlay(){
+    gateVideo.currentTime = 0;
+    const p = gateVideo.play();
+    if (p && typeof p.then==='function'){
+      p.catch(()=>{ /* will try again on user interaction */ });
+    }
+  }
+  gateVideo.addEventListener('loadeddata', forcePlay, {once:true});
+  // also bind a one-time user interaction to ensure playback if blocked
+  const resume = ()=>{
+    document.removeEventListener('touchend', resume);
+    document.removeEventListener('click', resume);
+    forcePlay();
+  };
+  document.addEventListener('touchend', resume, {once:true, passive:true});
+  document.addEventListener('click', resume, {once:true});
+})();
+</script>
+
 </body>
 </html>
