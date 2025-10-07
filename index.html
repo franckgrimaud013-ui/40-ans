@@ -229,24 +229,51 @@ html.stage-2 #bgVideoLayer{ display:block !important; }
 </style>
 
 <style>
-#startIntroBtn{
-  appearance:none !important;
-  border:1px solid rgba(255,215,0,.7) !important;
-  background:radial-gradient(120% 120% at 50% -10%, rgba(255,215,0,.18), rgba(255,215,0,.06)) !important;
-  color:#fff !important;
-  padding:12px 22px !important;
-  border-radius:999px !important;
-  letter-spacing:.04em !important;
-  text-transform:uppercase !important;
-  font-weight:700 !important;
-  box-shadow:0 0 22px rgba(255,215,0,.22) !important;
-  transition:transform .15s ease, box-shadow .2s ease !important;
-  cursor:pointer !important;
+/* Ensure overlay paragraphs show above bg video after transition */
+.overlay{ position:relative; z-index:3; }
+#bgVideoLayer{ z-index:0 !important; }
+</style>
+
+<style>
+/* Layering: bg video (0) < role image (1) < overlays (3) */
+#bgVideoLayer{ z-index:0 !important; }
+#roleBg{ z-index:1 !important; }
+.overlay{ position:relative; z-index:3 !important; }
+</style>
+
+<style>
+/* Luminous white text for final screen */
+.rules-wrap h2, .rules-wrap h3, .rules-wrap p, .rules-wrap em {
+  color: #fff;
+  text-shadow:
+    0 0 4px rgba(255,255,255,.35),
+    0 0 12px rgba(255,255,255,.18),
+    0 2px 10px rgba(0,0,0,.55);
 }
-#startIntroBtn:hover{ transform:translateY(-1px) !important; box-shadow:0 0 28px rgba(255,215,0,.35) !important; }
+.rules-wrap h2 { margin:0 0 8px; font-size:clamp(24px,4.2vw,38px); font-weight:800; letter-spacing:.02em; }
+.rules-wrap h3 { margin:4px 0 10px; font-size:clamp(18px,3vw,24px); font-weight:700; opacity:.95; }
+.rules-wrap p  { margin:8px 0; font-size:clamp(16px,2.2vw,22px); line-height:1.35; opacity:.95; }
+.rules-wrap em { font-style:normal; opacity:1; }
+
+/* Gold CTA button remains consistent */
+.btn-gold{
+  appearance:none;border:1px solid rgba(255,215,0,.7);
+  background:radial-gradient(120% 120% at 50% -10%, rgba(255,215,0,.18), rgba(255,215,0,.06));
+  color:#fff;padding:12px 22px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase;
+  font-weight:700;box-shadow:0 0 22px rgba(255,215,0,.22);cursor:pointer;transition:transform .15s ease, box-shadow .2s ease;
+}
+.btn-gold:hover{ transform:translateY(-1px); box-shadow:0 0 28px rgba(255,215,0,.35); }
+
+/* Layering: keep rules above roleBg */
+#rulesScreen{ z-index:4; }
 </style>
 </head>
 <body class="stage-1">
+
+  <!-- Third scene static image for the roles/règles -->
+  <div id="roleBg" aria-hidden="true" style="position:fixed;inset:0;background:url('rolebg.jpg') center/cover no-repeat;opacity:0;transition:opacity 1.5s ease-in-out;z-index:1;display:none;">
+  </div>
+
   <!-- === Screen 1: Intro video with overlay text/button === -->
   <div id="blackVeil" aria-hidden="true" style="position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:10;transition:opacity 1000ms ease;"></div>
   <section id="gateScreen" aria-label="Accueil" style="position:fixed;inset:0;z-index:1;">
@@ -255,11 +282,7 @@ html.stage-2 #bgVideoLayer{ display:block !important; }
       <source src="videos/intro-gate.mp4" type="video/mp4">
     </video>
   </section>
-  <div id="gateText" class="overlay" style="position:fixed;left:50%;bottom:7vh;transform:translateX(-50%);width:min(92vw,1100px);text-align:center;z-index:2;text-shadow:0 2px 10px rgba(0,0,0,.5);">
-    <h1>Vous avez été conviés…</h1>
-    <p class="muted">Un week-end pas comme les autres vous attend.</p>
-    <p style="margin-top:16px"><button id="startIntroBtn" class="btn-start">Lancez-vous</button></p>
-  </div>
+  
 
   <!-- Background video layer (hidden until click) -->
   <div id="bgVideoLayer" aria-hidden="true" style="display:none;position:fixed;inset:0;z-index:0;pointer-events:none;">
@@ -277,7 +300,12 @@ html.stage-2 #bgVideoLayer{ display:block !important; }
 <div class="bg-role bg-fallback" aria-hidden="true"></div>
 
 <!-- GATE -->
-
+<div id="gate">
+  <div class="panel">
+    <p>Un week-end pas comme les autres vous attend.<br><b>🔊 </b>… car chaque détail compte.</p>
+    <!-- Inline handler pour éviter tout problème de binding -->
+    <button class="btn" type="button" onclick="startIntro()"/button>
+  </div>
 </div>
 
 <!-- INTRO -->
@@ -678,560 +706,213 @@ function revealRole(payload){
 <!-- PATCH v7: remplace #closeRoleBtn par un lien "Voter la nuit..." pour les Traîtres -->
 <script>
 (function(){
-  // Helpers
-  function safeAtob(s){
-    try { return decodeURIComponent(atob(s)); }
-    catch(e){ try { return decodeURIComponent(escape(atob(s))); } catch(e2){ return null; } }
-  }
-  function normRole(r){
-    if(!r) return '';
-    try{ return String(r).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,''); }
-    catch(e){ return String(r).toLowerCase(); }
-  }
-  function isTraitor(){
-    try{
-      var t = new URLSearchParams(location.search).get('t') || '';
-      if(!t) return false;
-      var raw = safeAtob(t) || t;
-      var data = JSON.parse(raw);
-      return normRole(data && data.role).includes('trait'); // traître/traitre/traitor
-    }catch(e){ return false; }
-  }
-  function voteHref(){
-    try{
-      var t = new URLSearchParams(location.search).get('t') || '';
-      return 'traitor_vote.html' + (t ? ('?t='+encodeURIComponent(t)) : '');
-    }catch(e){ return 'traitor_vote.html'; }
-  }
-
-  if(!isTraitor()) return; // n'agit que pour les Traîtres
-
-  function replaceBtn(){
-    var btn = document.getElementById('closeRoleBtn');
-    if(!btn || btn.dataset.__votedone) return false;
-
-    // Crée un <a> à la place du bouton, style doré
-    var a = document.createElement('a');
-    a.textContent = 'Voter la nuit pour éliminer un Loyal';
-    a.href = voteHref();
-    a.target = '_blank'; a.rel = 'noopener';
-
-    // Conserver classes pour ton style, sinon appliquer un style or
-    a.className = btn.className || '';
-    if(!a.className){
-      a.style.display = 'inline-block';
-      a.style.padding = '10px 16px';
-      a.style.borderRadius = '12px';
-      a.style.background = '#ffd87a';
-      a.style.color = '#000';
-      a.style.fontWeight = '900';
-      a.style.textDecoration = 'none';
-      a.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
-    } else {
-      // Si classe .btn dorée, force couleurs or/noir
-      try{
-        a.style.background = '#ffd87a';
-        a.style.color = '#000';
-        a.style.fontWeight = '900';
-      }catch(e){}
-    }
-
-    // Neutraliser toute fermeture via propagation
-    a.addEventListener('click', function(ev){ ev.stopPropagation(); });
-
-    // Remplacer le noeud (évite les anciens listeners)
-    btn.parentNode.replaceChild(a, btn);
-    a.dataset.__votedone = "1";
-    return true;
-  }
-
-  // Essaye immédiatement, puis surveille jusqu'à ce que le bouton existe
-  if (replaceBtn()) return;
-
-  var tries = 0;
-  var tmr = setInterval(function(){
-    tries++;
-    if (replaceBtn() || tries>80) clearInterval(tmr); // ~8s
-  }, 100);
-
-  var obs = new MutationObserver(function(){ replaceBtn(); });
-  obs.observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:['class','style']});
-})();
-</script>
-
-
-<!-- PATCH: auto-tag p3 title, darken panels, and fix secret skip -->
-<script id="patch-p3-script">
-(function(){
-  function textIncludes(node, needles){
-    const t = (node.textContent||"").toLowerCase();
-    return needles.some(n=>t.includes(n));
-  }
-  function tagP3Title(){
-    // Try to find a heading on page 3 that mentions Franck/créé/jeu
-    const candidates = document.querySelectorAll("h1,h2,h3,h4");
-    const needles = ["franck", "créé", "cree", "jeu", "week-end", "week end"];
-    for(const el of candidates){
-      if(textIncludes(el, needles)){
-        el.id = "p3Title";
-        break;
-      }
-    }
-  }
-  function darkenPanels(){
-    // Add panel-dark to likely rule/planning containers on page 3
-    const sel = [
-      ".panel", ".rules", ".planning", ".notice", ".card", ".bloc", ".section"
-    ];
-    const needles = ["règle","regle","planning","déroulé","deroule","week-end","week end"];
-    const nodes = document.querySelectorAll(sel.join(","));
-    nodes.forEach(el => {
-      if(textIncludes(el, needles)){
-        el.classList.add("panel-dark");
-      }
-    });
-  }
-  function fixSecretSkip(){
-    const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
-    if(!secret) return;
-    function goToP3(){
-      // Only toggle .page visibility to avoid breaking background layers
-      document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
-      const p3 = document.getElementById("p3") || document.querySelector("[data-page='3']") || document.querySelector(".page:nth-of-type(3)");
-      if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
-      document.documentElement.classList.add("app-shown");
-    }
-    secret.addEventListener("click", goToP3);
-    let tId;
-    secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3, 500); }, {passive:true});
-    secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId);   }, {passive:true});
-  }
-  if(document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", ()=>{ tagP3Title(); darkenPanels(); fixSecretSkip(); });
-  }else{
-    tagP3Title(); darkenPanels(); fixSecretSkip();
-  }
-})();
-</script>
-
-
-<!-- PATCH: strong skip — masque aussi tous les fonds/overlays d'intro -->
-<script id="patch-strongskip">
-(function(){
-  const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
-  if(!secret) return;
-
-  function injectHideCSS(){
-    if (document.getElementById("skipHideCSS")) return;
-    const css = `
-      /* cache les couches visuelles d'intro potentiellement encore visibles */
-      .intro, .intro-layer, .bg, .bg-intro, .overlay, .overlay-intro,
-      .image-hero, .image-bg, .img-bg, .bg-img, .hero-bg,
-      .slide, .slides, .parallax, .page-bg, [data-intro] {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-      }
-      /* coupe les animations/vidéos éventuelles */
-      video, audio { display: none !important; }
-      * { animation: none !important; transition: none !important; }
-    `;
-    const style = document.createElement("style");
-    style.id = "skipHideCSS";
-    style.textContent = css;
-    document.head.appendChild(style);
-  }
-
-  function goToP3Strong(){
-    // 1) désactive toutes les pages actives
-    document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
-    // 2) masque agressivement les backgrounds/overlays d'intro
-    injectHideCSS();
-
-    // 3) masque tous les éléments fixed/absolute qui ne sont pas dans p3
-    const p3 = document.getElementById("p3");
-    const rectP3 = p3 ? p3.getBoundingClientRect() : null;
-    const all = Array.from(document.body.querySelectorAll("*"));
-    all.forEach(el=>{
-      const st = getComputedStyle(el);
-      if ((st.position === "fixed" || st.position === "absolute") && !p3?.contains(el)) {
-        el.style.display = "none";
-      }
-    });
-
-    // 4) affiche la page 3 proprement
-    if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
-    document.documentElement.classList.add("app-shown");
-    try { (document.getElementById('bgAudio')||{}).pause?.(); } catch(e){}
-  }
-
-  secret.addEventListener("click", goToP3Strong);
-  let tId;
-  secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
-  secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
-})();
-</script>
-
-
-<!-- PATCH v2: strong skip ++ — masque explicitement la page #p1 et le bloc "Un week‑end..." -->
-<script id="patch-strongskip-v2">
-(function(){
-  const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
-  if(!secret) return;
-
-  function injectHideCSS(){
-    if (document.getElementById("skipHideCSSv2")) return;
-    const css = `
-      /* Masquer dur #p1 et #p2 */
-      #p1, #p2 { display:none !important; visibility:hidden !important; opacity:0 !important; }
-      /* Masquer toutes couches intro possibles */
-      .intro, .intro-layer, .bg, .bg-intro, .overlay, .overlay-intro,
-      .image-hero, .image-bg, .img-bg, .bg-img, .hero-bg,
-      .slide, .slides, .parallax, .page-bg, [data-intro] {
-        display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important;
-      }
-      video, audio { display: none !important; }
-      * { animation: none !important; transition: none !important; }
-    `;
-    const style = document.createElement("style");
-    style.id = "skipHideCSSv2";
-    style.textContent = css;
-    document.head.appendChild(style);
-  }
-
-  function hideWelcomeBlockByText(){
-    const needles = ["Un week", "pas comme les autres", "Lancez‑vous", "Lancez-vous"];
-    const all = Array.from(document.body.querySelectorAll("*"));
-    for(const el of all){
-      const t = (el.textContent||"").trim();
-      if(!t) continue;
-      const ok = needles.every(n => t.toLowerCase().includes(n.toLowerCase()));
-      if(ok){
-        // Masquer l'élément le plus grand contenant ce texte (panel de p1)
-        let n = el;
-        for(let i=0;i<4 && n && n.parentElement;i++){ // remonte un peu pour cacher le bloc
-          n = n.parentElement;
-          if(n.classList && (n.classList.contains('panel') || n.classList.contains('wrap') || n.classList.contains('page'))){
-            n.style.display = 'none';
-            break;
-          }
-        }
-        // Sécurité : masque aussi el
-        el.style.display = 'none';
-        break;
-      }
-    }
-  }
-
-  function goToP3Strong(){
-    // Retire les .active de toutes les pages puis force p1/p2 masqués
-    document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
-    ['#p1','#p2','#intro','#welcome','.welcome','.hero-section'].forEach(sel=>{
-      document.querySelectorAll(sel).forEach(el=>{ el.style.display='none'; el.style.visibility='hidden'; el.style.opacity='0'; });
-    });
-
-    injectHideCSS();
-    hideWelcomeBlockByText();
-
-    const p3 = document.getElementById("p3");
-    // Masque tous les fixed/absolute hors p3
-    const all = Array.from(document.body.querySelectorAll("*"));
-    all.forEach(el=>{
-      const st = getComputedStyle(el);
-      if ((st.position === "fixed" || st.position === "absolute") && !p3?.contains(el)) {
-        el.style.display = "none";
-      }
-    });
-
-    if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
-    document.documentElement.classList.add("app-shown");
-    try { (document.getElementById('bgAudio')||{}).pause?.(); } catch(e){}
-  }
-
-  secret.addEventListener("click", goToP3Strong);
-  let tId;
-  secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
-  secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
-})();
-</script>
-
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(console.error);
-  });
-}
-</script>
-
-<script>
-(function(){
-  var cta = document.getElementById('ctaOverlay');
-  if(!cta) return;
-  function showCTA(){
-    cta.style.opacity = '1';
-    cta.style.pointerEvents = 'auto';
-    cta.style.transform = 'none';
-  }
-  var last = document.getElementById('intro-last');
-  if (last) {
-    last.addEventListener('animationend', showCTA, { once: true });
-  } else {
-    // Fallback: if not found, reveal after 35s
-    setTimeout(showCTA, 35000);
-  }
-})();
-</script>
-
-
-<script>
-(function(){
-  // Crossfade engine
-  const layer = document.getElementById('bgVideoLayer');
-  const v1 = document.getElementById('bgv1');
-  const v2 = document.getElementById('bgv2');
-  if (!layer || !v1 || !v2) return;
-  const CROSSFADE = 2.8;
-  let active = v1, next = v2, armed = false, started = false;
-
-  function armLoop(video){
-    if (armed) return;
-    armed = true;
-    const dur = video.duration || 0;
-    if (!dur || !isFinite(dur)) {
-      video.addEventListener('loadedmetadata', ()=>{ armed=false; armLoop(video); }, {once:true});
-      return;
-    }
-    const tick = () => {
-      if (video.paused || video.ended) return;
-      const t = video.currentTime;
-      if (dur - t <= CROSSFADE + 0.6) {
-        next.currentTime = 0;
-        next.play().catch(()=>{});
-        active.classList.remove('is-active');
-        next.classList.add('is-active');
-        const old = active; active = next; next = old;
-        armed = false;
-        armLoop(active);
-      } else {
-        requestAnimationFrame(tick);
-      }
-    };
-    requestAnimationFrame(tick);
-  }
-
-  function startVideo(){
-    if (started) return;
-    started = true;
-    layer.style.display = 'block';
-    try{
-      v1.currentTime = 0; v2.currentTime = 0;
-      v1.muted = true; v2.muted = true;
-      v1.playsInline = true; v2.playsInline = true;
-      v1.play().catch(()=>{});
-      v2.load();
-    }catch(e){}
-    v1.classList.add('is-active');
-    armLoop(v1);
-  }
-
-  // Find a "Lancez-vous" button and hook click
-  function isStartButton(el){
-    if (!el) return false;
-    const txt = (el.textContent || "").toLowerCase();
-    return /lancez/.test(txt);
-  }
-  let startBtn = document.getElementById('startIntroBtn')
-                  || document.querySelector('[data-action="start-intro"]')
-                  || Array.from(document.querySelectorAll('button,a')).find(isStartButton);
-
-  if (startBtn){
-    startBtn.addEventListener('click', function(){
-      // start video only after the click
-      startVideo();
-    }, {once:true});
-  }
-
-  // Fallback: if your code adds a special class on html when intro starts, listen to it
-  const obs = new MutationObserver(()=>{
-    if (document.documentElement.classList.contains('intro-text-start')){
-      startVideo(); obs.disconnect();
-    }
-  });
-  obs.observe(document.documentElement, {attributes:true, attributeFilter:['class']});
-})();
-</script>
-
-<script>
-(function(){
-  // When intro starts, reveal the CTA after a small delay so users can read
-  function revealCTA(){
-    var cta = document.getElementById('ctaOverlay');
-    if (cta) cta.style.display = 'flex';
-  }
-  // Try to detect when your start button was clicked by monitoring the video starting
-  var v1 = document.getElementById('bgv1');
-  if (v1){
-    v1.addEventListener('play', function onplay(){
-      v1.removeEventListener('play', onplay);
-      // Show CTA after 15 seconds (adjust if needed)
-      setTimeout(revealCTA, 15000);
-    });
-  } else {
-    // Fallback: show CTA after 15s on load
-    setTimeout(revealCTA, 15000);
-  }
-
-  // Optional: click handler to navigate to your app section if it exists
-  var enter = document.getElementById('enterBtn');
-  if (enter){
-    enter.addEventListener('click', function(e){
-      e.preventDefault();
-      // If you use a hash navigation like #app, uncomment the next line:
-      // location.hash = '#app';
-    });
-  }
-})();
-</script>
-
-<script>
-(function(){
-  function revealCTA(){ var c=document.getElementById('ctaOverlay'); if(c) c.style.display='flex'; }
-
-  // Choose target paragraph:
-  // - if a paragraph has [data-cta="true"], use it
-  // - else fallback to the last <p> inside .overlay .slide
-  var slide = document.querySelector('.overlay .slide');
-  var target = slide ? slide.querySelector('p[data-cta="true"]') : null;
-  if (!target && slide){
-    var ps = slide.querySelectorAll('p');
-    if (ps.length) target = ps[ps.length-1];
-  }
-
-  if (target && 'IntersectionObserver' in window){
-    var shown = false;
-    var io = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){
-        if (!shown && e.isIntersecting && e.intersectionRatio > 0.6){
-          shown = true;
-          revealCTA();
-          io.disconnect();
-        }
-      });
-    }, { root: null, threshold: [0, 0.25, 0.6, 0.9, 1] });
-    io.observe(target);
-  } else {
-    // Fallback: show CTA after 12s from video play
-    var v1 = document.getElementById('bgv1');
-    if (v1){
-      v1.addEventListener('play', function once(){ v1.removeEventListener('play', once); setTimeout(revealCTA, 12000); });
-    } else {
-      setTimeout(revealCTA, 12000);
-    }
-  }
-
-  // Optional manual override: add class 'show-cta' on <html> to force display
-  if (document.documentElement.classList.contains('show-cta')) revealCTA();
-
-})();
-</script>
-
-<script>
-(function(){
-  const veil = document.getElementById('blackVeil');
+  const veil = document.getElementById('blackVeil') || (function(){const d=document.createElement('div'); d.id='blackVeil'; d.style.cssText='position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:10;transition:opacity 1000ms ease'; document.body.prepend(d); return d;})();
   const gate = document.getElementById('gateScreen');
-  const gateText = document.getElementById('gateText');
-  const startBtn = document.getElementById('startIntroBtn');
+  const gateVideo = document.getElementById('gateVideo');
   const bgLayer = document.getElementById('bgVideoLayer');
   const music = document.getElementById('introMusic');
 
-  // make sure background layer is hidden initially
-  if (bgLayer) bgLayer.style.display = 'none';
-  if (music){ try{ music.pause(); music.currentTime = 0; }catch(e){} }
-
-  function startAll(){
-    // Fade to black for 1s
-    if (veil){ veil.style.opacity = '1'; }
-    // After 1s, start background video/music, remove gate
+  function goNext(){
+    // Fade to black
+    veil.style.opacity = '1';
     setTimeout(()=>{
-      // Start bg video looping
+      try{ gateVideo && gateVideo.pause(); }catch(e){}
       if (bgLayer) bgLayer.style.display = 'block';
       if (window.__bgVideoStart) window.__bgVideoStart();
 
-      // Start music
-      if (music){ try{ music.volume = 0.35; music.currentTime = 0; music.play().catch(()=>{}); }catch(e){} }
+      // Try starting music; if blocked, show tiny "Activer le son" button
+      let attempted = false;
+      function tryMusic(){
+        if (attempted) return; attempted = true;
+        if (!music) return;
+        music.volume = 0.35; music.currentTime = 0;
+        const p = music.play();
+        if (p && typeof p.then==='function'){
+          p.catch(()=>{
+            // showSoundPrompt disabled;
+          });
+        }
+      }
+      function showSoundPrompt(){});
+            btn.remove();
+          }catch(e){ btn.remove(); }
+        });
+        document.body.appendChild(btn);
+      }
+      tryMusic();
 
-      // Hide first screen elements
+      // Hide intro layer
       if (gate) gate.style.display = 'none';
-      if (gateText) gateText.style.display = 'none';
 
-      // Fade back from black
-      if (veil){ veil.style.opacity = '0'; }
+      // Fade back
+      veil.style.opacity = '0';
     }, 1000);
   }
 
-  if (startBtn) startBtn.addEventListener('click', function(e){ e.preventDefault(); startAll(); });
-})();
-</script>
-
-<script>
-(function(){
-  const veil = document.getElementById('blackVeil');
-  const gate = document.getElementById('gateScreen');
-  const gateText = document.getElementById('gateText');
-  const gateVideo = document.getElementById('gateVideo');
-  const startBtn = document.getElementById('startIntroBtn');
-  const bgLayer = document.getElementById('bgVideoLayer');
-  const music = document.getElementById('introMusic');
-
-  function startAll(){
-    // Fade to black
-    if (veil) veil.style.opacity = '1';
-
+  if (gateVideo){
+    // If video metadata not loaded, add handler
+    gateVideo.addEventListener('ended', goNext);
+    // Extra safety: if video is very short or fails, move on after 15s
     setTimeout(()=>{
-      // Pause and hide gate video
-      try{ gateVideo && gateVideo.pause(); }catch(e){}
-      document.documentElement.classList.remove('stage-1');
-      document.documentElement.classList.add('stage-2');
-
-      // Start bg video loop
-      if (window.__bgVideoStart) window.__bgVideoStart();
-
-      // Start music
-      if (music){ try{ music.volume = 0.35; music.currentTime = 0; music.play().catch(()=>{});}catch(e){} }
-
-      // Clear veil
-      if (veil) veil.style.opacity = '0';
-    }, 1000);
-  }
-
-  if (startBtn){
-    startBtn.addEventListener('click', function(e){ e.preventDefault(); startAll(); });
+      if (!bgLayer || bgLayer.style.display === 'none'){
+        goNext();
+      }
+    }, 15000);
+  } else {
+    // No intro video? go directly
+    goNext();
   }
 })();
 </script>
 
 <script>
 (function(){
-  var btn = document.getElementById('startIntroBtn');
-  if (!btn) return;
-  btn.addEventListener('click', function(e){
-    // Do not cancel default if other handlers use it, but ensure our starter runs.
-    setTimeout(function(){
+  // Find the paragraph that should trigger the role image
+  function findTriggerP(){
+    const explicit = document.getElementById('intro-last');
+    if (explicit) return explicit;
+    const slide = document.querySelector('.overlay .slide');
+    if (!slide) return null;
+    const ps = slide.querySelectorAll('p');
+    return ps.length ? ps[ps.length - 1] : null;
+  }
+
+  function showRoleBg(){
+    const role = document.getElementById('roleBg');
+    if (!role) return;
+    role.style.display = 'block';
+    // Let layout apply before fading
+    requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ role.style.opacity = '1'; }); });
+  }
+
+  const target = findTriggerP();
+  if (target && 'IntersectionObserver' in window){
+    let shown = false;
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{
+        if (!shown && e.isIntersecting && e.intersectionRatio >= 0.6){
+          shown = true;
+          showRoleBg();
+          io.disconnect();
+        }
+      });
+    }, {root:null, threshold:[0,0.25,0.6,0.9,1]});
+    io.observe(target);
+  } else {
+    // Fallback: show after 25s (approx end of reading)
+    setTimeout(showRoleBg, 25000);
+  }
+})();
+</script>
+
+  <!-- Rules screen -->
+  
+  <!-- Rules screen with luminous white text -->
+  <section id="rulesScreen" aria-label="Règles" style="position:fixed;inset:0;display:none;z-index:4;pointer-events:none;">
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:10vh 4vw;">
+      <div class="rules-wrap" style="max-width:1100px;text-align:center;pointer-events:auto;">
+        <h2>Règles du jeu</h2>
+        <h3>Un jeu entre amis, pour pimenter le week‑end.</h3>
+        <p>À chaque étape, le groupe délibère… et le doute s’installe. La nuit, les traîtres agissent discrètement.</p>
+        <p><em>Franck ne connaît pas votre rôle.</em></p>
+        <p style="margin-bottom:18px;">Gardez le fair‑play, amusez‑vous, et méfiez‑vous des apparences…</p>
+        <button id="discoverBtn" class="btn-gold">Découvre ton rôle</button>
+      </div>
+    </div>
+  </section>
+
+
+
+<script>
+(function(){
+  // Reveal CTA when last paragraph is visible
+  function findLastP(){
+    const explicit = document.getElementById('intro-last');
+    if (explicit) return explicit;
+    const slide = document.querySelector('.overlay .slide');
+    if (!slide) return null;
+    const ps = slide.querySelectorAll('p');
+    return ps.length ? ps[ps.length - 1] : null;
+  }
+  function revealCTA(){ var c=document.getElementById('ctaOverlay'); if(c) c.style.display='flex'; }
+
+  const target = findLastP();
+  if (target && 'IntersectionObserver' in window){
+    let shown=false;
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{
+        if(!shown && e.isIntersecting && e.intersectionRatio>0.6){
+          shown=true; revealCTA(); io.disconnect();
+        }
+      });
+    }, {threshold:[0,0.25,0.6,0.9,1]});
+    io.observe(target);
+  } else {
+    setTimeout(revealCTA, 15000);
+  }
+
+  // On CTA click: show roleBg (fade), show rules screen, keep video/musique as is
+  const cta = document.getElementById('enterBtn');
+  if (cta){
+    cta.addEventListener('click', function(e){
+      e.preventDefault();
+      const role = document.getElementById('roleBg');
+      const rules = document.getElementById('rulesScreen');
+      const overlaySlide = document.querySelector('.overlay');
+      if (role){ role.style.display='block'; requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ role.style.opacity='1'; }); }); }
+      if (overlaySlide) overlaySlide.style.display='none';
+      if (rules) rules.style.display='block';
+      const ctaWrap = document.getElementById('ctaOverlay'); if (ctaWrap) ctaWrap.style.display='none';
+      // Start music on this user interaction
       try{
-        // Pause intro video if present
-        var gv = document.getElementById('gateVideo'); if (gv) gv.pause();
-      }catch(e){}
-      // Start background video engine if present
-      if (window.__bgVideoStart) window.__bgVideoStart();
-      // Start music
-      var music = document.getElementById('introMusic');
-      if (music){ try{ music.volume=0.35; music.currentTime=0; music.play().catch(()=>{}); }catch(e){} }
-      // Switch stage to 2 if CSS uses it
-      document.documentElement.classList.add('stage-2');
-      document.documentElement.classList.remove('stage-1');
-    }, 20);
-  }, { once: false });
+        var music = document.getElementById('introMusic');
+        if (music){ music.volume = 0.35; music.currentTime = 0; music.play().catch(()=>{}); }
+      }catch(err){}
+    });
+  });
+      }
+      // Hide paragraphs overlay to "switch page"
+      if (overlaySlide) overlaySlide.style.display = 'none';
+      // Show rules
+      if (rules) rules.style.display = 'block';
+      // Hide CTA
+      const ctaWrap = document.getElementById('ctaOverlay');
+      if (ctaWrap) ctaWrap.style.display = 'none';
+    });
+  }
+})();
+</script>
+
+
+<script>
+/* Remove any legacy intro/sound overlay text blocks (without touching the paragraphs slide) */
+(function(){
+  function removeIntroArtifacts(){
+    const killers = [/mettez\s+le\s+son/i, /lancez[-\s]?vous/i, /un\s+week[-\s]?end\s+pas\s+comme\s+les\s+autres\s+vous\s+attend/i];
+    const slide = document.querySelector('.overlay .slide');
+    const isInsideSlide = (el)=> slide && slide.contains(el);
+    const nodes = Array.from(document.querySelectorAll('div,section,article,aside,header,footer,p,span'));
+    nodes.forEach(node => {
+      if (isInsideSlide(node)) return; // preserve real paragraphs
+      const txt = (node.innerText || "").trim();
+      if (!txt) return;
+      if (killers.some(rx => rx.test(txt))) {
+        // remove a reasonable container (go up a bit if tiny text node)
+        let target = node;
+        for (let i=0;i<3;i++){
+          if (!target) break;
+          if (target.childElementCount > 1 || /card|dialog|modal|overlay|sound|intro|hint/i.test(target.className||"") ) break;
+          target = target.parentElement;
+        }
+        if (target && target.parentElement) {
+          target.parentElement.removeChild(target);
+        }
+      }
+    });
+  }
+  // Run after load and after a short delay to catch dynamically inserted overlays
+  (window.requestIdleCallback || setTimeout)(removeIntroArtifacts, 250);
+  setTimeout(removeIntroArtifacts, 1500);
 })();
 </script>
 </body>
