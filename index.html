@@ -14,16 +14,11 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 .bg-fallback{background:radial-gradient(ellipse at center,#0a0d12 0%,#05070b 60%,#000 100%)}
 
 /* Arrière-plans */
-.bg-gate,.bg-intro{
-  position:fixed; inset:0;
-  background-size:cover; background-position:center;
-  z-index:0; filter:brightness(.7);
-  opacity:1; transition:opacity 1200ms ease; will-change:opacity;
-}
-.bg-gate{ background-image:url('photo1.jpg'); }
-.bg-intro{ background-image:url('chateau.jpg'); opacity:0; }
-.intro-started .bg-gate{ opacity:0; }
-.intro-started .bg-intro{ opacity:1; }
+.bg-gate,
+
+
+.intro-started 
+.intro-started 
 .bg-intro::after{
   content:""; position:absolute; inset:0; pointer-events:none;
   background:radial-gradient(ellipse at center, rgba(0,0,0,.05) 0%, rgba(0,0,0,.15) 60%, rgba(0,0,0,.25) 100%),
@@ -39,7 +34,7 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
   z-index:0; display:none; filter:brightness(.7);
 }
 .player-focus .bg-role{ display:block; }
-.player-focus .bg-gate, .player-focus .bg-intro{ display:none!important; }
+.player-focus .bg-gate, .player-focus 
 
 /* UI */
 .btn{padding:12px 18px;border-radius:14px;font-size:clamp(16px,2.6vw,22px);color:#fff;text-decoration:none;cursor:pointer;
@@ -210,31 +205,25 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 </style>
 
 <style>
-/* First screen video + overlays */
-#gateScreen{ position:fixed; inset:0; z-index:1; }
-#gateVideo{ display:block; }
-#gateText{ position:fixed; left:50%; bottom:7vh; transform:translateX(-50%);
-  width:min(92vw,1100px); text-align:center; z-index:2; text-shadow:0 2px 10px rgba(0,0,0,.5); }
-.btn-start{ appearance:none; border:1px solid rgba(255,215,0,.7);
+.btn-start{
+  appearance:none;border:1px solid rgba(255,215,0,.7);
   background:radial-gradient(120% 120% at 50% -10%, rgba(255,215,0,.18), rgba(255,215,0,.06));
-  color:#fff; padding:12px 22px; border-radius:999px; letter-spacing:.04em; text-transform:uppercase;
-  font-weight:700; box-shadow:0 0 22px rgba(255,215,0,.22); transition:transform .15s ease, box-shadow .2s ease; cursor:pointer; }
+  color:#fff;padding:12px 22px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase;
+  font-weight:700;box-shadow:0 0 22px rgba(255,215,0,.22);transition:transform .15s ease, box-shadow .2s ease;cursor:pointer;
+}
 .btn-start:hover{ transform:translateY(-1px); box-shadow:0 0 28px rgba(255,215,0,.35); }
-/* Ensure the second-screen video layer stays under overlays */
-#bgVideoLayer{ z-index:0 !important; }
-.overlay{ position:relative; z-index:2 !important; }
 </style>
 </head>
 <body>
-  <!-- Screen 1: Gate intro video -->
+  <!-- === Screen 1: Intro video with overlay text/button === -->
+  <div id="blackVeil" aria-hidden="true" style="position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:10;transition:opacity 1000ms ease;"></div>
   <section id="gateScreen" aria-label="Accueil" style="position:fixed;inset:0;z-index:1;">
     <video id="gateVideo" autoplay muted playsinline preload="auto"
            style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.96)">
       <source src="videos/intro-gate.mp4" type="video/mp4">
     </video>
   </section>
-
-  <div id="gateText" class="overlay">
+  <div id="gateText" class="overlay" style="position:fixed;left:50%;bottom:7vh;transform:translateX(-50%);width:min(92vw,1100px);text-align:center;z-index:2;text-shadow:0 2px 10px rgba(0,0,0,.5);">
     <h1>Vous avez été conviés…</h1>
     <p class="muted">Un week-end pas comme les autres vous attend.</p>
     <p style="margin-top:16px"><button id="startIntroBtn" class="btn-start">Lancez-vous</button></p>
@@ -251,6 +240,7 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
   </div>
 
 <div id="secretFixed" class="secret-fixed" title="Passer l\'intro"></div>
+<div class="bg-gate bg-fallback" aria-hidden="true"></div>
 <div class="bg-intro bg-fallback" aria-hidden="true"></div>
 <div class="bg-role bg-fallback" aria-hidden="true"></div>
 
@@ -1122,17 +1112,41 @@ if ('serviceWorker' in navigator) {
 
 <script>
 (function(){
-  const gv = document.getElementById('gateVideo');
-  if (!gv) return;
-  gv.addEventListener('ended', function(){
-    try {
-      // Freeze on last frame (seek just before end and pause)
-      const dt = Math.max(0, (gv.duration || 0) - 0.05);
-      if (isFinite(dt) && dt > 0) gv.currentTime = dt;
-      gv.pause();
-    } catch(e){}
-  });
+  const veil = document.getElementById('blackVeil');
+  const gate = document.getElementById('gateScreen');
+  const gateText = document.getElementById('gateText');
+  const startBtn = document.getElementById('startIntroBtn');
+  const bgLayer = document.getElementById('bgVideoLayer');
+  const music = document.getElementById('introMusic');
+
+  // make sure background layer is hidden initially
+  if (bgLayer) bgLayer.style.display = 'none';
+  if (music){ try{ music.pause(); music.currentTime = 0; }catch(e){} }
+
+  function startAll(){
+    // Fade to black for 1s
+    if (veil){ veil.style.opacity = '1'; }
+    // After 1s, start background video/music, remove gate
+    setTimeout(()=>{
+      // Start bg video looping
+      if (bgLayer) bgLayer.style.display = 'block';
+      if (window.__bgVideoStart) window.__bgVideoStart();
+
+      // Start music
+      if (music){ try{ music.volume = 0.35; music.currentTime = 0; music.play().catch(()=>{}); }catch(e){} }
+
+      // Hide first screen elements
+      if (gate) gate.style.display = 'none';
+      if (gateText) gateText.style.display = 'none';
+
+      // Fade back from black
+      if (veil){ veil.style.opacity = '0'; }
+    }, 1000);
+  }
+
+  if (startBtn) startBtn.addEventListener('click', function(e){ e.preventDefault(); startAll(); });
 })();
 </script>
 </body>
 </html>
+
