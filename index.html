@@ -203,6 +203,11 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 }
 #ctaOverlay .btn-start:hover{ transform: translateY(-1px); box-shadow:0 0 28px rgba(255,215,0,.35); }
 </style>
+
+<style>
+/* Smoother, slower crossfade for background videos */
+#bgVideoLayer .bgv{ transition: opacity 3.2s ease-in-out !important; }
+</style>
 </head>
 <body>
   <!-- Background video layer (hidden until click) -->
@@ -941,7 +946,7 @@ if ('serviceWorker' in navigator) {
   const v1 = document.getElementById('bgv1');
   const v2 = document.getElementById('bgv2');
   if (!layer || !v1 || !v2) return;
-  const CROSSFADE = 2.0;
+  const CROSSFADE = 2.8;
   let active = v1, next = v2, armed = false, started = false;
 
   function armLoop(video){
@@ -955,7 +960,7 @@ if ('serviceWorker' in navigator) {
     const tick = () => {
       if (video.paused || video.ended) return;
       const t = video.currentTime;
-      if (dur - t <= CROSSFADE + 0.4) {
+      if (dur - t <= CROSSFADE + 0.6) {
         next.currentTime = 0;
         next.play().catch(()=>{});
         active.classList.remove('is-active');
