@@ -208,8 +208,38 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 /* Smoother, slower crossfade for background videos */
 #bgVideoLayer .bgv{ transition: opacity 3.2s ease-in-out !important; }
 </style>
+
+<style>
+/* First screen video + overlays */
+#gateScreen{ position:fixed; inset:0; z-index:1; }
+#gateVideo{ display:block; }
+#gateText{ position:fixed; left:50%; bottom:7vh; transform:translateX(-50%);
+  width:min(92vw,1100px); text-align:center; z-index:2; text-shadow:0 2px 10px rgba(0,0,0,.5); }
+.btn-start{ appearance:none; border:1px solid rgba(255,215,0,.7);
+  background:radial-gradient(120% 120% at 50% -10%, rgba(255,215,0,.18), rgba(255,215,0,.06));
+  color:#fff; padding:12px 22px; border-radius:999px; letter-spacing:.04em; text-transform:uppercase;
+  font-weight:700; box-shadow:0 0 22px rgba(255,215,0,.22); transition:transform .15s ease, box-shadow .2s ease; cursor:pointer; }
+.btn-start:hover{ transform:translateY(-1px); box-shadow:0 0 28px rgba(255,215,0,.35); }
+/* Ensure the second-screen video layer stays under overlays */
+#bgVideoLayer{ z-index:0 !important; }
+.overlay{ position:relative; z-index:2 !important; }
+</style>
 </head>
 <body>
+  <!-- Screen 1: Gate intro video -->
+  <section id="gateScreen" aria-label="Accueil" style="position:fixed;inset:0;z-index:1;">
+    <video id="gateVideo" autoplay muted playsinline preload="auto"
+           style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.96)">
+      <source src="videos/intro-gate.mp4" type="video/mp4">
+    </video>
+  </section>
+
+  <div id="gateText" class="overlay">
+    <h1>Vous avez été conviés…</h1>
+    <p class="muted">Un week-end pas comme les autres vous attend.</p>
+    <p style="margin-top:16px"><button id="startIntroBtn" class="btn-start">Lancez-vous</button></p>
+  </div>
+
   <!-- Background video layer (hidden until click) -->
   <div id="bgVideoLayer" aria-hidden="true" style="display:none;position:fixed;inset:0;z-index:0;pointer-events:none;">
     <video id="bgv1" class="bgv" muted playsinline preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(0.9);opacity:0;transition:opacity 2.4s ease-in-out;">
@@ -221,7 +251,6 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
   </div>
 
 <div id="secretFixed" class="secret-fixed" title="Passer l\'intro"></div>
-<div class="bg-gate bg-fallback" aria-hidden="true"></div>
 <div class="bg-intro bg-fallback" aria-hidden="true"></div>
 <div class="bg-role bg-fallback" aria-hidden="true"></div>
 
@@ -1088,6 +1117,21 @@ if ('serviceWorker' in navigator) {
   // Optional manual override: add class 'show-cta' on <html> to force display
   if (document.documentElement.classList.contains('show-cta')) revealCTA();
 
+})();
+</script>
+
+<script>
+(function(){
+  const gv = document.getElementById('gateVideo');
+  if (!gv) return;
+  gv.addEventListener('ended', function(){
+    try {
+      // Freeze on last frame (seek just before end and pause)
+      const dt = Math.max(0, (gv.duration || 0) - 0.05);
+      if (isFinite(dt) && dt > 0) gv.currentTime = dt;
+      gv.pause();
+    } catch(e){}
+  });
 })();
 </script>
 </body>
