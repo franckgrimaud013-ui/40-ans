@@ -14,13 +14,23 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 .bg-fallback{background:radial-gradient(ellipse at center,#0a0d12 0%,#05070b 60%,#000 100%)}
 
 /* Arrière-plans */
-.bg-gate,
+.bg-gate,.bg-intro{
+  position:fixed; inset:0;
+  background-size:cover; background-position:center;
+  z-index:0; filter:brightness(.7);
+  opacity:1; transition:opacity 1200ms ease; will-change:opacity;
+}
 .bg-gate{ background-image:url('photo1.jpg'); }
-
+.bg-intro{ background-image:url('chateau.jpg'); opacity:0; }
 .intro-started .bg-gate{ opacity:0; }
-.intro-started 
-
-.intro-started 
+.intro-started .bg-intro{ opacity:1; }
+.bg-intro::after{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,.05) 0%, rgba(0,0,0,.15) 60%, rgba(0,0,0,.25) 100%),
+             linear-gradient(to bottom, rgba(0,0,0,.05), rgba(0,0,0,.15));
+  opacity:.85; transition:opacity 1200ms ease;
+}
+.intro-started .bg-intro::after{ opacity:.6; }
 
 /* 3e fond : écran joueur */
 .bg-role{
@@ -29,7 +39,7 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
   z-index:0; display:none; filter:brightness(.7);
 }
 .player-focus .bg-role{ display:block; }
-.player-focus .bg-gate, .player-focus 
+.player-focus .bg-gate, .player-focus .bg-intro{ display:none!important; }
 
 /* UI */
 .btn{padding:12px 18px;border-radius:14px;font-size:clamp(16px,2.6vw,22px);color:#fff;text-decoration:none;cursor:pointer;
@@ -210,23 +220,33 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 </style>
 
 <style>
-
-/* === FINAL OVERRIDES === */
-#bgVideoLayer{ position:fixed !important; inset:0 !important; z-index:0 !important; display:none !important; pointer-events:none !important; }
-#bgVideoLayer .bgv{ opacity:0 !important; transition: opacity 2.4s ease-in-out !important; }
-#bgVideoLayer .bgv.is-active{ opacity:1 !important; z-index:2 !important; }
-.bg-gate{ position:fixed !important; inset:0 !important; z-index:1 !important; background-size:cover !important; background-position:center !important; background-repeat:no-repeat !important; }
-.overlay{ position:relative !important; z-index:2 !important; }
-#ctaOverlay{ position:relative !important; z-index:3 !important; }
-.overlay .slide{ top:-14vh !important; }    /* intro text higher */
-#gateText{ position:fixed !important; left:50% !important; bottom:7vh !important; transform:translateX(-50%) !important; z-index:3 !important; width:min(92vw,1100px) !important; text-align:center !important; }
-
+/* === PRIORITAIRES (forcés) === */
+#gateText,
+.overlay:first-of-type {
+  position: fixed !important;
+  left: 50% !important;
+  bottom: 7vh !important;
+  transform: translateX(-50%) !important;
+  z-index: 3 !important;
+  width: min(92vw, 1100px) !important;
+  text-align: center !important;
+  pointer-events: auto !important;
+}
+.overlay .slide { top: -16vh !important; }
+#bgVideoLayer { position: fixed !important; inset: 0 !important; z-index: 0 !important; display: none !important; pointer-events: none !important; }
+.bg-gate { position: fixed !important; inset: 0 !important; z-index: 1 !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important; }
+.overlay { position: relative !important; z-index: 2 !important; }
+#startIntroBtn,[data-action="start-intro"],.start-btn,.btn-start {
+  appearance: none !important; border: 1px solid rgba(255,255,255,.35) !important; background: radial-gradient(120% 120% at 50% -10%, rgba(255,255,255,.15), rgba(255,255,255,.05)) !important; color: #fff !important; padding: 12px 22px !important; border-radius: 999px !important; letter-spacing: .04em !important; text-transform: uppercase !important; font-weight: 600 !important; box-shadow: 0 0 18px rgba(255,255,255,.12) !important; transition: transform .15s ease, box-shadow .2s ease !important;
+}
+#startIntroBtn:hover,[data-action="start-intro"]:hover,.start-btn:hover,.btn-start:hover { transform: translateY(-1px) !important; box-shadow: 0 0 26px rgba(255,255,255,.22) !important; }
 </style>
 </head>
 <body>
 <div class="fade-layer" id="introFade"></div>
 
 <div class="bg-gate bg-fallback" aria-hidden="true"></div>
+<div class="bg-intro bg-fallback" aria-hidden="true"></div>
 <div class="bg-role bg-fallback" aria-hidden="true"></div>
 
 <!-- GATE -->
@@ -516,13 +536,269 @@ function revealRole(payload){
 }
 </script>
 
+<script>
+/* Crossfading loop for background video (no visible jump) */
+(function(){
+  const layer = document.getElementById('bgVideoLayer');
+  if(!layer) return;
+  const v1 = document.getElementById('bgv1');
+  const v2 = document.getElementById('bgv2');
+  const CROSSFADE = 2.0;
+  let active = v1, next = v2, armed = false;
 
+  function armLoop(video){
+    if (armed) return;
+    armed = true;
+    const dur = video.duration || 0;
+    if (!dur || !isFinite(dur)) {
+      video.addEventListener('loadedmetadata', ()=>{ armed=false; armLoop(video); }, {once:true});
+      return;
+    }
+    const tick = () => {
+      if (video.paused || video.ended) return;
+      const t = video.currentTime;
+      if (dur - t <= CROSSFADE + 0.4) {
+        next.currentTime = 0;
+        next.play().catch(()=>{});
+        active.classList.remove('is-active');
+        next.classList.add('is-active');
+        const old = active; active = next; next = old;
+        armed = false;
+        armLoop(active);
+      } else {
+        requestAnimationFrame(tick);
+      }
+    };
+    requestAnimationFrame(tick);
+  }
 
+  function start(){
+    v1.classList.add('is-active');
+    v1.currentTime = 0; v2.currentTime = 0;
+    v1.play().catch(()=>{});
+    v2.load();
+    armLoop(v1);
+  }
 
+  function hideOnApp(){
+    // Hide layer when navigating to #app
+    const onHash = ()=>{
+      if (location.hash === '#app') layer.style.display='none';
+      else layer.style.display='block';
+    };
+    window.addEventListener('hashchange', onHash);
+    onHash();
+  }
 
+  // Autoplay fix for mobile: start on first user interaction if needed
+  document.addEventListener('click', ()=>{ 
+    if (v1.paused) start();
+  }, {once:true});
 
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ()=>{ start(); hideOnApp(); });
+  } else {
+    start(); hideOnApp();
+  }
+})();
+</script>
 
+<script>
+(function(){
+  const fadeLayer = document.getElementById('introFade');
+  const bgGate = document.querySelector('.bg-gate');
+  const bgLayer = document.getElementById('bgVideoLayer');
+  const v1 = document.getElementById('bgv1');
+  const v2 = document.getElementById('bgv2');
+  const bgMusic = document.getElementById('introMusic');
+  const FADE_MS = 2000;
+  const VOL_LOW = 0.18, VOL_HIGH = 0.35;
 
+  // Make sure music is silent before click
+  if (bgMusic){
+    try{ bgMusic.pause(); bgMusic.currentTime = 0; bgMusic.volume = VOL_HIGH; }catch(e){}
+  }
+
+  function lerp(a,b,t){ return a + (b-a)*t; }
+  function duckVolume(down=true){
+    if(!bgMusic) return;
+    const start = performance.now();
+    const from = down ? VOL_HIGH : VOL_LOW;
+    const to   = down ? VOL_LOW : VOL_HIGH;
+    (function step(now){
+      const t = Math.min(1, (now-start)/FADE_MS);
+      bgMusic.volume = lerp(from, to, t);
+      if(t<1) requestAnimationFrame(step);
+    })(start);
+  }
+  function startMusic(){
+    if (!bgMusic) return;
+    try{ bgMusic.currentTime = 0; bgMusic.play().catch(()=>{}); }catch(e){}
+  }
+
+  function handleIntroStart(){
+    // Show video layer now
+    if (bgLayer){ bgLayer.style.display='block'; }
+    // Start music and duck during fade
+    startMusic();
+    duckVolume(true);
+
+    // Visual fades
+    if (fadeLayer){ fadeLayer.style.opacity = "0.35"; }
+    if (bgGate){ bgGate.classList.add('fade-out'); }
+
+    try{
+      if (v1 && v1.paused) v1.play().catch(()=>{});
+      if (v2 && v2.paused) v2.load();
+    }catch(e){}
+
+    if (bgLayer){ bgLayer.classList.add('fade-in'); }
+
+    setTimeout(()=>{
+      if (fadeLayer){ fadeLayer.style.opacity = "0"; }
+      duckVolume(false);
+    }, FADE_MS);
+  }
+
+  // Start when the site adds "intro-text-start" (or button click)
+  const obs = new MutationObserver(()=>{
+    if(document.documentElement.classList.contains('intro-text-start')){
+      handleIntroStart(); obs.disconnect();
+    }
+  });
+  obs.observe(document.documentElement, {attributes:true, attributeFilter:['class']});
+
+  document.addEventListener('click', (e)=>{
+    const t = e.target;
+    if (t && (t.id === 'startIntroBtn' || t.matches('[data-action="start-intro"]'))) {
+      handleIntroStart();
+    }
+  }, true);
+})();
+</script>
+
+<script>
+(function(){
+  const fadeLayer = document.getElementById('introFade');
+  const bgGate = document.querySelector('.bg-gate');
+  const bgLayer = document.getElementById('bgVideoLayer');
+  const bgMusic = document.getElementById('introMusic');
+  const FADE_MS = 2000;
+  const VOL_LOW = 0.18, VOL_HIGH = 0.35;
+
+  // Ensure no music at load
+  if (bgMusic){
+    try{ bgMusic.pause(); bgMusic.currentTime = 0; bgMusic.volume = VOL_HIGH; }catch(e){}
+  }
+
+  function lerp(a,b,t){ return a + (b-a)*t; }
+  function duckVolume(down=true){
+    if(!bgMusic) return;
+    const start = performance.now();
+    const from = down ? VOL_HIGH : VOL_LOW;
+    const to   = down ? VOL_LOW : VOL_HIGH;
+    (function step(now){
+      const t = Math.min(1, (now-start)/FADE_MS);
+      bgMusic.volume = lerp(from, to, t);
+      if(t<1) requestAnimationFrame(step);
+    })(start);
+  }
+  function startMusic(){
+    if (!bgMusic) return;
+    try{ bgMusic.currentTime = 0; bgMusic.play().catch(()=>{}); }catch(e){}
+  }
+
+  function handleIntroStart(){
+    // Show video layer and start crossfade engine
+    if (bgLayer){ bgLayer.style.display='block'; }
+    if (window.__bgVideoStart) { window.__bgVideoStart(); }
+
+    // Start music with duck during fade
+    startMusic();
+    duckVolume(true);
+
+    // Visual fades
+    if (fadeLayer){ fadeLayer.style.opacity = "0.35"; }
+    if (bgGate){ bgGate.classList.add('fade-out'); }
+
+    // After fade: remove veil and restore volume
+    setTimeout(()=>{
+      if (fadeLayer){ fadeLayer.style.opacity = "0"; }
+      duckVolume(false);
+    }, FADE_MS);
+  }
+
+  // Start when the site adds "intro-text-start" OR when clicking an explicit button
+  const obs = new MutationObserver(()=>{
+    if(document.documentElement.classList.contains('intro-text-start')){
+      handleIntroStart(); obs.disconnect();
+    }
+  });
+  obs.observe(document.documentElement, {attributes:true, attributeFilter:['class']});
+
+  document.addEventListener('click', (e)=>{
+    const t = e.target;
+    if (t && (t.id === 'startIntroBtn' || t.matches('[data-action=\"start-intro\"]'))) {
+      handleIntroStart();
+    }
+  }, true);
+})();
+</script>
+
+<script>
+/* Crossfading loop engine for background video, exposed as __bgVideoStart */
+(function(){
+  const layer = document.getElementById('bgVideoLayer');
+  if(!layer) return;
+  const v1 = document.getElementById('bgv1');
+  const v2 = document.getElementById('bgv2');
+  const CROSSFADE = 2.0;
+  let active = v1, next = v2, armed = false;
+
+  function armLoop(video){
+    if (armed) return;
+    armed = true;
+    const dur = video.duration || 0;
+    if (!dur || !isFinite(dur)) {
+      video.addEventListener('loadedmetadata', ()=>{ armed=false; armLoop(video); }, {once:true});
+      return;
+    }
+    const tick = () => {
+      if (video.paused || video.ended) return;
+      const t = video.currentTime;
+      if (dur - t <= CROSSFADE + 0.4) {
+        next.currentTime = 0;
+        next.play().catch(()=>{});
+        active.classList.remove('is-active');
+        next.classList.add('is-active');
+        const old = active; active = next; next = old;
+        armed = false;
+        armLoop(active);
+      } else {
+        requestAnimationFrame(tick);
+      }
+    };
+    requestAnimationFrame(tick);
+  }
+
+  function start(){
+    if (!layer) return;
+    // Make sure videos are ready
+    try{
+      v1.currentTime = 0; v2.currentTime = 0;
+      v1.muted = true; v2.muted = true;
+      v1.playsInline = true; v2.playsInline = true;
+      v1.play().catch(()=>{});
+      v2.load();
+    }catch(e){}
+    v1.classList.add('is-active');
+    armLoop(v1);
+  }
+
+  // Expose starter globally
+  window.__bgVideoStart = start;
+})();
+</script>
 
 <script>
 (function(){
@@ -588,63 +864,45 @@ function revealRole(payload){
 
 <script>
 (function(){
-  const fadeLayer = document.getElementById('introFade');
-  const bgGate = document.querySelector('.bg-gate');
+  const firstOverlay = document.querySelector('.overlay');
+  if (firstOverlay && !firstOverlay.id) firstOverlay.id = 'gateText';
   const bgLayer = document.getElementById('bgVideoLayer');
+  if (bgLayer) { bgLayer.style.display = 'none'; bgLayer.style.zIndex = 0; }
   const bgMusic = document.getElementById('introMusic');
-  const FADE_MS = 2000;
-  const VOL_NORMAL = 0.35;
-
-  // ensure music is stopped initially
+  let started = false;
   if (bgMusic){
-    try{ bgMusic.pause(); bgMusic.currentTime = 0; bgMusic.volume = VOL_NORMAL; }catch(e){}
+    try { bgMusic.pause(); bgMusic.currentTime = 0; } catch(e){}
+    const realPause = bgMusic.pause ? bgMusic.pause.bind(bgMusic) : null;
+    if (realPause){
+      bgMusic.pause = function(){
+        if (!started) return realPause();
+      };
+    }
   }
-
-  function startMusic(){
-    if (!bgMusic) return;
-    try{
-      bgMusic.volume = VOL_NORMAL;
-      bgMusic.currentTime = 0;
-      bgMusic.play().catch(()=>{});
-    }catch(e){}
-  }
-
-  function handleIntroStart(){
-    // show video layer and start crossfade engine
+  function startIntroIfNeeded(){
+    if (started) return;
     if (bgLayer) bgLayer.style.display = 'block';
     if (window.__bgVideoStart) window.__bgVideoStart();
-
-    // start music at normal volume
-    startMusic();
-
-    // visual fade (photo -> video)
-    if (fadeLayer) fadeLayer.style.opacity = "0.35";
-    if (bgGate) bgGate.classList.add('fade-out');
-
-    setTimeout(()=>{ if (fadeLayer) fadeLayer.style.opacity = "0"; }, FADE_MS);
+    if (bgMusic){
+      try { bgMusic.volume = 0.35; bgMusic.currentTime = 0; bgMusic.play().catch(()=>{}); } catch(e){}
+    }
+    document.documentElement.classList.add('intro-text-start');
+    started = true;
   }
-
-  // Bind button and auto class
-  function bind(){
-    // Inline button path: startIntro() calls will still add .intro-started; we piggyback on "intro-text-start"
-    const obs = new MutationObserver(()=>{
-      if(document.documentElement.classList.contains('intro-text-start')){
-        handleIntroStart(); obs.disconnect();
-      }
-    });
-    obs.observe(document.documentElement, {attributes:true, attributeFilter:['class']});
-    // Explicit button fallback
-    document.addEventListener('click', (e)=>{
-      const t = e.target;
-      if (t && (t.id === 'startIntroBtn' || t.matches('[onclick*="startIntro"]') || t.matches('[data-action="start-intro"]'))) {
-        // add a tiny delay to ensure startIntro DOM changes happen
-        setTimeout(handleIntroStart, 50);
-      }
-    }, true);
-  }
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
-  else bind();
+  document.addEventListener('click', (e)=>{
+    const t = e.target;
+    if (!t) return;
+    if (t.id === 'startIntroBtn' || t.matches('[data-action="start-intro"], .start-btn, .btn-start')){
+      e.preventDefault();
+      setTimeout(startIntroIfNeeded, 30);
+    }
+  }, true);
+  const obs = new MutationObserver(()=>{
+    if (document.documentElement.classList.contains('intro-text-start')){
+      startIntroIfNeeded();
+    }
+  });
+  obs.observe(document.documentElement, {attributes:true, attributeFilter:['class']});
 })();
 </script>
 </body>
