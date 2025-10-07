@@ -143,29 +143,16 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 
 <style>
 
-/* === Smooth transition from first image to looping video === */
-:root{
-  --fade-dur: 2s;
-  --duck-start: 0.18;
-  --duck-normal: 0.35;
-}
-.fade-layer{
-  position: fixed;
-  inset: 0;
-  background: #000;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 1;
-  transition: opacity var(--fade-dur) ease-in-out;
-}
-.bg-gate.fade-out{
-  opacity: 0 !important;
-  transition: opacity var(--fade-dur) ease-in-out;
-}
-#bgVideoLayer.fade-in .bgv.is-active{
-  opacity: 1 !important;
-}
+/* Minimal fade layer */
+.fade-layer{ position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; z-index:1; transition: opacity 2s ease; }
+.bg-gate.fade-out{ opacity:0; transition: opacity 2s ease; }
+#bgVideoLayer.fade-in .bgv.is-active{ opacity:1 !important; }
 
+</style>
+
+<style>
+  /* Hide background video layer until user clicks "Lancez-vous" */
+  #bgVideoLayer{ display:none; }
 </style>
 </head>
 <body>
@@ -540,8 +527,12 @@ function revealRole(payload){
   const FADE_MS = 2000;
   const VOL_LOW = 0.18, VOL_HIGH = 0.35;
 
-  function lerp(a,b,t){ return a + (b-a)*t; }
+  // Make sure music is silent before click
+  if (bgMusic){
+    try{ bgMusic.pause(); bgMusic.currentTime = 0; bgMusic.volume = VOL_HIGH; }catch(e){}
+  }
 
+  function lerp(a,b,t){ return a + (b-a)*t; }
   function duckVolume(down=true){
     if(!bgMusic) return;
     const start = performance.now();
@@ -553,22 +544,36 @@ function revealRole(payload){
       if(t<1) requestAnimationFrame(step);
     })(start);
   }
+  function startMusic(){
+    if (!bgMusic) return;
+    try{ bgMusic.currentTime = 0; bgMusic.play().catch(()=>{}); }catch(e){}
+  }
 
   function handleIntroStart(){
+    // Show video layer now
+    if (bgLayer){ bgLayer.style.display='block'; }
+    // Start music and duck during fade
+    startMusic();
     duckVolume(true);
+
+    // Visual fades
     if (fadeLayer){ fadeLayer.style.opacity = "0.35"; }
     if (bgGate){ bgGate.classList.add('fade-out'); }
+
     try{
       if (v1 && v1.paused) v1.play().catch(()=>{});
       if (v2 && v2.paused) v2.load();
     }catch(e){}
+
     if (bgLayer){ bgLayer.classList.add('fade-in'); }
+
     setTimeout(()=>{
       if (fadeLayer){ fadeLayer.style.opacity = "0"; }
       duckVolume(false);
     }, FADE_MS);
   }
 
+  // Start when the site adds "intro-text-start" (or button click)
   const obs = new MutationObserver(()=>{
     if(document.documentElement.classList.contains('intro-text-start')){
       handleIntroStart(); obs.disconnect();
@@ -578,7 +583,7 @@ function revealRole(payload){
 
   document.addEventListener('click', (e)=>{
     const t = e.target;
-    if (t && (t.id === 'startIntroBtn' || t.matches('[data-action=\"start-intro\"]'))) {
+    if (t && (t.id === 'startIntroBtn' || t.matches('[data-action="start-intro"]'))) {
       handleIntroStart();
     }
   }, true);
