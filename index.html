@@ -172,7 +172,8 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   #gate{ padding-top:3vh !important; }
 }
 
-#roleVideoLayer{position:fixed;inset:0;z-index:1;opacity:0;pointer-events:none;transition:opacity 900ms ease}
+/* role video layer */
+#roleVideoLayer{position:fixed;inset:0;z-index:0;opacity:0;pointer-events:none;transition:opacity 900ms ease}
 </style>
 
 
@@ -211,6 +212,15 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     <source src="videos/intro-gate.mp4" type="video/mp4">
   </video>
 </section>
+
+<!-- Role background video (derrière l'écran Règles) -->
+<div id="roleVideoLayer" aria-hidden="true" style="position:fixed;inset:0;z-index:0;opacity:0;pointer-events:none;transition:opacity 900ms ease;">
+  <video id="roleVideo" muted loop playsinline webkit-playsinline preload="auto"
+         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.94)">
+    <source src="videos/role-bg.mp4" type="video/mp4">
+  </video>
+</div>
+
 <div id="bgVideoLayer" class="bg-intro" aria-hidden="true" style="position:fixed;inset:0;z-index:0;opacity:0;transition:opacity 1200ms ease;">
   <video id="bgv1" class="bgv" muted playsinline preload="auto"
          style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.9);opacity:1;" muted playsinline webkit-playsinline preload="auto">
@@ -1189,15 +1199,6 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 </script>
 
 
-<!-- Role background video (derrière l'écran Règles) -->
-<div id="roleVideoLayer" aria-hidden="true" style="position:fixed;inset:0;z-index:1;opacity:0;pointer-events:none;transition:opacity 900ms ease;">
-  <video id="roleVideo" muted loop playsinline webkit-playsinline preload="auto"
-         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.94)">
-    <source src="videos/role-bg.mp4" type="video/mp4">
-  </video>
-</div>
-
-
 <script>
 (function(){
   function forcePlay(v){
@@ -1213,8 +1214,8 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     if(!el) return false;
     const cs = getComputedStyle(el);
     if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity === 0) return false;
-    const rect = el.getBoundingClientRect();
-    return rect.width>0 && rect.height>0;
+    const r = el.getBoundingClientRect();
+    return r.width>0 && r.height>0;
   }
   function startRole(){
     var layer = document.getElementById('roleVideoLayer');
@@ -1225,8 +1226,8 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     forcePlay(video).then(function(){
       requestAnimationFrame(function(){ requestAnimationFrame(function(){ layer.style.opacity='1'; }); });
     });
-    // Retry a few times (iOS)
-    var tries=0, iv = setInterval(function(){
+    // retry a few times for iOS
+    var tries=0, iv=setInterval(function(){
       if (!video.paused) { clearInterval(iv); return; }
       tries++; forcePlay(video);
       if (tries>6) clearInterval(iv);
@@ -1235,21 +1236,14 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   function bind(){
     var rules = document.getElementById('rulesScreen') || document.querySelector('[data-section="rules"]');
     if(!rules) return;
-
-    // If already visible (edge case), start immediately
     if (isVisible(rules)) { startRole(); return; }
-
-    // Observe display/style changes
     var obs = new MutationObserver(function(){
-      if (isVisible(rules)) { try{ obs.disconnect(); }catch(_){ } startRole(); }
+      if (isVisible(rules)) { try{obs.disconnect();}catch(_){ } startRole(); }
     });
-    obs.observe(rules, { attributes:true, attributeFilter:['style','class'] });
-
-    // Also listen to global user interactions (some UIs toggle via JS without attributes)
-    ['click','touchend','keydown'].forEach(function(evt){
-      document.addEventListener(evt, function(){
-        if (isVisible(rules)) startRole();
-      }, {passive:true});
+    obs.observe(rules, {attributes:true, attributeFilter:['style','class']});
+    // safety: if click/touch shows rules via JS without attributes changes
+    ['click','touchend','keydown'].forEach(function(ev){
+      document.addEventListener(ev, function(){ if (isVisible(rules)) startRole(); }, {passive:true});
     });
   }
   if (document.readyState!=='loading') bind();
