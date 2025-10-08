@@ -171,8 +171,6 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 @media (max-width:480px){
   #gate{ padding-top:3vh !important; }
 }
-
-#roleVideoLayer{position:fixed;inset:0;z-index:1;opacity:0;pointer-events:none;transition:opacity 900ms ease}
 </style>
 
 
@@ -1189,14 +1187,25 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 </script>
 
 
-<!-- Role background video (derrière l'écran Règles) -->
-<div id="roleVideoLayer" aria-hidden="true" style="position:fixed;inset:0;z-index:1;opacity:0;pointer-events:none;transition:opacity 900ms ease;">
+<!-- ===== ROLE VIDEO : drop-in garanti ===== -->
+<style>
+  /* La vidéo passe SOUS le contenu (z-index négatif) */
+  #roleVideoLayer{
+    position:fixed; inset:0;
+    z-index:-1;
+    opacity:0; pointer-events:none;
+    transition:opacity 900ms ease;
+  }
+  /* S’assure que la section règles est au-dessus */
+  #rulesScreen, #welcomeSection{ position:relative; z-index:10; }
+</style>
+
+<div id="roleVideoLayer" aria-hidden="true" hidden>
   <video id="roleVideo" muted loop playsinline webkit-playsinline preload="auto"
-         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.94)">
+         style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(.94)">
     <source src="videos/role-bg.mp4" type="video/mp4">
   </video>
 </div>
-
 
 <script>
 (function(){
@@ -1205,57 +1214,63 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     try{
       v.muted = true; v.playsInline = true;
       v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
-      const p = v.play(); if (p && p.catch) return p.catch(()=>{});
-      return Promise.resolve();
+      const p = v.play(); return p && p.catch ? p.catch(()=>{}) : Promise.resolve();
     }catch(e){ return Promise.resolve(); }
   }
-  function isVisible(el){
+  function visible(el){
     if(!el) return false;
     const cs = getComputedStyle(el);
-    if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity === 0) return false;
-    const rect = el.getBoundingClientRect();
-    return rect.width>0 && rect.height>0;
+    if (cs.display==='none' || cs.visibility==='hidden' || +cs.opacity===0) return false;
+    const r = el.getBoundingClientRect(); return r.width>0 && r.height>0;
+  }
+  function hideFallbacks(){
+    ['bg-role','bg-intro','bg-gate','bgVideoLayer'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el){ el.style.opacity='0'; el.style.pointerEvents='none'; el.style.display='none'; }
+    });
+    document.querySelectorAll('.bg-fallback').forEach(el=>{
+      el.style.opacity='0'; el.style.pointerEvents='none'; el.style.display='none';
+    });
   }
   function startRole(){
-    var layer = document.getElementById('roleVideoLayer');
-    var video = document.getElementById('roleVideo');
+    const layer = document.getElementById('roleVideoLayer');
+    const video = document.getElementById('roleVideo');
     if(!layer || !video) return;
-    layer.style.display='block';
+    hideFallbacks();
+    layer.hidden = false;
     try{ video.currentTime = 0; }catch(_){}
-    forcePlay(video).then(function(){
-      requestAnimationFrame(function(){ requestAnimationFrame(function(){ layer.style.opacity='1'; }); });
+    forcePlay(video).then(()=>{
+      requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ layer.style.opacity='1'; }); });
     });
-    // Retry a few times (iOS)
-    var tries=0, iv = setInterval(function(){
-      if (!video.paused) { clearInterval(iv); return; }
-      tries++; forcePlay(video);
-      if (tries>6) clearInterval(iv);
+    // iOS : retentes
+    let tries=0, iv=setInterval(()=>{
+      if(!video.paused){ clearInterval(iv); return; }
+      tries++; forcePlay(video); if(tries>6) clearInterval(iv);
     }, 600);
   }
   function bind(){
-    var rules = document.getElementById('rulesScreen') || document.querySelector('[data-section="rules"]');
+    const rules = document.getElementById('rulesScreen') || document.getElementById('welcomeSection') || document.querySelector('[data-section="rules"]');
     if(!rules) return;
-
-    // If already visible (edge case), start immediately
-    if (isVisible(rules)) { startRole(); return; }
-
-    // Observe display/style changes
-    var obs = new MutationObserver(function(){
-      if (isVisible(rules)) { try{ obs.disconnect(); }catch(_){ } startRole(); }
+    if(visible(rules)) { startRole(); }
+    // Observe quand ça devient visible
+    const obs = new MutationObserver(()=>{ if(visible(rules)){ try{obs.disconnect();}catch(_){ } startRole(); }});
+    obs.observe(rules, {attributes:true, attributeFilter:['style','class']});
+    // Si ta navigation utilise #app, déclenche à l'arrivée
+    window.addEventListener('hashchange', ()=>{
+      if(location.hash==="#app"){ setTimeout(()=>{ if(visible(rules)) startRole(); }, 150); }
     });
-    obs.observe(rules, { attributes:true, attributeFilter:['style','class'] });
-
-    // Also listen to global user interactions (some UIs toggle via JS without attributes)
-    ['click','touchend','keydown'].forEach(function(evt){
-      document.addEventListener(evt, function(){
-        if (isVisible(rules)) startRole();
-      }, {passive:true});
+    // Safety : premier geste utilisateur
+    ['click','touchend','keydown'].forEach(ev=>{
+      document.addEventListener(ev, ()=>{ if(visible(rules)) startRole(); }, {passive:true});
     });
+    // Si on est déjà sur #app au chargement
+    if(location.hash==="#app"){ setTimeout(()=>{ if(visible(rules)) startRole(); }, 300); }
   }
-  if (document.readyState!=='loading') bind();
+  if(document.readyState!=='loading') bind();
   else document.addEventListener('DOMContentLoaded', bind);
 })();
 </script>
+<!-- ===== /ROLE VIDEO ===== -->
 
 </body>
 </html>
