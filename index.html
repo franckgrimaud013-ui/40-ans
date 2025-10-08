@@ -1,10 +1,6 @@
 <!doctype html>
 <html lang="fr">
 <head>
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Les Traîtres — 40 ans Franck</title>
@@ -18,16 +14,11 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 .bg-fallback{background:radial-gradient(ellipse at center,#0a0d12 0%,#05070b 60%,#000 100%)}
 
 /* Arrière-plans */
-.bg-gate,.bg-intro{
-  position:fixed; inset:0;
-  background-size:cover; background-position:center;
-  z-index:0; filter:brightness(.7);
-  opacity:1; transition:opacity 1200ms ease; will-change:opacity;
-}
-.bg-gate{ background-image:url('photo1.jpg'); }
-.bg-intro{ background-image:url('chateau.jpg'); opacity:0; }
-.intro-started .bg-gate{ opacity:0; }
-.intro-started .bg-intro{ opacity:1; }
+.bg-gate,
+
+
+.intro-started 
+.intro-started 
 .bg-intro::after{
   content:""; position:absolute; inset:0; pointer-events:none;
   background:radial-gradient(ellipse at center, rgba(0,0,0,.05) 0%, rgba(0,0,0,.15) 60%, rgba(0,0,0,.25) 100%),
@@ -39,11 +30,11 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 /* 3e fond : écran joueur */
 .bg-role{
   position:fixed; inset:0;
-  background:none center/cover no-repeat;
+  background:url('rolebg.jpg') center/cover no-repeat;
   z-index:0; display:none; filter:brightness(.7);
 }
 .player-focus .bg-role{ display:block; }
-.player-focus .bg-gate, .player-focus .bg-intro{ display:none!important; }
+.player-focus .bg-gate, .player-focus 
 
 /* UI */
 .btn{padding:12px 18px;border-radius:14px;font-size:clamp(16px,2.6vw,22px);color:#fff;text-decoration:none;cursor:pointer;
@@ -149,33 +140,9 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 .cta-traitor{display:inline-block;padding:10px 14px;border-radius:12px;background:#ffd87a;color:#000;font-weight:900}
 
 
-/* === Video backgrounds (added) === */
-.bgv{ transition:opacity 3.2s ease-in-out; }
-.bgv.is-active{ opacity:1 !important; }
-.intro-started #bgVideoLayer{ opacity:1 !important; } /* when intro ends, reveal looping layer */
-
-
-/* === Intro panel pinned to top (override) === */
-#gate{ align-items:flex-start !important; padding-top:4vh !important; }
-#gate .panel.panel--dark{ margin-top:0 !important; }
-@media (max-width:480px){
-  #gate{ padding-top:3vh !important; }
-}
-
-
-/* Force full black UI chrome and safe dark scheme */
-html, body { background:#000 !important; color-scheme: dark; overscroll-behavior: none; }
-/* Keep intro panel pinned to top (from prior step) */
-#gate{ align-items:flex-start !important; padding-top:4vh !important; }
-#gate .panel.panel--dark{ margin-top:0 !important; }
-@media (max-width:480px){
-  #gate{ padding-top:3vh !important; }
-}
-
 /* role video layer */
 #roleVideoLayer{position:fixed;inset:0;z-index:0;opacity:0;pointer-events:none;transition:opacity 900ms ease}
 </style>
-
 
 <!-- PATCH: lisibilité p3 (titre blanc + panneaux sombres) -->
 <style id="patch-p3-style">
@@ -197,40 +164,101 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 </style>
 
 <link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#ffd87a">
 <link rel="icon" href="/icons/icon-192.png">
 <style>
 /* CTA visibility controlled by end of intro animation */
 #ctaOverlay{opacity:0;pointer-events:none;transform:translateY(6px);transition:.4s ease;}
 </style>
+
+<style>
+/* Video is under initial gate image and text */
+#bgVideoLayer{ z-index:0 !important; }
+.bg-gate, .gate, .intro-gate{ z-index:1 !important; position:fixed !important; inset:0 !important; }
+.overlay, .intro-overlay{ position:relative !important; z-index:2 !important; }
+/* Crossfade visibility */
+#bgVideoLayer .bgv.is-active{ opacity:1 !important; }
+</style>
+
+<style>
+/* Restore paragraphs on second screen */
+.overlay .slide { white-space: normal !important; }
+.overlay .slide p { display: block !important; margin: 0.6em 0 !important; }
+.overlay .slide p.muted { opacity: .85; }
+/* Make sure overlays sit above the video */
+#bgVideoLayer{ z-index:0 !important; }
+.overlay{ position:relative !important; z-index:2 !important; }
+/* CTA button overlay */
+#ctaOverlay{
+  position: fixed; left: 0; right: 0; bottom: 6vh;
+  display: none; justify-content: center; z-index: 3;
+}
+#ctaOverlay .btn-start{
+  appearance:none;border:1px solid rgba(255,215,0,.7);
+  background:radial-gradient(120% 120% at 50% -10%, rgba(255,215,0,.18), rgba(255,215,0,.06));
+  color:#fff;padding:12px 22px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase;
+  font-weight:700;box-shadow:0 0 22px rgba(255,215,0,.22);transition:transform .15s ease, box-shadow .2s ease;cursor:pointer;
+}
+#ctaOverlay .btn-start:hover{ transform: translateY(-1px); box-shadow:0 0 28px rgba(255,215,0,.35); }
+</style>
+
+<style>
+/* Smoother, slower crossfade for background videos */
+#bgVideoLayer .bgv{ transition: opacity 3.2s ease-in-out !important; }
+</style>
+
+<style>
+.btn-start{
+  appearance:none;border:1px solid rgba(255,215,0,.7);
+  background:radial-gradient(120% 120% at 50% -10%, rgba(255,215,0,.18), rgba(255,215,0,.06));
+  color:#fff;padding:12px 22px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase;
+  font-weight:700;box-shadow:0 0 22px rgba(255,215,0,.22);transition:transform .15s ease, box-shadow .2s ease;cursor:pointer;
+}
+.btn-start:hover{ transform:translateY(-1px); box-shadow:0 0 28px rgba(255,215,0,.35); }
+</style>
+
+<style>
+/* Stage toggling */
+html.stage-1 #gateScreen,
+html.stage-1 #gateText{ display:block; }
+html.stage-1 #bgVideoLayer{ display:none; }
+
+html.stage-2 #gateScreen,
+html.stage-2 #gateText{ display:none !important; }
+html.stage-2 #bgVideoLayer{ display:block !important; }
+
+/* Prevent crowding at the very top; intro slide spacing */
+.overlay .slide { margin-top: 10vh; white-space: normal; }
+</style>
 </head>
-<body>
+<body class="stage-1">
+  <!-- === Screen 1: Intro video with overlay text/button === -->
+  <div id="blackVeil" aria-hidden="true" style="position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:10;transition:opacity 1000ms ease;"></div>
+  <section id="gateScreen" aria-label="Accueil" style="position:fixed;inset:0;z-index:1;">
+    <video id="gateVideo" autoplay muted playsinline preload="auto"
+           style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.96)">
+      <source src="videos/intro-gate.mp4" type="video/mp4">
+    </video>
+  </section>
+  <div id="gateText" class="overlay" style="position:fixed;left:50%;bottom:7vh;transform:translateX(-50%);width:min(92vw,1100px);text-align:center;z-index:2;text-shadow:0 2px 10px rgba(0,0,0,.5);">
+    <h1>Vous avez été conviés…</h1>
+    <p class="muted">Un week-end pas comme les autres vous attend.</p>
+    <p style="margin-top:16px"><button id="startIntroBtn" class="btn-start">Lancez-vous</button></p>
+  </div>
+
+  <!-- Background video layer (hidden until click) -->
+  <div id="bgVideoLayer" aria-hidden="true" style="display:none;position:fixed;inset:0;z-index:0;pointer-events:none;">
+    <video id="bgv1" class="bgv" muted playsinline preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(0.9);opacity:0;transition:opacity 2.4s ease-in-out;">
+      <source src="videos/fond-boucle.mp4" type="video/mp4">
+    </video>
+    <video id="bgv2" class="bgv" muted playsinline preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(0.9);opacity:0;transition:opacity 2.4s ease-in-out;">
+      <source src="videos/fond-boucle.mp4" type="video/mp4">
+    </video>
+  </div>
+
 <div id="secretFixed" class="secret-fixed" title="Passer l\'intro"></div>
-<section class="bg-gate" aria-hidden="true" style="position:fixed;inset:0;z-index:0;">
-  <video id="gateVideo" muted playsinline preload="auto"
-         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.7)" autoplay muted playsinline webkit-playsinline preload="auto">
-    <source src="videos/intro-gate.mp4" type="video/mp4">
-  </video>
-</section>
-
-<!-- Role background video (derrière l'écran Règles) -->
-<div id="roleVideoLayer" aria-hidden="true" style="position:fixed;inset:0;z-index:0;opacity:0;pointer-events:none;transition:opacity 900ms ease;">
-  <video id="roleVideo" muted loop playsinline webkit-playsinline preload="auto"
-         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.94)">
-    <source src="videos/role-bg.mp4" type="video/mp4">
-  </video>
-</div>
-
-<div id="bgVideoLayer" class="bg-intro" aria-hidden="true" style="position:fixed;inset:0;z-index:0;opacity:0;transition:opacity 1200ms ease;">
-  <video id="bgv1" class="bgv" muted playsinline preload="auto"
-         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.9);opacity:1;" muted playsinline webkit-playsinline preload="auto">
-    <source src="videos/fond-boucle.mp4" type="video/mp4">
-  </video>
-  <video id="bgv2" class="bgv" muted playsinline preload="auto"
-         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.9);opacity:0;" muted playsinline webkit-playsinline preload="auto">
-    <source src="videos/fond-boucle.mp4" type="video/mp4">
-  </video>
-</div>
+<div class="bg-gate bg-fallback" aria-hidden="true"></div>
+<div class="bg-intro bg-fallback" aria-hidden="true"></div>
 <div class="bg-role bg-fallback" aria-hidden="true"></div>
 
 <!-- GATE -->
@@ -948,14 +976,14 @@ if ('serviceWorker' in navigator) {
 
 
 <script>
-// Crossfade loop for background videos
 (function(){
+  // Crossfade engine
   const layer = document.getElementById('bgVideoLayer');
-  if(!layer) return;
   const v1 = document.getElementById('bgv1');
   const v2 = document.getElementById('bgv2');
+  if (!layer || !v1 || !v2) return;
   const CROSSFADE = 2.8;
-  let active = v1, next = v2, armed = false;
+  let active = v1, next = v2, armed = false, started = false;
 
   function armLoop(video){
     if (armed) return;
@@ -969,7 +997,7 @@ if ('serviceWorker' in navigator) {
       if (video.paused || video.ended) return;
       const t = video.currentTime;
       if (dur - t <= CROSSFADE + 0.6) {
-        try{ next.currentTime = 0; }catch(e){}
+        next.currentTime = 0;
         next.play().catch(()=>{});
         active.classList.remove('is-active');
         next.classList.add('is-active');
@@ -983,9 +1011,11 @@ if ('serviceWorker' in navigator) {
     requestAnimationFrame(tick);
   }
 
-  window.__bgVideoStart = function start(){
+  function startVideo(){
+    if (started) return;
+    started = true;
+    layer.style.display = 'block';
     try{
-      layer.style.opacity = '1';
       v1.currentTime = 0; v2.currentTime = 0;
       v1.muted = true; v2.muted = true;
       v1.playsInline = true; v2.playsInline = true;
@@ -995,208 +1025,190 @@ if ('serviceWorker' in navigator) {
     v1.classList.add('is-active');
     armLoop(v1);
   }
-})();
 
-// Hook into startIntro to play the intro video and then switch to bg loop + intro text
-(function(){
-  const oldStart = window.startIntro;
-  window.startIntro = function(){
-    try{
-      oldStart && oldStart(); // keeps your original: hide gate, start music, schedule text animation
-    }catch(e){}
-    try{
-      const gateVideo = document.getElementById('gateVideo');
-      if (gateVideo){
-        gateVideo.currentTime = 0;
-        gateVideo.muted = true; gateVideo.playsInline = true;
-        gateVideo.play().catch(()=>{});
-        gateVideo.onended = function(){
-          // when intro video finishes: reveal bg loop, start it, and force intro text start (just in case)
-          document.documentElement.classList.add('intro-started');
-          if (window.__bgVideoStart) window.__bgVideoStart();
-// Safe gate for bg readiness
-(function(){var bgv1=document.getElementById('bgv1');var started=false;function ok(){if(started)return; if(bgv1&&bgv1.readyState>=2){started=true;startParagraphs();}}
-if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',ok);}setTimeout(function(){if(!started){started=true;startParagraphs();}},1800);})();
-          // Ensure text animation starts even if timing differs
-          setTimeout(function(){
-            document.documentElement.classList.add('intro-text-start');
-          }, 300);
-        };
-      } else {
-        // No video? fallback: start bg loop immediately
-        document.documentElement.classList.add('intro-started');
-        if (window.__bgVideoStart) window.__bgVideoStart();
-// Safe gate for bg readiness
-(function(){var bgv1=document.getElementById('bgv1');var started=false;function ok(){if(started)return; if(bgv1&&bgv1.readyState>=2){started=true;startParagraphs();}}
-if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',ok);}setTimeout(function(){if(!started){started=true;startParagraphs();}},1800);})();
-      }
-    }catch(e){ console.error(e); }
-  };
-})();
-</script>
-
-
-<script>
-// === Robust intro video start ===
-(function(){
-  const gateVideo = document.getElementById('gateVideo');
-  if (!gateVideo) return;
-  gateVideo.muted = true;
-  gateVideo.playsInline = true;
-  function forcePlay(){
-    gateVideo.currentTime = 0;
-    const p = gateVideo.play();
-    if (p && typeof p.then==='function'){
-      p.catch(()=>{ /* will try again on user interaction */ });
-    }
+  // Find a "Lancez-vous" button and hook click
+  function isStartButton(el){
+    if (!el) return false;
+    const txt = (el.textContent || "").toLowerCase();
+    return /lancez/.test(txt);
   }
-  gateVideo.addEventListener('loadeddata', forcePlay, {once:true});
-  // also bind a one-time user interaction to ensure playback if blocked
-  const resume = ()=>{
-    document.removeEventListener('touchend', resume);
-    document.removeEventListener('click', resume);
-    forcePlay();
-  };
-  document.addEventListener('touchend', resume, {once:true, passive:true});
-  document.addEventListener('click', resume, {once:true});
-})();
-</script>
+  let startBtn = document.getElementById('startIntroBtn')
+                  || document.querySelector('[data-action="start-intro"]')
+                  || Array.from(document.querySelectorAll('button,a')).find(isStartButton);
 
-
-<script>
-// === iOS/Safari robust autoplay patch ===
-(function(){
-  var interacted = false;
-  function markInteracted(){ interacted = true; }
-  ['touchstart','touchend','click'].forEach(function(evt){
-    document.addEventListener(evt, markInteracted, {once:true, passive:true});
-  });
-
-  function forcePlay(video){
-    if (!video) return;
-    try{
-      video.muted = true;
-      video.playsInline = true;
-      video.setAttribute('playsinline','');
-      video.setAttribute('webkit-playsinline','');
-      var p = video.play();
-      if (p && typeof p.then==='function'){ p.catch(function(){}); }
-    }catch(e){}
-  }
-
-  // 1) Force intro video after interaction and on load retries
-  var gateVideo = document.getElementById('gateVideo');
-  if (gateVideo){
-    gateVideo.addEventListener('loadeddata', function(){ if (interacted) forcePlay(gateVideo); }, {once:true});
-    setTimeout(function(){ forcePlay(gateVideo); }, 300);
-    setTimeout(function(){ forcePlay(gateVideo); }, 1000);
-    setTimeout(function(){ forcePlay(gateVideo); }, 2000);
-  }
-
-  // 2) Sur le bouton "Lancez-vous" (ton code existant déclenche startIntro) → on force la vidéo
-  var startBtn = document.querySelector('[data-action="start-intro"], #startIntroBtn, .btn-start');
   if (startBtn){
     startBtn.addEventListener('click', function(){
-      forcePlay(gateVideo);
+      // start video only after the click
+      startVideo();
+    }, {once:true});
+  }
+
+  // Fallback: if your code adds a special class on html when intro starts, listen to it
+  const obs = new MutationObserver(()=>{
+    if (document.documentElement.classList.contains('intro-text-start')){
+      startVideo(); obs.disconnect();
+    }
+  });
+  obs.observe(document.documentElement, {attributes:true, attributeFilter:['class']});
+})();
+</script>
+
+<script>
+(function(){
+  // When intro starts, reveal the CTA after a small delay so users can read
+  function revealCTA(){
+    var cta = document.getElementById('ctaOverlay');
+    if (cta) cta.style.display = 'flex';
+  }
+  // Try to detect when your start button was clicked by monitoring the video starting
+  var v1 = document.getElementById('bgv1');
+  if (v1){
+    v1.addEventListener('play', function onplay(){
+      v1.removeEventListener('play', onplay);
+      // Show CTA after 15 seconds (adjust if needed)
+      setTimeout(revealCTA, 15000);
+    });
+  } else {
+    // Fallback: show CTA after 15s on load
+    setTimeout(revealCTA, 15000);
+  }
+
+  // Optional: click handler to navigate to your app section if it exists
+  var enter = document.getElementById('enterBtn');
+  if (enter){
+    enter.addEventListener('click', function(e){
+      e.preventDefault();
+      // If you use a hash navigation like #app, uncomment the next line:
+      // location.hash = '#app';
     });
   }
-
-  // 3) Quand on bascule vers la vidéo de fond, démarrer après 1er geste si besoin
-  var origBgStart = window.__bgVideoStart;
-  window.__bgVideoStart = function(){
-    function realStart(){
-      try{ origBgStart && origBgStart(); }catch(e){}
-      // "débloquer" le player actif
-      try{
-        var v1 = document.getElementById('bgv1');
-        forcePlay(v1);
-      }catch(e){}
-    }
-    if (interacted){ realStart(); }
-    else{
-      var once = function(){
-        document.removeEventListener('touchend', once);
-        document.removeEventListener('click', once);
-        realStart();
-      };
-      document.addEventListener('touchend', once, {once:true, passive:true});
-      document.addEventListener('click', once, {once:true});
-    }
-  };
 })();
 </script>
-
-
-<script>
-// Preload the looping background while intro plays (mobile-friendly)
-(function(){
-  try{
-    var bgv1 = document.getElementById('bgv1');
-    if (bgv1){
-      bgv1.setAttribute('preload','auto');
-      // Kick a load early so iOS starts fetching while intro runs
-      bgv1.load();
-    }
-  }catch(e){}
-})();
-</script>
-
 
 <script>
 (function(){
-  function forcePlay(video){
-    if (!video) return;
-    try{
-      video.muted = true;
-      video.playsInline = true;
-      video.setAttribute('playsinline','');
-      video.setAttribute('webkit-playsinline','');
-      var p = video.play();
-      if (p && typeof p.then==='function'){ p.catch(function(){}); }
-    }catch(e){}
+  function revealCTA(){ var c=document.getElementById('ctaOverlay'); if(c) c.style.display='flex'; }
+
+  // Choose target paragraph:
+  // - if a paragraph has [data-cta="true"], use it
+  // - else fallback to the last <p> inside .overlay .slide
+  var slide = document.querySelector('.overlay .slide');
+  var target = slide ? slide.querySelector('p[data-cta="true"]') : null;
+  if (!target && slide){
+    var ps = slide.querySelectorAll('p');
+    if (ps.length) target = ps[ps.length-1];
   }
-  // Enhance CTA behavior
-  var enterBtn = document.getElementById('enterBtn') || document.querySelector('#ctaOverlay button');
-  var rules = document.getElementById('rulesScreen');
-  var roleLayer = document.getElementById('roleVideoLayer');
-  var roleVideo = document.getElementById('roleVideo');
-  if (enterBtn && rules && roleLayer && roleVideo){
-    enterBtn.addEventListener('click', function(){
-      // Show the rules screen UI
-      rules.style.display = 'block';
-      // Start and fade in the role video behind
-      roleLayer.style.opacity = '0';
-      roleLayer.style.display = 'block';
-      forcePlay(roleVideo);
-      requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ roleLayer.style.opacity = '1'; }); });
-    }, {once:false});
+
+  if (target && 'IntersectionObserver' in window){
+    var shown = false;
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (!shown && e.isIntersecting && e.intersectionRatio > 0.6){
+          shown = true;
+          revealCTA();
+          io.disconnect();
+        }
+      });
+    }, { root: null, threshold: [0, 0.25, 0.6, 0.9, 1] });
+    io.observe(target);
+  } else {
+    // Fallback: show CTA after 12s from video play
+    var v1 = document.getElementById('bgv1');
+    if (v1){
+      v1.addEventListener('play', function once(){ v1.removeEventListener('play', once); setTimeout(revealCTA, 12000); });
+    } else {
+      setTimeout(revealCTA, 12000);
+    }
   }
+
+  // Optional manual override: add class 'show-cta' on <html> to force display
+  if (document.documentElement.classList.contains('show-cta')) revealCTA();
+
 })();
 </script>
-
 
 <script>
-// Ensure the role video can start after first gesture on iOS if needed
 (function(){
-  var interacted = false;
-  function mark(){ interacted = true; }
-  ['touchstart','touchend','click'].forEach(evt => document.addEventListener(evt, mark, {once:true, passive:true}));
-  var orig = document.getElementById('roleVideo');
-  if (!orig) return;
-  function unlock(){
-    try{
-      orig.muted = true; orig.playsInline = true;
-      orig.setAttribute('playsinline',''); orig.setAttribute('webkit-playsinline','');
-      var p = orig.play(); if (p && p.catch) p.catch(()=>{});
-    }catch(e){}
+  const veil = document.getElementById('blackVeil');
+  const gate = document.getElementById('gateScreen');
+  const gateText = document.getElementById('gateText');
+  const startBtn = document.getElementById('startIntroBtn');
+  const bgLayer = document.getElementById('bgVideoLayer');
+  const music = document.getElementById('introMusic');
+
+  // make sure background layer is hidden initially
+  if (bgLayer) bgLayer.style.display = 'none';
+  if (music){ try{ music.pause(); music.currentTime = 0; }catch(e){} }
+
+  function startAll(){
+    // Fade to black for 1s
+    if (veil){ veil.style.opacity = '1'; }
+    // After 1s, start background video/music, remove gate
+    setTimeout(()=>{
+      // Start bg video looping
+      if (bgLayer) bgLayer.style.display = 'block';
+      if (window.__bgVideoStart) window.__bgVideoStart();
+
+      // Start music
+      if (music){ try{ music.volume = 0.35; music.currentTime = 0; music.play().catch(()=>{}); }catch(e){} }
+
+      // Hide first screen elements
+      if (gate) gate.style.display = 'none';
+      if (gateText) gateText.style.display = 'none';
+
+      // Fade back from black
+      if (veil){ veil.style.opacity = '0'; }
+    }, 1000);
   }
-  // Attempt a couple retries early
-  setTimeout(unlock, 500);
-  setTimeout(unlock, 1200);
-  document.addEventListener('click', unlock, {once:true});
-  document.addEventListener('touchend', unlock, {once:true, passive:true});
+
+  if (startBtn) startBtn.addEventListener('click', function(e){ e.preventDefault(); startAll(); });
 })();
 </script>
+
+<script>
+(function(){
+  const veil = document.getElementById('blackVeil');
+  const gate = document.getElementById('gateScreen');
+  const gateText = document.getElementById('gateText');
+  const gateVideo = document.getElementById('gateVideo');
+  const startBtn = document.getElementById('startIntroBtn');
+  const bgLayer = document.getElementById('bgVideoLayer');
+  const music = document.getElementById('introMusic');
+
+  function startAll(){
+    // Fade to black
+    if (veil) veil.style.opacity = '1';
+
+    setTimeout(()=>{
+      // Pause and hide gate video
+      try{ gateVideo && gateVideo.pause(); }catch(e){}
+      document.documentElement.classList.remove('stage-1');
+      document.documentElement.classList.add('stage-2');
+
+      // Start bg video loop
+      if (window.__bgVideoStart) window.__bgVideoStart();
+
+      // Start music
+      if (music){ try{ music.volume = 0.35; music.currentTime = 0; music.play().catch(()=>{});}catch(e){} }
+
+      // Clear veil
+      if (veil) veil.style.opacity = '0';
+    }, 1000);
+  }
+
+  if (startBtn){
+    startBtn.addEventListener('click', function(e){ e.preventDefault(); startAll(); });
+  }
+})();
+</script>
+
+<!-- Role background video (derrière l'écran Règles) -->
+<div id="roleVideoLayer" aria-hidden="true" style="position:fixed;inset:0;z-index:0;opacity:0;pointer-events:none;transition:opacity 900ms ease;">
+  <video id="roleVideo" muted loop playsinline webkit-playsinline preload="auto"
+         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.94)">
+    <source src="videos/role-bg.mp4" type="video/mp4">
+  </video>
+</div>
 
 
 <script>
@@ -1217,16 +1229,26 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     const r = el.getBoundingClientRect();
     return r.width>0 && r.height>0;
   }
+  function hideFallbacks(){
+    ['bg-role','bg-intro','bg-gate'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el){ el.style.opacity='0'; el.style.pointerEvents='none'; }
+    });
+    document.querySelectorAll('.bg-fallback').forEach(function(el){
+      el.style.opacity='0'; el.style.pointerEvents='none';
+    });
+  }
   function startRole(){
     var layer = document.getElementById('roleVideoLayer');
     var video = document.getElementById('roleVideo');
     if(!layer || !video) return;
+    hideFallbacks(); // <- important pour dévoiler la vidéo
     layer.style.display='block';
     try{ video.currentTime = 0; }catch(_){}
     forcePlay(video).then(function(){
       requestAnimationFrame(function(){ requestAnimationFrame(function(){ layer.style.opacity='1'; }); });
     });
-    // retry a few times for iOS
+    // retry quelques fois (iOS)
     var tries=0, iv=setInterval(function(){
       if (!video.paused) { clearInterval(iv); return; }
       tries++; forcePlay(video);
@@ -1241,7 +1263,6 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       if (isVisible(rules)) { try{obs.disconnect();}catch(_){ } startRole(); }
     });
     obs.observe(rules, {attributes:true, attributeFilter:['style','class']});
-    // safety: if click/touch shows rules via JS without attributes changes
     ['click','touchend','keydown'].forEach(function(ev){
       document.addEventListener(ev, function(){ if (isVisible(rules)) startRole(); }, {passive:true});
     });
