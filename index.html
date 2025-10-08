@@ -158,7 +158,17 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
   #gate{ padding-top:3vh !important; }
 }
 
+
+/* Force full black UI chrome and safe dark scheme */
+html, body { background:#000 !important; color-scheme: dark; overscroll-behavior: none; }
+/* Keep intro panel pinned to top (from prior step) */
+#gate{ align-items:flex-start !important; padding-top:4vh !important; }
+#gate .panel.panel--dark{ margin-top:0 !important; }
+@media (max-width:480px){
+  #gate{ padding-top:3vh !important; }
+}
 </style>
+
 
 <!-- PATCH: lisibilité p3 (titre blanc + panneaux sombres) -->
 <style id="patch-p3-style">
@@ -1112,6 +1122,63 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       bgv1.load();
     }
   }catch(e){}
+})();
+</script>
+
+
+<script>
+(function(){
+  function forcePlay(video){
+    if (!video) return;
+    try{
+      video.muted = true;
+      video.playsInline = true;
+      video.setAttribute('playsinline','');
+      video.setAttribute('webkit-playsinline','');
+      var p = video.play();
+      if (p && typeof p.then==='function'){ p.catch(function(){}); }
+    }catch(e){}
+  }
+  // Enhance CTA behavior
+  var enterBtn = document.getElementById('enterBtn') || document.querySelector('#ctaOverlay button');
+  var rules = document.getElementById('rulesScreen');
+  var roleLayer = document.getElementById('roleVideoLayer');
+  var roleVideo = document.getElementById('roleVideo');
+  if (enterBtn && rules && roleLayer && roleVideo){
+    enterBtn.addEventListener('click', function(){
+      // Show the rules screen UI
+      rules.style.display = 'block';
+      // Start and fade in the role video behind
+      roleLayer.style.opacity = '0';
+      roleLayer.style.display = 'block';
+      forcePlay(roleVideo);
+      requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ roleLayer.style.opacity = '1'; }); });
+    }, {once:false});
+  }
+})();
+</script>
+
+
+<script>
+// Ensure the role video can start after first gesture on iOS if needed
+(function(){
+  var interacted = false;
+  function mark(){ interacted = true; }
+  ['touchstart','touchend','click'].forEach(evt => document.addEventListener(evt, mark, {once:true, passive:true}));
+  var orig = document.getElementById('roleVideo');
+  if (!orig) return;
+  function unlock(){
+    try{
+      orig.muted = true; orig.playsInline = true;
+      orig.setAttribute('playsinline',''); orig.setAttribute('webkit-playsinline','');
+      var p = orig.play(); if (p && p.catch) p.catch(()=>{});
+    }catch(e){}
+  }
+  // Attempt a couple retries early
+  setTimeout(unlock, 500);
+  setTimeout(unlock, 1200);
+  document.addEventListener('click', unlock, {once:true});
+  document.addEventListener('touchend', unlock, {once:true, passive:true});
 })();
 </script>
 
