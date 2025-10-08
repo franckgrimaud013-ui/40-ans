@@ -187,6 +187,26 @@
     });
     $('#reload').addEventListener('click', ()=>location.reload());
   </script>
+
+<!-- ==== VIDEO DE FOND (ajoutée, non intrusive) ==== -->
+<style>
+  #videoBack {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -2;            /* Sous tout */
+    opacity: 0.75;          /* Légère transparence pour garder la lisibilité du texte */
+    filter: brightness(0.85);
+  }
+</style>
+
+<video id="videoBack" autoplay muted loop playsinline webkit-playsinline preload="auto">
+  <source src="videos/vote-bg.mp4" type="video/mp4">
+</video>
+<!-- ==== /VIDEO DE FOND ==== -->
+
 </body>
 </html>
 
