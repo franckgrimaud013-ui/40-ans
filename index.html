@@ -150,6 +150,14 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 .bgv.is-active{ opacity:1 !important; }
 .intro-started #bgVideoLayer{ opacity:1 !important; } /* when intro ends, reveal looping layer */
 
+
+/* === Intro panel pinned to top (override) === */
+#gate{ align-items:flex-start !important; padding-top:4vh !important; }
+#gate .panel.panel--dark{ margin-top:0 !important; }
+@media (max-width:480px){
+  #gate{ padding-top:3vh !important; }
+}
+
 </style>
 
 <!-- PATCH: lisibilité p3 (titre blanc + panneaux sombres) -->
@@ -980,6 +988,9 @@ if ('serviceWorker' in navigator) {
           // when intro video finishes: reveal bg loop, start it, and force intro text start (just in case)
           document.documentElement.classList.add('intro-started');
           if (window.__bgVideoStart) window.__bgVideoStart();
+// Safe gate for bg readiness
+(function(){var bgv1=document.getElementById('bgv1');var started=false;function ok(){if(started)return; if(bgv1&&bgv1.readyState>=2){started=true;startParagraphs();}}
+if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',ok);}setTimeout(function(){if(!started){started=true;startParagraphs();}},1800);})();
           // Ensure text animation starts even if timing differs
           setTimeout(function(){
             document.documentElement.classList.add('intro-text-start');
@@ -989,6 +1000,9 @@ if ('serviceWorker' in navigator) {
         // No video? fallback: start bg loop immediately
         document.documentElement.classList.add('intro-started');
         if (window.__bgVideoStart) window.__bgVideoStart();
+// Safe gate for bg readiness
+(function(){var bgv1=document.getElementById('bgv1');var started=false;function ok(){if(started)return; if(bgv1&&bgv1.readyState>=2){started=true;startParagraphs();}}
+if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',ok);}setTimeout(function(){if(!started){started=true;startParagraphs();}},1800);})();
       }
     }catch(e){ console.error(e); }
   };
@@ -1083,6 +1097,21 @@ if ('serviceWorker' in navigator) {
       document.addEventListener('click', once, {once:true});
     }
   };
+})();
+</script>
+
+
+<script>
+// Preload the looping background while intro plays (mobile-friendly)
+(function(){
+  try{
+    var bgv1 = document.getElementById('bgv1');
+    if (bgv1){
+      bgv1.setAttribute('preload','auto');
+      // Kick a load early so iOS starts fetching while intro runs
+      bgv1.load();
+    }
+  }catch(e){}
 })();
 </script>
 
