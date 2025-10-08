@@ -1,160 +1,126 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Vote secret — Traîtres</title>
-  <meta name="theme-color" content="#ffd87a">
-  <style>
-    :root{
-      --bg:#071226; --card:#071827; --mut:#9fb0c6; --gold:#ffd87a; --glass: rgba(255,255,255,0.04);
-      --radius:14px; --pad:18px;
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;background:linear-gradient(180deg,#071226 0%, #071827 100%);color:#eaf0f8;display:flex;align-items:center;justify-content:center;padding:20px}
-    .wrap{width:100%;max-width:760px}
-    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.015)); border:1px solid rgba(255,255,255,0.04);
-          border-radius:var(--radius); padding:calc(var(--pad)); box-shadow: 0 10px 30px rgba(2,6,23,0.6)}
-    h1{margin:0 0 8px;font-size:20px;color:var(--gold);letter-spacing:0.02em}
-    p.lead{margin:0 0 14px;color:var(--mut)}
-    .instructions{background:var(--glass); padding:12px;border-radius:10px;margin:12px 0;color:#e6eef6;line-height:1.4}
-    label{display:block;font-size:13px;color:var(--mut);margin-bottom:6px}
-    input[type="text"]{width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:#fff;font-size:16px}
-    .row{display:flex;gap:10px;margin-top:12px;align-items:center}
-    .btn{background:var(--gold);color:#000;border:none;padding:12px 16px;border-radius:10px;font-weight:800;cursor:pointer}
-    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--mut);padding:10px 14px;border-radius:10px;cursor:pointer}
-    .hint{font-size:13px;color:var(--mut);margin-top:10px}
-    .status{margin-top:12px;font-size:14px}
-    .small{font-size:13px;color:var(--mut)}
-    .center{display:flex;justify-content:center;align-items:center;gap:10px}
-    footer{margin-top:14px;font-size:13px;color:var(--mut);text-align:center}
-    @media(max-width:520px){ .row{flex-direction:column} }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vote — Les Traîtres</title>
+
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="dns-prefetch" href="https://www.gstatic.com">
+<link rel="dns-prefetch" href="https://www.googleapis.com">
+
+<style>
+  :root{--gold:rgba(255,215,0,.8);}
+  html,body{margin:0;height:100%;background:#000;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial;color-scheme:dark;overscroll-behavior:none}
+  .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:8vh 4vw}
+  .panel{width:min(92vw,720px);background:rgba(12,16,20,.88);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:22px 22px 18px;
+          box-shadow:0 10px 40px rgba(0,0,0,.45);}
+  h1{margin:.2em 0 .6em;font-size:clamp(22px,4.5vw,36px)}
+  p, label{font-size:clamp(15px,2.6vw,18px)}
+  .field{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 14px}
+  input[type="text"], select{flex:1;min-width:220px;background:#0a0f14;border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:12px}
+  .btn{appearance:none;border:1px solid var(--gold);
+        background:radial-gradient(120% 120% at 50% -10%, rgba(255,215,0,.18), rgba(255,215,0,.06));
+        color:#fff;padding:12px 22px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase;
+        font-weight:700;box-shadow:0 0 20px rgba(255,215,0,.22);cursor:pointer;transition:transform .15s ease, box-shadow .2s ease}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 0 28px rgba(255,215,0,.35)}
+  .row{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:10px}
+  #toast{position:fixed;left:50%;bottom:8vh;transform:translateX(-50%);background:rgba(20,24,28,.94);
+          padding:12px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.12);color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.4);
+          font-weight:600;letter-spacing:.02em;z-index:999;display:none;max-width:85vw;text-align:center}
+  .hint{opacity:.75;font-size:.9em;margin-top:.4em}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card" role="main" aria-labelledby="title">
-      <h1 id="title">Vote secret — Traîtres</h1>
-      <p class="lead">Vous êtes sur la page privée des traîtres. Ici vous choisissez ensemble la victime à éliminer cette nuit.</p>
+<div class="wrap">
+  <div class="panel">
+    <h1>Voter pour un Traître</h1>
+    <p>Choisissez le joueur que vous souhaitez éliminer. Votre vote sera enregistré anonymement.</p>
 
-      <div class="instructions" id="instr">
-        
-        <strong>Important — lisez avant de voter :</strong>
-        <ul>
-          <li>Discutez ensemble et <em>choisissez la même personne</em>. Si les traîtres ne votent pas la même personne, le vote peut être dispersé et ne pas aboutir.</li>
-          <li>Le vote est <strong>anonyme</strong> et sera enregistré automatiquement lorsque vous validerez.</li>
-          <li>Un seul vote par appareil. Si vous avez un doute, discutez d'abord, puis validez.</li>
-        </ul>
+    <form id="voteForm">
+      <div class="field">
+        <label for="victim" style="min-width:110px">Joueur</label>
+        <input id="victim" name="victim" type="text" placeholder="Nom du joueur" autocomplete="off" required>
       </div>
 
-      <label for="victim">Prénom de la victime (ex. Marc)</label>
-      <input id="victim" type="text" placeholder="Votre vote ici" autocomplete="off" inputmode="text" />
+      <!-- Si tu préfères un SELECT fixe, remplace l'input par un <select id='victim'>... -->
 
       <div class="row">
-        <button id="voteBtn" class="btn">Voter maintenant</button>
-        <button id="clearBtn" class="btn-ghost">Effacer</button>
+        <button id="voteNow" class="btn" type="submit">Voter maintenant</button>
       </div>
-
-      <div class="status" id="status" aria-live="polite"></div>
-
-      <div class="hint small" id="hintText">Conseil : convenez d'un prénom précis avant d'envoyer.</div>
-
-      <footer>Si vous avez un problème technique, vous pouvez contacter l’organisateur (Franck). Sachez toutefois qu’en le contactant, il pourra se douter que vous avez consulté la page des traîtres et en déduire votre rôle.</footer>
-    </div>
+      <div class="hint">Un seul vote par personne. Merci de ne pas recharger la page après avoir voté.</div>
+    </form>
   </div>
+</div>
 
-  <script>
-  // Firebase config - utilise ta config (déjà fournie)
-  const firebaseConfig = {
-    apiKey: "AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
+<div id="toast">Message</div>
+
+<!-- Firebase v8 (compat avec ton code existant) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+(function(){
+  // --- UI helpers ---
+  const toast = document.getElementById('toast');
+  function showToast(msg, ms){ toast.textContent = msg; toast.style.display='block'; clearTimeout(toast.__to); toast.__to=setTimeout(()=>toast.style.display='none', ms||2400); }
+
+  const form = document.getElementById('voteForm');
+  const voteBtn = document.getElementById('voteNow');
+  const victimInput = document.getElementById('victim');
+
+  function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+  // --- Firebase init ---
+  var firebaseConfig = {
+    apiKey: "FAKE-KEY-FOR-CLIENT-ONLY",
     authDomain: "ans-de-franck.firebaseapp.com",
     databaseURL: "https://ans-de-franck-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "ans-de-franck",
-    storageBucket: "ans-de-franck.firebasestorage.app",
-    messagingSenderId: "1063437612417",
-    appId: "1:1063437612417:web:812e847dfcd990c6922480"
+    projectId: "ans-de-franck"
   };
+  try{ if(!firebase.apps.length) firebase.initializeApp(firebaseConfig); }catch(e){ /* ignore double init */ }
 
-  // Load Firebase compat if available
-  (function(){
-    function loadFirebase(cb){
-      if(window.firebase && window.firebase.database) { cb(); return; }
-      var s1 = document.createElement('script'); s1.src = 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js'; s1.onload = function(){
-        var s2 = document.createElement('script'); s2.src = 'https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js'; s2.onload = cb; document.head.appendChild(s2);
-      }; document.head.appendChild(s1);
+  function getDb(){ try{ return firebase.database(); }catch(e){ return null; } }
+
+  async function recordVote(name){ 
+    const db = getDb();
+    if(!db){ 
+      showToast('❌ Problème de connexion. Réessaie dans un instant.', 2600);
+      return;
     }
-
-    const status = document.getElementById('status');
-    const victimInput = document.getElementById('victim');
-    const voteBtn = document.getElementById('voteBtn');
-    const clearBtn = document.getElementById('clearBtn');
-
-    function safeTrim(s){ return String(s||'').trim(); }
-    function todayISO(){
-      const dt = new Date();
-      const y = dt.getFullYear(), m = String(dt.getMonth()+1).padStart(2,'0'), d = String(dt.getDate()).padStart(2,'0');
-      return y+'-'+m+'-'+d;
+    const key = 'nights/' + todayKey() + '/votes';
+    const ref = db.ref(key).push();
+    const payload = { victim: name, ts: Date.now(), ua: navigator.userAgent || '' };
+    try {
+      await ref.set(payload);
+      showToast('✅ Votre vote a été enregistré.', 2400);
+      if (voteBtn) { voteBtn.disabled = true; voteBtn.textContent = 'Vote enregistré'; }
+      if (victimInput) victimInput.readOnly = true;
+    } catch(err) {
+      console.error('Firebase write error:', err);
+      if (String(err).match(/permission|denied|auth/i)) {
+        showToast('❌ Accès refusé par la base. Vérifie les règles Firebase.', 3200);
+      } else {
+        showToast('❌ Erreur réseau. Réessaie.', 2400);
+      }
     }
+  }
 
-    loadFirebase(function(){
-      try{ firebase.initializeApp(firebaseConfig); } catch(e){}
-      const db = firebase.database();
+  function onSubmit(e){ 
+    e.preventDefault();
+    const name = (victimInput && victimInput.value || '').trim();
+    if(!name){ showToast('Indique un nom avant de voter.', 2000); victimInput && victimInput.focus(); return; }
+    recordVote(name);
+  }
 
-      voteBtn.addEventListener('click', function(){
-        const name = safeTrim(victimInput.value);
-        if(!name){ status.textContent = 'Saisis un prénom avant de voter.'; status.style.color = '#ffd87a'; return; }
-
-        // Give one final explicit confirmation
-        if(!confirm('Vous êtes sûr de vouloir voter pour "'+name+'"? Assurez-vous que votre co-traître vote exactement la même orthographe.')) return;
-
-        // Disable button to avoid double sends
-        voteBtn.disabled = true;
-        voteBtn.textContent = 'Envoi…';
-
-        const date = todayISO();
-        const path = '/nights/'+date+'/votes';
-
-        db.ref(path).push({ victim: name, ts: Date.now() })
-          .then(function(){
-            status.textContent = '✅ Vote enregistré. Merci — gardez le secret.';
-            status.style.color = '#9fe39f';
-            voteBtn.textContent = 'Vote envoyé';
-          })
-          .catch(function(err){
-            status.textContent = 'Erreur lors de l'envoi : ' + (err && err.message ? err.message : String(err));
-            status.style.color = '#ffb0a0';
-            voteBtn.disabled = false;
-            voteBtn.textContent = 'Voter maintenant';
-          });
-      });
-
-      clearBtn.addEventListener('click', function(){
-        victimInput.value = '';
-        status.textContent = '';
-      });
-
-      // parse token t=... (optional) to show traitor name but keep page minimal
-      (function parseToken(){
-        const p = new URLSearchParams(location.search);
-        if(!p.has('t')) return;
-        try{
-          const raw = p.get('t');
-          const decoded = atob(raw);
-          const obj = JSON.parse(decoded);
-          if(obj && obj.name){
-            // show minimal greeting in status then hide
-            status.textContent = 'Bienvenue, ' + obj.name + ' — procédez au vote en secret.';
-            status.style.color = '#cfd5dc';
-            setTimeout(()=> status.textContent = '', 5000);
-          }
-        }catch(e){}
-      })();
-
-    });
-
-  })();
-  </script>
+  form && form.addEventListener('submit', onSubmit);
+})();
+</script>
 </body>
 </html>
