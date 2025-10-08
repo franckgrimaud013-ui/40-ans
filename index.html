@@ -172,9 +172,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   #gate{ padding-top:3vh !important; }
 }
 
-/* --- role video fade layer --- */
-#roleVideoLayer{position:fixed;inset:0;z-index:1;opacity:0;pointer-events:none;transition:opacity 1200ms ease}
-
+#roleVideoLayer{position:fixed;inset:0;z-index:1;opacity:0;pointer-events:none;transition:opacity 900ms ease}
 </style>
 
 
@@ -248,11 +246,11 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     <p style="--i:7">Et puis, il y a celle qui connaît toutes les règles du jeu… et qui aime que tout soit clair… avant de commencer.</p>
     <p style="--i:8">Il y en a qui ont l’art de contredire… même quand, au fond, c’était une bonne idée.</p>
     <p style="--i:9">D’autres, au contraire, laissent tout glisser… rien n’est grave.</p>
-    <p style="--i:10">Et puis, nous avons un passionné.Son métier, les couleurs pastels, les "S" difficilement prononcés…</p>
+    <p style="--i:10">Et puis, nous avons un passionné.Son métier, les couleurs pastel, les "S" difficilement prononcé…</p>
     <p style="--i:11">Et bien sûr, des infirmières, prêtes à veiller sur chacun mais elles aussi devront se méfier...ou devriez-vous vous méfier d'elle...</p>
     <p style="--i:12">Tout le monde se connaît depuis plusieurs années… Mais saurez-vous reconnaître les traîtres cachés parmi vous ?</p>
     <p style="--i:13">À chaque repas, à chaque nuit, un vote décidera d’un destin</p>
-    <p style="--i:14">Vous allez dans quelques instants connaître votre rôles...</p>
+    <p style="--i:14">Vous allez dans quelques instants connaître vos rôles...</p>
     <p id="intro-last" style="--i:15">Que la partie commence…</p> 
   </div>
 </div>
@@ -1192,12 +1190,72 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 
 
 <!-- Role background video (derrière l'écran Règles) -->
-<div id="roleVideoLayer" aria-hidden="true" style="position:fixed;inset:0;z-index:1;opacity:0;pointer-events:none;transition:opacity 1200ms ease;">
+<div id="roleVideoLayer" aria-hidden="true" style="position:fixed;inset:0;z-index:1;opacity:0;pointer-events:none;transition:opacity 900ms ease;">
   <video id="roleVideo" muted loop playsinline webkit-playsinline preload="auto"
          style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.94)">
     <source src="videos/role-bg.mp4" type="video/mp4">
   </video>
 </div>
+
+
+<script>
+(function(){
+  function forcePlay(v){
+    if(!v) return Promise.resolve();
+    try{
+      v.muted = true; v.playsInline = true;
+      v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
+      const p = v.play(); if (p && p.catch) return p.catch(()=>{});
+      return Promise.resolve();
+    }catch(e){ return Promise.resolve(); }
+  }
+  function isVisible(el){
+    if(!el) return false;
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity === 0) return false;
+    const rect = el.getBoundingClientRect();
+    return rect.width>0 && rect.height>0;
+  }
+  function startRole(){
+    var layer = document.getElementById('roleVideoLayer');
+    var video = document.getElementById('roleVideo');
+    if(!layer || !video) return;
+    layer.style.display='block';
+    try{ video.currentTime = 0; }catch(_){}
+    forcePlay(video).then(function(){
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ layer.style.opacity='1'; }); });
+    });
+    // Retry a few times (iOS)
+    var tries=0, iv = setInterval(function(){
+      if (!video.paused) { clearInterval(iv); return; }
+      tries++; forcePlay(video);
+      if (tries>6) clearInterval(iv);
+    }, 600);
+  }
+  function bind(){
+    var rules = document.getElementById('rulesScreen') || document.querySelector('[data-section="rules"]');
+    if(!rules) return;
+
+    // If already visible (edge case), start immediately
+    if (isVisible(rules)) { startRole(); return; }
+
+    // Observe display/style changes
+    var obs = new MutationObserver(function(){
+      if (isVisible(rules)) { try{ obs.disconnect(); }catch(_){ } startRole(); }
+    });
+    obs.observe(rules, { attributes:true, attributeFilter:['style','class'] });
+
+    // Also listen to global user interactions (some UIs toggle via JS without attributes)
+    ['click','touchend','keydown'].forEach(function(evt){
+      document.addEventListener(evt, function(){
+        if (isVisible(rules)) startRole();
+      }, {passive:true});
+    });
+  }
+  if (document.readyState!=='loading') bind();
+  else document.addEventListener('DOMContentLoaded', bind);
+})();
+</script>
 
 </body>
 </html>
