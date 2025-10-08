@@ -183,17 +183,17 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 <div id="secretFixed" class="secret-fixed" title="Passer l\'intro"></div>
 <section class="bg-gate" aria-hidden="true" style="position:fixed;inset:0;z-index:0;">
   <video id="gateVideo" muted playsinline preload="auto"
-         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.7)">
+         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.7)" autoplay muted playsinline webkit-playsinline preload="auto">
     <source src="videos/intro-gate.mp4" type="video/mp4">
   </video>
 </section>
 <div id="bgVideoLayer" class="bg-intro" aria-hidden="true" style="position:fixed;inset:0;z-index:0;opacity:0;transition:opacity 1200ms ease;">
   <video id="bgv1" class="bgv" muted playsinline preload="auto"
-         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.9);opacity:1;">
+         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.9);opacity:1;" muted playsinline webkit-playsinline preload="auto">
     <source src="videos/fond-boucle.mp4" type="video/mp4">
   </video>
   <video id="bgv2" class="bgv" muted playsinline preload="auto"
-         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.9);opacity:0;">
+         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.9);opacity:0;" muted playsinline webkit-playsinline preload="auto">
     <source src="videos/fond-boucle.mp4" type="video/mp4">
   </video>
 </div>
@@ -1019,6 +1019,70 @@ if ('serviceWorker' in navigator) {
   };
   document.addEventListener('touchend', resume, {once:true, passive:true});
   document.addEventListener('click', resume, {once:true});
+})();
+</script>
+
+
+<script>
+// === iOS/Safari robust autoplay patch ===
+(function(){
+  var interacted = false;
+  function markInteracted(){ interacted = true; }
+  ['touchstart','touchend','click'].forEach(function(evt){
+    document.addEventListener(evt, markInteracted, {once:true, passive:true});
+  });
+
+  function forcePlay(video){
+    if (!video) return;
+    try{
+      video.muted = true;
+      video.playsInline = true;
+      video.setAttribute('playsinline','');
+      video.setAttribute('webkit-playsinline','');
+      var p = video.play();
+      if (p && typeof p.then==='function'){ p.catch(function(){}); }
+    }catch(e){}
+  }
+
+  // 1) Force intro video after interaction and on load retries
+  var gateVideo = document.getElementById('gateVideo');
+  if (gateVideo){
+    gateVideo.addEventListener('loadeddata', function(){ if (interacted) forcePlay(gateVideo); }, {once:true});
+    setTimeout(function(){ forcePlay(gateVideo); }, 300);
+    setTimeout(function(){ forcePlay(gateVideo); }, 1000);
+    setTimeout(function(){ forcePlay(gateVideo); }, 2000);
+  }
+
+  // 2) Sur le bouton "Lancez-vous" (ton code existant déclenche startIntro) → on force la vidéo
+  var startBtn = document.querySelector('[data-action="start-intro"], #startIntroBtn, .btn-start');
+  if (startBtn){
+    startBtn.addEventListener('click', function(){
+      forcePlay(gateVideo);
+    });
+  }
+
+  // 3) Quand on bascule vers la vidéo de fond, démarrer après 1er geste si besoin
+  var origBgStart = window.__bgVideoStart;
+  window.__bgVideoStart = function(){
+    function realStart(){
+      try{ origBgStart && origBgStart(); }catch(e){}
+      // "débloquer" le player actif
+      try{
+        var v1 = document.getElementById('bgv1');
+        forcePlay(v1);
+      }catch(e){}
+    }
+    if (interacted){ realStart(); }
+    else{
+      var once = function(){
+        document.removeEventListener('touchend', once);
+        document.removeEventListener('click', once);
+        realStart();
+      };
+      document.addEventListener('touchend', once, {once:true, passive:true});
+      document.addEventListener('click', once, {once:true});
+    }
+  };
 })();
 </script>
 
