@@ -171,6 +171,10 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 @media (max-width:480px){
   #gate{ padding-top:3vh !important; }
 }
+
+/* --- role video fade layer --- */
+#roleVideoLayer{position:fixed;inset:0;z-index:1;opacity:0;pointer-events:none;transition:opacity 1200ms ease}
+
 </style>
 
 
@@ -244,11 +248,11 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     <p style="--i:7">Et puis, il y a celle qui connaît toutes les règles du jeu… et qui aime que tout soit clair… avant de commencer.</p>
     <p style="--i:8">Il y en a qui ont l’art de contredire… même quand, au fond, c’était une bonne idée.</p>
     <p style="--i:9">D’autres, au contraire, laissent tout glisser… rien n’est grave.</p>
-    <p style="--i:10">Et puis, nous avons un passionné.Son métier, les couleurs pastel, les "S" difficilement prononcé…</p>
+    <p style="--i:10">Et puis, nous avons un passionné.Son métier, les couleurs pastels, les "S" difficilement prononcés…</p>
     <p style="--i:11">Et bien sûr, des infirmières, prêtes à veiller sur chacun mais elles aussi devront se méfier...ou devriez-vous vous méfier d'elle...</p>
     <p style="--i:12">Tout le monde se connaît depuis plusieurs années… Mais saurez-vous reconnaître les traîtres cachés parmi vous ?</p>
     <p style="--i:13">À chaque repas, à chaque nuit, un vote décidera d’un destin</p>
-    <p style="--i:14">Vous allez dans quelques instants connaître vos rôles...</p>
+    <p style="--i:14">Vous allez dans quelques instants connaître votre rôles...</p>
     <p id="intro-last" style="--i:15">Que la partie commence…</p> 
   </div>
 </div>
@@ -1185,6 +1189,15 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   document.addEventListener('touchend', unlock, {once:true, passive:true});
 })();
 </script>
+
+
+<!-- Role background video (derrière l'écran Règles) -->
+<div id="roleVideoLayer" aria-hidden="true" style="position:fixed;inset:0;z-index:1;opacity:0;pointer-events:none;transition:opacity 1200ms ease;">
+  <video id="roleVideo" muted loop playsinline webkit-playsinline preload="auto"
+         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.94)">
+    <source src="videos/role-bg.mp4" type="video/mp4">
+  </video>
+</div>
 
 </body>
 </html>
