@@ -1267,9 +1267,9 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 <!-- ===== /ROLE VIDEO ===== -->
 
 
-<script id="sound-loop-patch">
+<script id="final-scenario">
 (function(){
-  // Ensure intro video (intro.mp4 or gateVideo) stays muted
+  // 1) Ensure intro.mp4 (gateVideo) stays muted and visible
   var intro = document.getElementById('gateVideo');
   if (intro){
     try{
@@ -1278,11 +1278,19 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       intro.setAttribute('muted','');
       intro.setAttribute('playsinline','');
       intro.setAttribute('webkit-playsinline','');
+      intro.autoplay = true;
+      intro.loop = false;
+      intro.style.opacity = '1';
     }catch(e){}
   }
 
-  // Enable sound on fond-boucle-v2.mp4 (bgv1/bg v2) when clicking "Lancez-vous"
-  function enableLoopSound(){
+  // 2) When user clicks "Lancez-vous", stop intro & play fond-boucle-v2.mp4 with sound (once only)
+  function startMainVideo(){
+    var intro = document.getElementById('gateVideo');
+    if (intro){
+      try{ intro.pause(); intro.currentTime = 0; intro.style.display = 'none'; }catch(e){}
+    }
+
     var v1 = document.getElementById('bgv1');
     var v2 = document.getElementById('bgv2');
     [v1, v2].forEach(function(v){
@@ -1290,26 +1298,20 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       try{
         v.muted = false;
         v.volume = 0.4;
+        v.loop = false; // plays once only
         v.play().catch(()=>{});
       }catch(e){}
     });
   }
 
-  // Bind to "Lancez-vous" button
+  // 3) Bind to "Lancez-vous" button
   var startBtn = document.querySelector('#gate .btn');
-  if (startBtn && !startBtn.dataset._loopSoundBound){
-    startBtn.dataset._loopSoundBound = "1";
-    startBtn.addEventListener('click', enableLoopSound, { once:true });
+  if (startBtn && !startBtn.dataset._bound){
+    startBtn.dataset._bound = "1";
+    startBtn.addEventListener('click', startMainVideo, { once:true });
   }
 
-  // Hook into startIntro() if it exists
-  var prevStart = window.startIntro;
-  window.startIntro = function(){
-    try{ prevStart && prevStart(); }catch(e){}
-    enableLoopSound();
-  };
-
-  // Reveal layers only when videos ready (avoid black flashes)
+  // 4) Ensure layer reveal when ready (avoid black flash)
   function revealWhenReady(videoId, layerId){
     var v = document.getElementById(videoId);
     var layer = document.getElementById(layerId);
@@ -1319,6 +1321,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     if (v.readyState >= 2) show();
     else v.addEventListener('canplay', show, {once:true});
   }
+  revealWhenReady('gateVideo', 'bgVideoLayer'); // intro visible asap
   revealWhenReady('bgv1', 'bgVideoLayer');
   revealWhenReady('roleVideo', 'roleVideoLayer');
 })();
