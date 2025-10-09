@@ -58,6 +58,16 @@
   </style>
 </head>
 <body>
+
+<!-- === BACKGROUND VIDEO (plein écran, sans voile) === -->
+<div id="bgVideoWrap" aria-hidden="true">
+  <video id="bgVoteVideo" autoplay muted loop playsinline webkit-playsinline preload="auto">
+    <source src="videos/vote-bg.mp4" type="video/mp4">
+  </video>
+</div>
+<!-- === /BACKGROUND VIDEO === -->
+
+>
   <!-- Fond en fondu -->
   <div class="bgstage" aria-hidden="true">
     <div class="bgslide bg1"></div>
@@ -188,25 +198,77 @@
     $('#reload').addEventListener('click', ()=>location.reload());
   </script>
 
-<!-- ==== VIDEO DE FOND (ajoutée, non intrusive) ==== -->
-<style>
-  #videoBack {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: -2;            /* Sous tout */
-    opacity: 0.75;          /* Légère transparence pour garder la lisibilité du texte */
-    filter: brightness(0.85);
+<!-- Garder la vidéo visible pendant le compte à rebours -->
+<style id="keep-video-overlays-transparent">
+  /* La vidéo plein écran derrière tout */
+  #bgVideoWrap { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  #bgVoteVideo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+  /* Le contenu utile passe au-dessus */
+  #app, main, .container, .wrap, .page, .content, #root, #__next {
+    position: relative; z-index: 1; background: transparent !important;
+  }
+
+  /* Le calque overlay et ses blocs n'ont AUCUN fond */
+  #overlay { position: relative; z-index: 1; background: transparent !important; }
+  #overlay::before, #overlay::after { background: transparent !important; }
+  #overlay .inner, #overlay .slide, #overlay .countdown, #cd, #overlay .bar {
+    background: transparent !important; box-shadow: none !important;
+  }
+
+  /* Neutralise des anciens fonds statiques éventuels */
+  .bgstage, .bgslide, #bg-role, .bg-fallback, .bg-intro {
+    display: none !important; opacity: 0 !important; pointer-events: none !important;
+  }
+
+  /* Base */
+  html, body { background: #000; margin: 0; }
+</style>
+
+
+<style id="name-top-white">
+  /* Nom du joueur : blanc, en haut, centré, même taille */
+  #overlay .name, .name {
+    color: #ffffff !important;
+    position: absolute !important;
+    top: 5vh !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 5 !important;
+    text-align: center;
+    /* on ne touche pas à font-size / font-weight pour garder la même taille */
   }
 </style>
 
-<video id="videoBack" autoplay muted loop playsinline webkit-playsinline preload="auto">
-  <source src="videos/vote-bg.mp4" type="video/mp4">
-</video>
-<!-- ==== /VIDEO DE FOND ==== -->
+
+<style id="final-tweaks">
+  :root { --mask-scale: 0.5; } /* 50% */
+  /* 1) "Les traîtres..." en blanc pur */
+  .announcement h1 {
+    color:#ffffff !important;
+    -webkit-text-fill-color:#ffffff !important;
+    text-shadow:none !important;
+  }
+  /* 2) Les deux autres phrases +70% */
+  .announcement h2,
+  .announcement p {
+    font-size: 170% !important; /* +70% */
+    line-height: 1.15 !important;
+  }
+  /* 3) Masque deux fois plus petit (robuste : attrape id/class contenant 'mask') */
+  [id*="mask"],
+  [class*="mask"] {
+    transform: scale(var(--mask-scale)) !important;
+    transform-origin: center center !important;
+  }
+  [class*="mask"] img,
+  [class*="mask"] video {
+    max-width: 50% !important;
+    height: auto !important;
+  }
+</style>
 
 </body>
 </html>
+
 
