@@ -200,6 +200,16 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 /* CTA visibility controlled by end of intro animation */
 #ctaOverlay{opacity:0;pointer-events:none;transform:translateY(6px);transition:.4s ease;}
 </style>
+
+<style id="patch-video-clarity">
+  .bg-gate, .bg-intro { filter: none !important; }
+  #bgv1, #bgv2, .bg-intro video { filter: none !important; background: transparent !important; }
+  .bg-intro::after { opacity: 0.12 !important; }
+  .intro-started .bg-intro::after { opacity: 0.10 !important; }
+  #roleVideo { filter: none !important; background: transparent !important; }
+  #bgVideoLayer, #roleVideoLayer { opacity: 1 !important; }
+</style>
+
 </head>
 <body>
 <div id="secretFixed" class="secret-fixed" title="Passer l\'intro"></div>
@@ -225,7 +235,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <div id="gate">
   <div class="panel">
     <h1>Vous avez été conviés par Franck…</h1>
-    <p>Un week-end pas comme les autres vous attend.<br><b>🔊 Mettez le son</b>… car chaque détail compte.</p>
+    
     <!-- Inline handler pour éviter tout problème de binding -->
     <button class="btn" type="button" onclick="startIntro()">Lancez-vous</button>
   </div>
@@ -245,7 +255,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   <!-- Planning & Règles -->
   <section id="welcomeSection" class="welcome-section">
     <h2 style="text-align:center;color:#ffd98a;margin:0 0 6px">Le déroulé du week-end</h2>
-    <p style="text-align:center;color:#cfd5dc;margin:0 0 10px">Tu vas bientôt découvrir ton rôle. Voici comment va se dérouler l’expérience — on est entre amis, le but est de s’amuser 😉</p>
+    
     <div class="welcome-grid">
       <div class="wc-card">
         <h3>🗓️ Le planning</h3>
@@ -273,11 +283,11 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     <div id="roleInline" class="role-wrap" style="display:none">
       <div id="roleBlue" class="role-box-blue" style="display:none">
         <h3>Ton rôle : LOYAL 🛡️</h3>
-        <p>Observe, discute, vote avec stratégie — et protège le groupe.</p>
+        
       </div>
       <div id="roleRed" class="role-box-red" style="display:none">
         <h3>Ton rôle : TRAÎTRE 🕵️‍♂️</h3>
-        <p>Joue en secret. Garde ton lien sous la main pour voter la nuit.</p>
+        
         <div style="text-align:center;margin-top:8px">
           <a id="voteCta" class="cta-traitor" href="#" target="_blank" rel="noopener">Voter la nuit pour éliminer un Loyal</a>
         </div>
@@ -1255,6 +1265,64 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 })();
 </script>
 <!-- ===== /ROLE VIDEO ===== -->
+
+
+<script id="sound-loop-patch">
+(function(){
+  // Ensure intro video (intro.mp4 or gateVideo) stays muted
+  var intro = document.getElementById('gateVideo');
+  if (intro){
+    try{
+      intro.muted = true;
+      intro.volume = 0.0;
+      intro.setAttribute('muted','');
+      intro.setAttribute('playsinline','');
+      intro.setAttribute('webkit-playsinline','');
+    }catch(e){}
+  }
+
+  // Enable sound on fond-boucle-v2.mp4 (bgv1/bg v2) when clicking "Lancez-vous"
+  function enableLoopSound(){
+    var v1 = document.getElementById('bgv1');
+    var v2 = document.getElementById('bgv2');
+    [v1, v2].forEach(function(v){
+      if(!v) return;
+      try{
+        v.muted = false;
+        v.volume = 0.4;
+        v.play().catch(()=>{});
+      }catch(e){}
+    });
+  }
+
+  // Bind to "Lancez-vous" button
+  var startBtn = document.querySelector('#gate .btn');
+  if (startBtn && !startBtn.dataset._loopSoundBound){
+    startBtn.dataset._loopSoundBound = "1";
+    startBtn.addEventListener('click', enableLoopSound, { once:true });
+  }
+
+  // Hook into startIntro() if it exists
+  var prevStart = window.startIntro;
+  window.startIntro = function(){
+    try{ prevStart && prevStart(); }catch(e){}
+    enableLoopSound();
+  };
+
+  // Reveal layers only when videos ready (avoid black flashes)
+  function revealWhenReady(videoId, layerId){
+    var v = document.getElementById(videoId);
+    var layer = document.getElementById(layerId);
+    if(!v || !layer) return;
+    layer.style.opacity = '0';
+    var show = function(){ layer.style.opacity = '1'; };
+    if (v.readyState >= 2) show();
+    else v.addEventListener('canplay', show, {once:true});
+  }
+  revealWhenReady('bgv1', 'bgVideoLayer');
+  revealWhenReady('roleVideo', 'roleVideoLayer');
+})();
+</script>
 
 </body>
 </html>
