@@ -212,11 +212,11 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <div id="bgVideoLayer" class="bg-intro" aria-hidden="true" style="position:fixed;inset:0;z-index:0;opacity:0;transition:opacity 1200ms ease;">
   <video id="bgv1" class="bgv" muted playsinline preload="auto"
          style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.9);opacity:1;" muted playsinline webkit-playsinline preload="auto">
-    <source src="videos/fond-boucle.mp4" type="video/mp4">
+    <source src="videos/fond-boucle-v2.mp4" type="video/mp4">
   </video>
   <video id="bgv2" class="bgv" muted playsinline preload="auto"
          style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.9);opacity:0;" muted playsinline webkit-playsinline preload="auto">
-    <source src="videos/fond-boucle.mp4" type="video/mp4">
+    <source src="videos/fond-boucle-v2.mp4" type="video/mp4">
   </video>
 </div>
 <div class="bg-role bg-fallback" aria-hidden="true"></div>
@@ -1255,6 +1255,24 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 })();
 </script>
 <!-- ===== /ROLE VIDEO ===== -->
+
+
+<script>
+/* --- Anti-cache automatique (force la mise à jour du site quand version change) --- */
+(function(){
+  const BUILD_VERSION = '2025-10-09-2'; // ← change ce numéro à chaque mise à jour
+  const last = localStorage.getItem('siteBuildVersion');
+  if (last && last !== BUILD_VERSION) {
+    if ('caches' in window) {
+      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+    }
+    navigator.serviceWorker?.getRegistrations?.().then(rs => rs.forEach(r => r.unregister()));
+    localStorage.removeItem('siteBuildVersion');
+    location.reload(true);
+  }
+  localStorage.setItem('siteBuildVersion', BUILD_VERSION);
+})();
+</script>
 
 </body>
 </html>
