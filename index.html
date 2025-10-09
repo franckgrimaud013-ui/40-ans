@@ -1256,23 +1256,5 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 </script>
 <!-- ===== /ROLE VIDEO ===== -->
 
-
-<script>
-/* --- Anti-cache automatique (force la mise à jour du site quand version change) --- */
-(function(){
-  const BUILD_VERSION = '2025-10-09-2'; // ← change ce numéro à chaque mise à jour
-  const last = localStorage.getItem('siteBuildVersion');
-  if (last && last !== BUILD_VERSION) {
-    if ('caches' in window) {
-      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
-    }
-    navigator.serviceWorker?.getRegistrations?.().then(rs => rs.forEach(r => r.unregister()));
-    localStorage.removeItem('siteBuildVersion');
-    location.reload(true);
-  }
-  localStorage.setItem('siteBuildVersion', BUILD_VERSION);
-})();
-</script>
-
 </body>
 </html>
