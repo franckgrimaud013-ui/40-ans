@@ -201,15 +201,15 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 #ctaOverlay{opacity:0;pointer-events:none;transform:translateY(6px);transition:.4s ease;}
 </style>
 
-<style id="scenario-css">
+<style id="sound-first-click-css">
+  /* clean overlays / no dark veil */
   .bg-gate, .bg-intro { filter:none !important; }
-  .bg-intro video, #bgv1, #bgv2, #roleVideo { filter:none !important;background:transparent !important; }
+  .bg-intro video, #bgv1, #bgv2 { filter:none !important; background:transparent !important; }
   .bg-intro::after, .intro-started .bg-intro::after { opacity:0 !important; }
-  /* Hide legacy audio toggle if any */
+  /* First CTA hidden by default; shown at intro end (existing logic or we keep as-is) */
   #bgSoundToggle, #audioUnlock { display:none !important; }
-  /* First CTA (existing ctaOverlay): hidden by default, shown at intro end */
-  #ctaOverlay { opacity:0; pointer-events:none; transition:opacity .35s ease; }
-  #ctaOverlay.show { opacity:1; pointer-events:auto; }
+  #enterGameOverlay { position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:20; }
+  #enterGameOverlay.show { display:flex; }
 </style>
 
 </head>
@@ -1269,93 +1269,94 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 <!-- ===== /ROLE VIDEO ===== -->
 
 
-<!-- === Enter Game overlay (appears 88s after bg video starts) === -->
-<div id="enterGameOverlay" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:20;">
-  <div style="background:rgba(0,0,0,.55);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.2);
-              padding:18px 22px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);">
-    <button id="enterGameBtn" class="btn" style="font-weight:800;padding:14px 22px;border-radius:10px;border:none;cursor:pointer;
-            background:#d4af37;color:#000;font-size:clamp(16px,2.4vw,22px);">
-      ENTRER DANS LE JEU
-    </button>
-  </div>
-</div>
-
-
-<script id="scenario-js">
+<script id="sound-first-click-js">
 (function(){
-  var intro = document.getElementById('gateVideo');           // intro.mp4
-  var bg1   = document.getElementById('bgv1');                // fond-boucle-v2.mp4 (source 1)
-  var bg2   = document.getElementById('bgv2');                // fond-boucle-v2.mp4 (source 2)
-  var cta   = document.getElementById('ctaOverlay');          // overlay avec "Vous avez été convié..." + "Lancez-vous"
-  var ctaBtn= cta ? cta.querySelector('.btn') : null;         // bouton "Lancez-vous"
-  var enter  = document.getElementById('enterGameOverlay');   // nouvel overlay pour "Entrer dans le jeu"
+  var intro = document.getElementById('gateVideo');   // intro.mp4
+  var bg = document.getElementById('bgv1') || document.getElementById('bgv2'); // fond-boucle-v2.mp4
+  var cta = document.getElementById('ctaOverlay');    // overlay avec "Lancez-vous"
+  var ctaBtn = cta ? cta.querySelector('.btn') : null;
+  var enter = document.getElementById('enterGameOverlay');
   var enterBtn = document.getElementById('enterGameBtn');
   var started = false;
 
-  // --- Safe defaults ---
-  if (intro){
-    intro.muted = true; intro.volume = 0; intro.loop = false; intro.autoplay = true;
-    intro.setAttribute('muted',''); intro.setAttribute('playsinline',''); intro.setAttribute('webkit-playsinline','');
-  }
-  [bg1,bg2].forEach(function(v){
-    if(!v) return;
-    v.autoplay = false; v.loop = false; v.muted = true;
-    v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
-    try{ v.load(); }catch(e){}
-  });
-
-  // --- Show first CTA only when intro ENDS ---
-  function showFirstCTA(){
-    if (!cta) return;
-    cta.classList.add('show');
-  }
-  if (intro){
-    intro.addEventListener('ended', showFirstCTA, {once:true});
-  } else {
-    setTimeout(showFirstCTA, 1000);
+  // Prime background video early (muted) to avoid delay later
+  if (bg){
+    try{
+      bg.autoplay = false;
+      bg.loop = false;
+      bg.muted = true;                 // prime muted
+      bg.setAttribute('playsinline',''); bg.setAttribute('webkit-playsinline','');
+      bg.preload = 'auto';
+      bg.load();
+      // try to start muted (many browsers allow muted autoplay) to build buffer
+      bg.play().then(()=>{ /* buffered */ }).catch(()=>{ /* ignore */ });
+    }catch(e){}
   }
 
-  // --- On "Lancez-vous": stop intro, start bg video with sound ---
-  function startBackground(){
-    if (started) return;
+  // Intro should be muted & visible
+  if (intro){
+    try{
+      intro.muted = true; intro.volume = 0; intro.loop = false; intro.autoplay = true;
+      intro.setAttribute('muted',''); intro.setAttribute('playsinline',''); intro.setAttribute('webkit-playsinline','');
+    }catch(e){}
+  }
+
+  // On first CTA click: stop intro, unmute & start BG with sound immediately
+  function startWithSound(){
+    if (started) return; 
     started = true;
-    if (cta){ cta.classList.remove('show'); cta.style.opacity=0; cta.style.pointerEvents='none'; }
+
+    if (cta){ cta.style.opacity = 0; cta.style.pointerEvents = 'none'; }
     if (intro){ try{ intro.pause(); intro.style.display='none'; }catch(e){} }
 
-    var bg = bg1 || bg2;
     if (bg){
       try{
+        // ensure we start from beginning and with sound
+        bg.pause();
         bg.currentTime = 0;
-        bg.muted = false; bg.volume = 0.4; bg.loop = false;
-        bg.play().catch(function(){});
-        // After 88s of this background playback, show "Enter Game"
-        var showEnter = function(){
-          if (!enter) return;
-          enter.style.display='flex';
-          enter.style.opacity='0';
-          requestAnimationFrame(function(){
-            enter.style.transition='opacity .35s ease';
-            enter.style.opacity='1';
-          });
-        };
-        // Prefer timeupdate to be accurate; also fallback timer
+        bg.muted = false;
+        bg.volume = 0.45;
+        bg.loop = false;
+        // play in user gesture -> sound allowed
+        bg.play().catch(()=>{});
+        // Schedule Enter button at 88s from bg playback
         var revealed = false;
         var onTime = function(){
           if (revealed) return;
-          if (bg.currentTime >= 88) { revealed = true; bg.removeEventListener('timeupdate', onTime); showEnter(); }
+          if (bg.currentTime >= 88){ 
+            revealed = true;
+            bg.removeEventListener('timeupdate', onTime);
+            if (enter) enter.classList.add('show');
+          }
         };
         bg.addEventListener('timeupdate', onTime);
-        setTimeout(function(){ if(!revealed) showEnter(); }, 88000 + 500);
+        setTimeout(function(){ if (!revealed && enter) enter.classList.add('show'); }, 88000 + 500);
+        // ensure no unwanted restart
+        bg.addEventListener('ended', function(){ try{ bg.pause(); }catch(e){} }, {once:true});
       }catch(e){}
     }
   }
 
   if (ctaBtn && !ctaBtn.dataset._bound){
     ctaBtn.dataset._bound = "1";
-    ctaBtn.addEventListener('click', startBackground, {once:true});
+    ctaBtn.addEventListener('click', startWithSound, {once:true});
   }
 
-  // --- Enter Game button => go to #app keeping querystring ---
+  // Enter button navigates to #app keeping invitation token
+  if (!enter){
+    // if overlay missing, create a minimal fallback (safety)
+    enter = document.createElement('div');
+    enter.id = 'enterGameOverlay';
+    enter.style.display = 'none';
+    document.body.appendChild(enter);
+  }
+  if (!enterBtn){
+    enterBtn = document.createElement('button');
+    enterBtn.id = 'enterGameBtn';
+    enterBtn.textContent = 'ENTRER DANS LE JEU';
+    enterBtn.className = 'btn';
+    enter.appendChild(enterBtn);
+  }
   if (enterBtn){
     enterBtn.addEventListener('click', function(e){
       e.preventDefault();
@@ -1364,11 +1365,9 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     });
   }
 
-  // Remove any legacy audio UI
-  var noise = document.getElementById('bgSoundToggle');
-  if (noise && noise.parentNode) noise.parentNode.removeChild(noise);
-  var unlock = document.getElementById('audioUnlock');
-  if (unlock && unlock.parentNode) unlock.parentNode.removeChild(unlock);
+  // Remove any legacy "activate sound" UI
+  var unlock = document.getElementById('audioUnlock'); if (unlock) unlock.remove();
+  var toggle = document.getElementById('bgSoundToggle'); if (toggle) toggle.remove();
 })();
 </script>
 
