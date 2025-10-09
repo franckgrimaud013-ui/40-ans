@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forcer la mise à jour</title>
+<style>
+  html,body{height:100%;margin:0;background:#000;color:#fff;font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
+  .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}
+  .box{max-width:720px}
+  h1{margin:0 0 10px;font-size:clamp(22px,5vw,34px)}
+  p{margin:6px 0 0;color:#cfd5dc}
+  .log{margin-top:14px;font:12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;color:#9fb3c8;white-space:pre-wrap;text-align:left;background:#0b0f18;border-radius:10px;padding:10px;border:1px solid rgba(255,255,255,.1)}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="box">
+  <h1>🔄 Mise à jour forcée du site</h1>
+  <p>Patiente quelques secondes… On nettoie le cache et on recharge la dernière version.</p>
+  <div class="log" id="log">Initialisation…</div>
+</div></div>
+
+<script>
+(async function(){
+  const log = (m)=>{ const el=document.getElementById('log'); el.textContent += "\n" + m; };
+  try{
+    log("Désinscription des Service Workers…");
+    const regs = await (navigator.serviceWorker?.getRegistrations?.()||Promise.resolve([]));
+    for (const r of regs){ await r.unregister(); }
+    log("✔ Service Workers désinscrits (" + regs.length + ")");
+  }catch(e){ log("! SW: " + (e&&e.message||e)); }
+
+  try{
+    if ('caches' in window){
+      log("Nettoyage des caches…");
+      const keys = await caches.keys();
+      for (const k of keys){ await caches.delete(k); log(" - supprimé: " + k); }
+      log("✔ Caches supprimés (" + keys.length + ")");
+    } else {
+      log("API Cache indisponible — ignoré");
+    }
+  }catch(e){ log("! Cache: " + (e&&e.message||e)); }
+
+  // Petit délai pour laisser le navigateur libérer les entrées
+  setTimeout(()=>{
+    const target = (new URLSearchParams(location.search)).get('to') || 'index.html?build=force';
+    log("Redirection vers: " + target);
+    location.replace(target);
+  }, 500);
+})();
+</script>
+</body>
+</html>
