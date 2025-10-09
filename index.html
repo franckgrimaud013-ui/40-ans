@@ -201,10 +201,17 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 #ctaOverlay{opacity:0;pointer-events:none;transform:translateY(6px);transition:.4s ease;}
 </style>
 
-<style id="fix-cta-and-videos">
-/* Cache CTA jusqu'à la fin de l'intro */
-#ctaOverlay{ opacity:0 !important; pointer-events:none !important; transform:none !important; }
+<style id="scenario-css">
+  .bg-gate, .bg-intro { filter:none !important; }
+  .bg-intro video, #bgv1, #bgv2, #roleVideo { filter:none !important;background:transparent !important; }
+  .bg-intro::after, .intro-started .bg-intro::after { opacity:0 !important; }
+  /* Hide legacy audio toggle if any */
+  #bgSoundToggle, #audioUnlock { display:none !important; }
+  /* First CTA (existing ctaOverlay): hidden by default, shown at intro end */
+  #ctaOverlay { opacity:0; pointer-events:none; transition:opacity .35s ease; }
+  #ctaOverlay.show { opacity:1; pointer-events:auto; }
 </style>
+
 </head>
 <body>
 <div id="secretFixed" class="secret-fixed" title="Passer l\'intro"></div>
@@ -1262,108 +1269,106 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 <!-- ===== /ROLE VIDEO ===== -->
 
 
+<!-- === Enter Game overlay (appears 88s after bg video starts) === -->
+<div id="enterGameOverlay" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:20;">
+  <div style="background:rgba(0,0,0,.55);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.2);
+              padding:18px 22px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);">
+    <button id="enterGameBtn" class="btn" style="font-weight:800;padding:14px 22px;border-radius:10px;border:none;cursor:pointer;
+            background:#d4af37;color:#000;font-size:clamp(16px,2.4vw,22px);">
+      ENTRER DANS LE JEU
+    </button>
+  </div>
+</div>
 
-<script id="fix-video-logic">
+
+<script id="scenario-js">
 (function(){
-  var intro = document.getElementById('gateVideo');      // intro.mp4
-  var bg1   = document.getElementById('bgv1');           // fond-boucle-v2.mp4 (source 1)
-  var bg2   = document.getElementById('bgv2');           // fond-boucle-v2.mp4 (source 2 éventuelle)
-  var cta   = document.getElementById('ctaOverlay');     // bouton/layer "Lancez-vous"
+  var intro = document.getElementById('gateVideo');           // intro.mp4
+  var bg1   = document.getElementById('bgv1');                // fond-boucle-v2.mp4 (source 1)
+  var bg2   = document.getElementById('bgv2');                // fond-boucle-v2.mp4 (source 2)
+  var cta   = document.getElementById('ctaOverlay');          // overlay avec "Vous avez été convié..." + "Lancez-vous"
+  var ctaBtn= cta ? cta.querySelector('.btn') : null;         // bouton "Lancez-vous"
+  var enter  = document.getElementById('enterGameOverlay');   // nouvel overlay pour "Entrer dans le jeu"
+  var enterBtn = document.getElementById('enterGameBtn');
   var started = false;
 
-  // --- 1) Paramètres sûrs au chargement ---
+  // --- Safe defaults ---
   if (intro){
-    try{
-      intro.muted = true;
-      intro.volume = 0.0;
-      intro.autoplay = true;
-      intro.loop = false;
-      intro.playsInline = true;
-      intro.setAttribute('muted','');
-      intro.setAttribute('playsinline','');
-      intro.setAttribute('webkit-playsinline','');
-    }catch(e){}
+    intro.muted = true; intro.volume = 0; intro.loop = false; intro.autoplay = true;
+    intro.setAttribute('muted',''); intro.setAttribute('playsinline',''); intro.setAttribute('webkit-playsinline','');
   }
-
   [bg1,bg2].forEach(function(v){
     if(!v) return;
-    try{
-      v.autoplay = false;   // pas d'autoplay
-      v.loop = false;       // une seule lecture
-      v.muted = true;       // restera muet tant que pas de clic
-      v.playsInline = true;
-      v.setAttribute('playsinline','');
-      v.setAttribute('webkit-playsinline','');
-    }catch(e){}
+    v.autoplay = false; v.loop = false; v.muted = true;
+    v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
+    try{ v.load(); }catch(e){}
   });
 
-  // --- 2) Afficher le CTA UNIQUEMENT quand l'intro est terminée ---
-  function showCTA(){
-    if(!cta) return;
-    cta.style.opacity = '1';
-    cta.style.pointerEvents = 'auto';
+  // --- Show first CTA only when intro ENDS ---
+  function showFirstCTA(){
+    if (!cta) return;
+    cta.classList.add('show');
   }
   if (intro){
-    intro.addEventListener('ended', showCTA, {once:true});
+    intro.addEventListener('ended', showFirstCTA, {once:true});
   } else {
-    // sécurité si pas d'intro
-    setTimeout(showCTA, 1000);
+    setTimeout(showFirstCTA, 1000);
   }
 
-  // --- 3) Au clic "Lancez-vous" : couper l'intro et lancer la boucle avec son ---
-  function startMain(){
+  // --- On "Lancez-vous": stop intro, start bg video with sound ---
+  function startBackground(){
     if (started) return;
     started = true;
+    if (cta){ cta.classList.remove('show'); cta.style.opacity=0; cta.style.pointerEvents='none'; }
+    if (intro){ try{ intro.pause(); intro.style.display='none'; }catch(e){} }
 
-    if (cta){ cta.style.opacity = '0'; cta.style.pointerEvents = 'none'; }
-
-    if (intro){
-      try{ intro.pause(); intro.style.display='none'; }catch(e){}
-    }
     var bg = bg1 || bg2;
     if (bg){
       try{
         bg.currentTime = 0;
-        bg.muted = false;   // activer le son
-        bg.volume = 0.4;
-        bg.loop = false;    // ne pas boucler
+        bg.muted = false; bg.volume = 0.4; bg.loop = false;
         bg.play().catch(function(){});
-        // empêcher tout "reloop" externe : verrou
-        bg.addEventListener('ended', function(){
-          try{ bg.pause(); }catch(e){}
-        }, {once:true});
+        // After 88s of this background playback, show "Enter Game"
+        var showEnter = function(){
+          if (!enter) return;
+          enter.style.display='flex';
+          enter.style.opacity='0';
+          requestAnimationFrame(function(){
+            enter.style.transition='opacity .35s ease';
+            enter.style.opacity='1';
+          });
+        };
+        // Prefer timeupdate to be accurate; also fallback timer
+        var revealed = false;
+        var onTime = function(){
+          if (revealed) return;
+          if (bg.currentTime >= 88) { revealed = true; bg.removeEventListener('timeupdate', onTime); showEnter(); }
+        };
+        bg.addEventListener('timeupdate', onTime);
+        setTimeout(function(){ if(!revealed) showEnter(); }, 88000 + 500);
       }catch(e){}
     }
   }
 
-  // Binder sur le vrai bouton dans #ctaOverlay ou #gate
-  var startBtn = document.querySelector('#ctaOverlay .btn, #gate .btn');
-  if (startBtn && !startBtn.dataset._bound){
-    startBtn.dataset._bound = "1";
-    startBtn.addEventListener('click', startMain, {once:true});
+  if (ctaBtn && !ctaBtn.dataset._bound){
+    ctaBtn.dataset._bound = "1";
+    ctaBtn.addEventListener('click', startBackground, {once:true});
   }
 
-  // Neutraliser d'éventuels scripts legacy qui relancent la boucle
-  window.startIntro = (function(prev){
-    return function(){
-      try{ prev && prev(); }catch(e){}
-      // Ne déclenche plus rien ici : on gère via le clic uniquement
-    };
-  })(window.startIntro);
-
-  // --- 4) Anti "flash noir" : révéler les couches au canplay ---
-  function revealWhenReady(videoId, layerId){
-    var v = document.getElementById(videoId);
-    var layer = document.getElementById(layerId);
-    if(!v || !layer) return;
-    layer.style.opacity = '0';
-    var show = function(){ layer.style.opacity = '1'; };
-    if (v.readyState >= 2) show();
-    else v.addEventListener('canplay', show, {once:true});
+  // --- Enter Game button => go to #app keeping querystring ---
+  if (enterBtn){
+    enterBtn.addEventListener('click', function(e){
+      e.preventDefault();
+      var qs = window.location.search || '';
+      window.location.href = window.location.pathname + qs + '#app';
+    });
   }
-  revealWhenReady('gateVideo', 'bgVideoLayer');   // intro visible
-  revealWhenReady('bgv1', 'bgVideoLayer');
-  revealWhenReady('roleVideo', 'roleVideoLayer');
+
+  // Remove any legacy audio UI
+  var noise = document.getElementById('bgSoundToggle');
+  if (noise && noise.parentNode) noise.parentNode.removeChild(noise);
+  var unlock = document.getElementById('audioUnlock');
+  if (unlock && unlock.parentNode) unlock.parentNode.removeChild(unlock);
 })();
 </script>
 
