@@ -201,9 +201,13 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 #ctaOverlay{opacity:0;pointer-events:none;transform:translateY(6px);transition:.4s ease;}
 </style>
 
-<style id="enter-only-css">
-  #enterGameOverlay{display:none}
-  #enterGameOverlay.show{display:flex}
+<style id="final-sound-flow-css">
+  .bg-gate, .bg-intro { filter: none !important; }
+  .bg-intro video, #bgv1, #bgv2, #roleVideo { filter: none !important; background: transparent !important; }
+  .bg-intro::after, .intro-started .bg-intro::after { opacity: 0 !important; }
+  #bgSoundToggle, #audioUnlock { display: none !important; }
+  #enterGameOverlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 20; }
+  #enterGameOverlay.show { display: flex; }
 </style>
 
 </head>
@@ -231,7 +235,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <div id="gate">
   <div class="panel">
     <h1>Vous avez été conviés par Franck…</h1>
-    <p>Un week-end pas comme les autres vous attend.<br><b>🔊 Mettez le son</b>… car chaque détail compte.</p>
+    
     <!-- Inline handler pour éviter tout problème de binding -->
     <button class="btn" type="button" onclick="startIntro()">Lancez-vous</button>
   </div>
@@ -251,7 +255,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   <!-- Planning & Règles -->
   <section id="welcomeSection" class="welcome-section">
     <h2 style="text-align:center;color:#ffd98a;margin:0 0 6px">Le déroulé du week-end</h2>
-    <p style="text-align:center;color:#cfd5dc;margin:0 0 10px">Tu vas bientôt découvrir ton rôle. Voici comment va se dérouler l’expérience — on est entre amis, le but est de s’amuser 😉</p>
+    
     <div class="welcome-grid">
       <div class="wc-card">
         <h3>🗓️ Le planning</h3>
@@ -279,11 +283,11 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     <div id="roleInline" class="role-wrap" style="display:none">
       <div id="roleBlue" class="role-box-blue" style="display:none">
         <h3>Ton rôle : LOYAL 🛡️</h3>
-        <p>Observe, discute, vote avec stratégie — et protège le groupe.</p>
+        
       </div>
       <div id="roleRed" class="role-box-red" style="display:none">
         <h3>Ton rôle : TRAÎTRE 🕵️‍♂️</h3>
-        <p>Joue en secret. Garde ton lien sous la main pour voter la nuit.</p>
+        
         <div style="text-align:center;margin-top:8px">
           <a id="voteCta" class="cta-traitor" href="#" target="_blank" rel="noopener">Voter la nuit pour éliminer un Loyal</a>
         </div>
@@ -1264,7 +1268,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 
 
 <!-- Overlay "Entrer dans le jeu" (affiché après 88s de la vidéo 2) -->
-<div id="enterGameOverlay" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:20;">
+<div id="enterGameOverlay">
   <button id="enterGameBtn" class="btn" style="font-weight:800;padding:14px 22px;border-radius:10px;border:none;cursor:pointer;
     background:#d4af37;color:#000;font-size:clamp(16px,2.4vw,22px);box-shadow:0 10px 30px rgba(0,0,0,.35);">
     ENTRER DANS LE JEU
@@ -1272,84 +1276,102 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 </div>
 
 
-<script id="enter-fix-controller">
+<script id="final-sound-flow-js">
 (function(){
-  var intro = document.getElementById('gateVideo');
-  var bg = document.getElementById('bgv1') || document.getElementById('bgv2');
-  var cta = document.getElementById('ctaOverlay');
-  var ctaBtn = cta ? cta.querySelector('.btn') : null;
-  var enter = document.getElementById('enterGameOverlay');
-  var enterBtn = document.getElementById('enterGameBtn');
+  var intro   = document.getElementById('gateVideo');   // intro.mp4
+  var bg      = document.getElementById('bgv1') || document.getElementById('bgv2'); // fond-boucle-v2.mp4
+  var cta     = document.getElementById('ctaOverlay');  // bloc avec "Vous avez été convié..." + bouton
+  var ctaBtn  = cta ? cta.querySelector('.btn') : null; // bouton "Lancez-vous"
+  var enter   = document.getElementById('enterGameOverlay'); // overlay "Entrer"
+  var enterBtn= document.getElementById('enterGameBtn');
   var started = false, enterShown = false;
 
-  // Prepare
+  // --- States de base ---
   if (intro){
-    try{ intro.muted = true; intro.loop = false; intro.autoplay = true; }catch(e){}
+    try{
+      intro.muted = true; intro.volume = 0; intro.loop = false; intro.autoplay = true;
+      intro.setAttribute('muted',''); intro.setAttribute('playsinline',''); intro.setAttribute('webkit-playsinline','');
+    }catch(e){}
   }
   if (bg){
     try{
-      bg.autoplay = false; bg.loop = false; bg.muted = true;
+      // Préparer la vidéo 2 pour réduire le délai au clic
+      bg.autoplay = false; bg.loop = false; bg.muted = true; // prime muted
       bg.setAttribute('playsinline',''); bg.setAttribute('webkit-playsinline','');
-      bg.preload = 'auto'; bg.load();
-      // Try to buffer silently to reduce startup delay
-      bg.play().then(()=>{ bg.pause(); }).catch(()=>{});
+      bg.preload = 'auto';
+      bg.load();
+      // tenter un play() muet pour buffer puis pause aussitôt
+      bg.play().then(()=>{ try{ bg.pause(); }catch(e){} }).catch(()=>{});
     }catch(e){}
   }
 
-  function startBackground(){
+  // --- Afficher le CTA intro uniquement à la fin de l'intro ---
+  function showIntroCTA(){
+    if (!cta) return;
+    cta.style.opacity = 1;
+    cta.style.pointerEvents = 'auto';
+  }
+  if (cta){
+    cta.style.opacity = 0;
+    cta.style.pointerEvents = 'none';
+  }
+  if (intro){
+    intro.addEventListener('ended', showIntroCTA, {once:true});
+  }
+
+  // --- Clic "Lancez-vous": stop intro, lancer vidéo 2 AVEC SON (immédiat), sans boucle ---
+  function startVideo2WithSound(){
     if (started) return;
     started = true;
-    if (cta){ cta.style.opacity=0; cta.style.pointerEvents='none'; }
+    if (cta){ cta.style.opacity = 0; cta.style.pointerEvents = 'none'; }
     if (intro){ try{ intro.pause(); intro.style.display='none'; }catch(e){} }
     if (!bg) return;
+
     try{
       bg.currentTime = 0;
-      bg.muted = false;
-      bg.volume = 0.45;
+      bg.muted = false;      // déverrouille le son AU PREMIER CLIC
+      bg.volume = 0.4;
       bg.loop = false;
       bg.play().catch(()=>{});
 
-      // Strict: show "Entrer" ONLY when bg currentTime >= 88
+      // Montrer "Entrer" seulement à 88s de lecture réelle (aucun timer de secours)
       var onTime = function(){
         if (enterShown) return;
         if (bg.currentTime >= 88){
           enterShown = true;
-          if (enter){ enter.classList.add('show'); }
+          if (enter) enter.classList.add('show');
           bg.removeEventListener('timeupdate', onTime);
         }
       };
       bg.addEventListener('timeupdate', onTime);
 
-      // Stop completely at end; do NOT loop
-      bg.addEventListener('ended', function(){
-        try{ bg.pause(); }catch(e){}
-      }, {once:true});
+      // Fin: pas de redémarrage
+      bg.addEventListener('ended', function(){ try{ bg.pause(); }catch(e){} }, {once:true});
     }catch(e){}
   }
 
-  if (ctaBtn && !ctaBtn.dataset._entered){
-    ctaBtn.dataset._entered = "1";
-    ctaBtn.addEventListener('click', startBackground, {once:true});
+  if (ctaBtn && !ctaBtn.dataset._bound){
+    ctaBtn.dataset._bound = "1";
+    ctaBtn.addEventListener('click', startVideo2WithSound, {once:true});
   }
 
-  // Enter button: stop audio/video FIRST, then navigate to #app
+  // --- Clic "Entrer dans le jeu": couper audio/vidéo puis nav #app ---
   function goToApp(e){
     e && e.preventDefault && e.preventDefault();
-    try{
-      if (bg){ bg.pause(); bg.muted = true; }
-      var a = document.querySelector('audio'); if (a){ a.pause(); a.currentTime = 0; }
-    }catch(err){}
+    try{ if (bg){ bg.pause(); bg.muted = true; } }catch(err){}
     var qs = window.location.search || '';
-    // small delay to ensure audio stops before navigation
     setTimeout(function(){
       window.location.href = window.location.pathname + qs + '#app';
-    }, 50);
+    }, 30);
   }
-
   if (enterBtn && !enterBtn.dataset._nav){
     enterBtn.dataset._nav = "1";
     enterBtn.addEventListener('click', goToApp);
   }
+
+  // --- Retire tout bouton "Activer le son" éventuel ---
+  var unlock = document.getElementById('audioUnlock'); if (unlock) unlock.remove();
+  var toggle = document.getElementById('bgSoundToggle'); if (toggle) toggle.remove();
 })();
 </script>
 
