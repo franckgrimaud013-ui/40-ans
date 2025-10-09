@@ -201,15 +201,10 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 #ctaOverlay{opacity:0;pointer-events:none;transform:translateY(6px);transition:.4s ease;}
 </style>
 
-<style id="patch-video-clarity">
-  .bg-gate, .bg-intro { filter: none !important; }
-  #bgv1, #bgv2, .bg-intro video { filter: none !important; background: transparent !important; }
-  .bg-intro::after { opacity: 0.12 !important; }
-  .intro-started .bg-intro::after { opacity: 0.10 !important; }
-  #roleVideo { filter: none !important; background: transparent !important; }
-  #bgVideoLayer, #roleVideoLayer { opacity: 1 !important; }
+<style id="fix-cta-and-videos">
+/* Cache CTA jusqu'à la fin de l'intro */
+#ctaOverlay{ opacity:0 !important; pointer-events:none !important; transform:none !important; }
 </style>
-
 </head>
 <body>
 <div id="secretFixed" class="secret-fixed" title="Passer l\'intro"></div>
@@ -1267,51 +1262,96 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 <!-- ===== /ROLE VIDEO ===== -->
 
 
-<script id="final-scenario">
+
+<script id="fix-video-logic">
 (function(){
-  // 1) Ensure intro.mp4 (gateVideo) stays muted and visible
-  var intro = document.getElementById('gateVideo');
+  var intro = document.getElementById('gateVideo');      // intro.mp4
+  var bg1   = document.getElementById('bgv1');           // fond-boucle-v2.mp4 (source 1)
+  var bg2   = document.getElementById('bgv2');           // fond-boucle-v2.mp4 (source 2 éventuelle)
+  var cta   = document.getElementById('ctaOverlay');     // bouton/layer "Lancez-vous"
+  var started = false;
+
+  // --- 1) Paramètres sûrs au chargement ---
   if (intro){
     try{
       intro.muted = true;
       intro.volume = 0.0;
+      intro.autoplay = true;
+      intro.loop = false;
+      intro.playsInline = true;
       intro.setAttribute('muted','');
       intro.setAttribute('playsinline','');
       intro.setAttribute('webkit-playsinline','');
-      intro.autoplay = true;
-      intro.loop = false;
-      intro.style.opacity = '1';
     }catch(e){}
   }
 
-  // 2) When user clicks "Lancez-vous", stop intro & play fond-boucle-v2.mp4 with sound (once only)
-  function startMainVideo(){
-    var intro = document.getElementById('gateVideo');
-    if (intro){
-      try{ intro.pause(); intro.currentTime = 0; intro.style.display = 'none'; }catch(e){}
-    }
+  [bg1,bg2].forEach(function(v){
+    if(!v) return;
+    try{
+      v.autoplay = false;   // pas d'autoplay
+      v.loop = false;       // une seule lecture
+      v.muted = true;       // restera muet tant que pas de clic
+      v.playsInline = true;
+      v.setAttribute('playsinline','');
+      v.setAttribute('webkit-playsinline','');
+    }catch(e){}
+  });
 
-    var v1 = document.getElementById('bgv1');
-    var v2 = document.getElementById('bgv2');
-    [v1, v2].forEach(function(v){
-      if(!v) return;
-      try{
-        v.muted = false;
-        v.volume = 0.4;
-        v.loop = false; // plays once only
-        v.play().catch(()=>{});
-      }catch(e){}
-    });
+  // --- 2) Afficher le CTA UNIQUEMENT quand l'intro est terminée ---
+  function showCTA(){
+    if(!cta) return;
+    cta.style.opacity = '1';
+    cta.style.pointerEvents = 'auto';
+  }
+  if (intro){
+    intro.addEventListener('ended', showCTA, {once:true});
+  } else {
+    // sécurité si pas d'intro
+    setTimeout(showCTA, 1000);
   }
 
-  // 3) Bind to "Lancez-vous" button
-  var startBtn = document.querySelector('#gate .btn');
+  // --- 3) Au clic "Lancez-vous" : couper l'intro et lancer la boucle avec son ---
+  function startMain(){
+    if (started) return;
+    started = true;
+
+    if (cta){ cta.style.opacity = '0'; cta.style.pointerEvents = 'none'; }
+
+    if (intro){
+      try{ intro.pause(); intro.style.display='none'; }catch(e){}
+    }
+    var bg = bg1 || bg2;
+    if (bg){
+      try{
+        bg.currentTime = 0;
+        bg.muted = false;   // activer le son
+        bg.volume = 0.4;
+        bg.loop = false;    // ne pas boucler
+        bg.play().catch(function(){});
+        // empêcher tout "reloop" externe : verrou
+        bg.addEventListener('ended', function(){
+          try{ bg.pause(); }catch(e){}
+        }, {once:true});
+      }catch(e){}
+    }
+  }
+
+  // Binder sur le vrai bouton dans #ctaOverlay ou #gate
+  var startBtn = document.querySelector('#ctaOverlay .btn, #gate .btn');
   if (startBtn && !startBtn.dataset._bound){
     startBtn.dataset._bound = "1";
-    startBtn.addEventListener('click', startMainVideo, { once:true });
+    startBtn.addEventListener('click', startMain, {once:true});
   }
 
-  // 4) Ensure layer reveal when ready (avoid black flash)
+  // Neutraliser d'éventuels scripts legacy qui relancent la boucle
+  window.startIntro = (function(prev){
+    return function(){
+      try{ prev && prev(); }catch(e){}
+      // Ne déclenche plus rien ici : on gère via le clic uniquement
+    };
+  })(window.startIntro);
+
+  // --- 4) Anti "flash noir" : révéler les couches au canplay ---
   function revealWhenReady(videoId, layerId){
     var v = document.getElementById(videoId);
     var layer = document.getElementById(layerId);
@@ -1321,7 +1361,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     if (v.readyState >= 2) show();
     else v.addEventListener('canplay', show, {once:true});
   }
-  revealWhenReady('gateVideo', 'bgVideoLayer'); // intro visible asap
+  revealWhenReady('gateVideo', 'bgVideoLayer');   // intro visible
   revealWhenReady('bgv1', 'bgVideoLayer');
   revealWhenReady('roleVideo', 'roleVideoLayer');
 })();
