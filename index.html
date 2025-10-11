@@ -205,10 +205,19 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 </style>
 
 <style id="seq-steps-css">
-  .sequenced .step { display:none; animation: fadeIn .35s ease; }
-  .sequenced .step.active { display:block; }
-  .seq-actions { display:flex; gap:10px; margin-top:12px; }
-  @keyframes fadeIn { from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
+  /* Affichage étape par étape */
+  .sequenced .step{ display:none; }
+  .sequenced .step.active{ display:block; }
+  .sequenced .step.fade{ animation: fadeIn .45s ease; }
+  .seq-actions{ display:flex; gap:10px; margin-top:12px; }
+
+  /* Supprime toute carte/transparence éventuelle */
+  .wc-card{ background:transparent !important; box-shadow:none !important; border:none !important; padding:0 !important; }
+
+  @keyframes fadeIn{
+    from{ opacity:0; transform:translateY(8px); }
+    to{ opacity:1; transform:none; }
+  }
 </style>
 
 </head>
@@ -257,45 +266,41 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   <!-- Planning & Règles -->
   
 <section id="welcomeSection" class="welcome-section sequenced">
-  <!-- ÉTAPE 1 -->
-  <div class="step active" data-i="0">
-    <h2 style="text-align:center;color:#ffd98a;margin:0 0 6px">Le déroulé du week-end</h2>
-    <div class="wc-card">
-      <h3>🗓️ Le planning</h3>
-      <ul>
-        <li><b>Vendredi soir</b> : conseil et vote d’élimination.</li>
-        <li><b>Nuit ven → sam</b> : les Traîtres choisissent discrètement une victime via leur lien.</li>
-        <li><b>Samedi matin</b> : annonce au groupe du résultat de la nuit.</li>
-        <li><b>Samedi midi</b> : nouveau conseil et vote.</li>
-        <li><b>Samedi soir</b> : conseil et vote.</li>
-        <li><b>Nuit sam → dim</b> : les Traîtres éliminent à nouveau via leur lien.</li>
-        <li><b>Dimanche matin</b> : annonce au groupe de la victime de la nuit.</li>
-      </ul>
-    </div>
-    <div class="seq-actions">
+  <!-- ÉTAPE 1 : planning (sans carte, fond noir) -->
+  <div class="step active fade" data-i="0" aria-live="polite">
+    <h2 style="text-align:center;color:#ffd98a;margin:0 0 10px">Le déroulé du week-end</h2>
+    <h3 style="text-align:center;margin:0 0 12px">🗓️ Le planning</h3>
+    <ul style="max-width:860px;margin:0 auto 10px;line-height:1.4">
+      <li><b>Vendredi soir</b> : conseil et vote d’élimination.</li>
+      <li><b>Nuit ven → sam</b> : les Traîtres choisissent discrètement une victime via leur lien.</li>
+      <li><b>Samedi matin</b> : annonce au groupe du résultat de la nuit.</li>
+      <li><b>Samedi midi</b> : nouveau conseil et vote.</li>
+      <li><b>Samedi soir</b> : conseil et vote.</li>
+      <li><b>Nuit sam → dim</b> : les Traîtres éliminent à nouveau via leur lien.</li>
+      <li><b>Dimanche matin</b> : annonce au groupe de la victime de la nuit.</li>
+    </ul>
+    <div class="seq-actions" style="justify-content:center;margin-top:14px">
       <button class="btn next">Suivant</button>
     </div>
   </div>
 
-  <!-- ÉTAPE 2 -->
-  <div class="step" data-i="1">
-    <div class="wc-card">
-      <h3>🎭 Esprit & règles</h3>
-      <ul>
-        <li>Les Traîtres jouent <b>en secret</b> via un lien privé (personne ne sait qui ils sont).</li>
-        <li>Les Loyaux observent, discutent et votent avec stratégie.</li>
-        <li>Pas de prise de tête : les écrans clés s’affichent au bon moment pour le groupe.</li>
-        <li>On garde la <b>bonne entente</b> : fun & fair-play.</li>
-      </ul>
-    </div>
-    <div class="seq-actions">
+  <!-- ÉTAPE 2 : esprit & règles (sans carte) -->
+  <div class="step" data-i="1" aria-live="polite">
+    <h3 style="text-align:center;margin:0 0 12px">🎭 Esprit & règles</h3>
+    <ul style="max-width:860px;margin:0 auto 10px;line-height:1.4">
+      <li>Les Traîtres jouent <b>en secret</b> via un lien privé (personne ne sait qui ils sont).</li>
+      <li>Les Loyaux observent, discutent et votent avec stratégie.</li>
+      <li>Pas de prise de tête : les écrans clés s’affichent au bon moment pour le groupe.</li>
+      <li>On garde la <b>bonne entente</b> : fun & fair-play.</li>
+    </ul>
+    <div class="seq-actions" style="justify-content:center;margin-top:14px">
       <button class="btn prev">Précédent</button>
       <button class="btn next">Suivant</button>
     </div>
   </div>
 
-  <!-- ÉTAPE 3 (texte + CTA rôle) -->
-  <div class="step" data-i="2">
+  <!-- ÉTAPE 3 : texte final + CTA "Découvre ton rôle" -->
+  <div class="step" data-i="2" aria-live="polite">
     <h3 style="text-align:center;color:#ffd98a;margin:0 0 10px">1, es-tu prêt ? Quand tu es seul, découvre ta carte.</h3>
     <p style="text-align:center;color:#cfd5dc;margin:0 0 16px">
       Petit secret : c’est bien Franck qui a eu l’idée de ce jeu 😉… mais rassurez-vous, il ne connaît pas vos rôles.
@@ -1470,10 +1475,18 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   const steps = Array.from(wrap.querySelectorAll('.step'));
   let i = steps.findIndex(s => s.classList.contains('active'));
   if(i < 0) i = 0;
-  show(i);
+  show(i, true);
 
-  function show(n){
-    steps.forEach((s,idx)=>s.classList.toggle('active', idx===n));
+  function show(n, first){
+    steps.forEach((s,idx)=>{
+      s.classList.toggle('active', idx===n);
+      if(idx===n && !first){
+        s.classList.remove('fade'); // restart animation
+        // force reflow
+        void s.offsetWidth;
+        s.classList.add('fade');
+      }
+    });
     i = n;
   }
 
@@ -1501,3 +1514,4 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 </body>
 
 </html>
+
