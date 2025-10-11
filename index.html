@@ -228,7 +228,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- GATE -->
 <div id="gate">
   <div class="panel">
-    <h1>Vous avez été conviés par z12…</h1>
+    <h1>Vous avez été conviés par z159…</h1>
     
     <!-- Inline handler pour éviter tout problème de binding -->
     <button class="btn" type="button" onclick="startIntro()">Lancez-vous</button>
@@ -1442,6 +1442,29 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   }
 })();
 </script>
+
+
+<style id="roleBannerScopedCSS">
+  /* Vidéo bandeau décorative en haut de la page Règles */
+  #rulesScreen { position: relative; overflow-x: hidden; }
+  #rulesScreen #roleBannerScoped{
+    width:100%;
+    height:30vh;           /* bandeau = 30% de la hauteur écran */
+    overflow:hidden;
+    background:#000;
+    position:relative;
+    z-index:1;
+  }
+  #rulesScreen #roleBannerScoped video{
+    width:100%; height:100%; display:block; object-fit:cover;
+  }
+  /* Les étapes restent en dessous, lisibles */
+  #rulesScreen #welcomeSection{
+    margin-top:4vh;
+    position:relative;
+    z-index:2;
+  }
+</style>
 
 </body>
 
