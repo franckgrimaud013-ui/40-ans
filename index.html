@@ -238,7 +238,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- GATE -->
 <div id="gate">
   <div class="panel">
-    <h1>Vous avez été conviés par 789…</h1>
+    <h1>Vous avez été conviés par 456…</h1>
     
     <!-- Inline handler pour éviter tout problème de binding -->
     <button class="btn" type="button" id="launchBtn">Lancez-vous</button>
@@ -1417,6 +1417,37 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       var bgLayer = document.getElementById('bgVideoLayer');
       if (bgLayer){ bgLayer.style.opacity='1'; bgLayer.style.display='block'; bgLayer.removeAttribute('aria-hidden'); }
     }, { once:true });
+  });
+})();
+</script>
+
+
+<script id="enter-overlay-hide">
+(function(){
+  var enterUI  = document.getElementById('enterGameOverlay');
+  var enterBtn = document.getElementById('enterGameBtn');
+  var bgv = document.getElementById('bgv1') || document.getElementById('bgv2');
+  var bga = document.getElementById('bgAudio');
+
+  if (!enterBtn) return;
+
+  enterBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+
+    // Couper audio/vidéo
+    try { if (bga) bga.pause(); } catch(e){}
+    try { if (bgv) bgv.pause(); } catch(e){}
+
+    // Cacher définitivement l'overlay
+    if (enterUI){
+      enterUI.style.opacity = '0';
+      enterUI.style.pointerEvents = 'none';
+      enterUI.style.display = 'none';
+    }
+
+    // Naviguer vers l'app (en conservant ?t=... s'il existe)
+    var qs = window.location.search || '';
+    window.location.replace(window.location.pathname + qs + '#app');
   });
 })();
 </script>
