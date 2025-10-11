@@ -238,7 +238,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- GATE -->
 <div id="gate">
   <div class="panel">
-    <h1>Vous avez été conviés par 147…</h1>
+    <h1>Vous avez été conviés par 2589…</h1>
     
     <!-- Inline handler pour éviter tout problème de binding -->
     <button class="btn" type="button" id="launchBtn">Lancez-vous</button>
@@ -1465,6 +1465,45 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       var target = document.getElementById('role') || document.getElementById('player') || document.getElementById('roleSection');
       if (target) location.hash = '#' + target.id;
     }
+  });
+})();
+</script>
+
+
+<script id="autoroute-token">
+(function(){
+  function hideOverlays() {
+    var cta = document.getElementById('ctaOverlay');
+    if (cta){ cta.style.display='none'; cta.style.opacity='0'; cta.style.pointerEvents='none'; }
+    var enterUI = document.getElementById('enterGameOverlay');
+    if (enterUI){ enterUI.style.display='none'; enterUI.style.opacity='0'; enterUI.style.pointerEvents='none'; }
+    var bgLayer = document.getElementById('bgVideoLayer');
+    if (bgLayer){ bgLayer.style.opacity='1'; bgLayer.style.display='block'; bgLayer.removeAttribute('aria-hidden'); }
+  }
+  function stopAV() {
+    try { var g=document.getElementById('gateVideo'); if(g){ g.pause(); g.currentTime=0; g.style.display='none'; } } catch(e){}
+    try { var v=document.getElementById('bgv1')||document.getElementById('bgv2'); if(v){ v.pause(); v.currentTime=0; } } catch(e){}
+    try { var a=document.getElementById('bgAudio'); if(a){ a.pause(); a.currentTime=0; } } catch(e){}
+  }
+
+  function hasToken(){
+    try{ return new URLSearchParams(window.location.search).has('t'); }catch(e){ return false; }
+  }
+
+  // 1) Organisateur: si hash === #app, masquer overlays pour libérer les clics (génération d'invitations)
+  if (location.hash==="#app"){
+    hideOverlays();
+  }
+
+  // 2) Joueur (invitation) : si ?t=..., ignorer la gate et aller direct sur l'espace joueur (comme avant)
+  document.addEventListener('DOMContentLoaded', function(){
+    try{
+      if (hasToken()){
+        hideOverlays();
+        stopAV();
+        if (typeof onEnterApp === 'function'){ onEnterApp(); }
+      }
+    }catch(e){}
   });
 })();
 </script>
