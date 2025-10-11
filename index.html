@@ -21,26 +21,21 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 .bg-gate,.bg-intro{
   position:fixed; inset:0;
   background-size:cover; background-position:center;
-  z-index:0; filter:brightness(.7);
+  z-index:0; 
   opacity:1; transition:opacity 1200ms ease; will-change:opacity;
 }
 .bg-gate{ background-image:url('photo1.jpg'); }
 .bg-intro{ background-image:url('chateau.jpg'); opacity:0; }
 .intro-started .bg-gate{ opacity:0; }
 .intro-started .bg-intro{ opacity:1; }
-.bg-intro::after{
-  content:""; position:absolute; inset:0; pointer-events:none;
-  background:radial-gradient(ellipse at center, rgba(0,0,0,.05) 0%, rgba(0,0,0,.15) 60%, rgba(0,0,0,.25) 100%),
-             linear-gradient(to bottom, rgba(0,0,0,.05), rgba(0,0,0,.15));
-  opacity:.85; transition:opacity 1200ms ease;
-}
-.intro-started .bg-intro::after{ opacity:.6; }
+.bg-intro::after { content: none !important; }
+
 
 /* 3e fond : écran joueur */
 .bg-role{
   position:fixed; inset:0;
   background:none center/cover no-repeat;
-  z-index:0; display:none; filter:brightness(.7);
+  z-index:0; display:none; 
 }
 .player-focus .bg-role{ display:block; }
 .player-focus .bg-gate, .player-focus .bg-intro{ display:none!important; }
@@ -207,22 +202,30 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   #enterGameOverlay.show{ display:flex; }
 </style>
 
+
+<style id="preload-sound-fix-css">
+  #enterGameOverlay { position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:20; }
+  #enterGameOverlay.show { display:flex; }
+  #bgSoundToggle, #audioUnlock { display:none !important; }
+  .bg-intro::after { content: none !important; }
+</style>
+
 </head>
 <body>
 <div id="secretFixed" class="secret-fixed" title="Passer l\'intro"></div>
 <section class="bg-gate" aria-hidden="true" style="position:fixed;inset:0;z-index:0;">
   <video id="gateVideo" muted playsinline preload="auto"
-         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.7)" autoplay muted playsinline webkit-playsinline preload="auto">
+         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" autoplay muted playsinline webkit-playsinline preload="auto">
     <source src="videos/intro-gate.mp4" type="video/mp4">
   </video>
 </section>
 <div id="bgVideoLayer" class="bg-intro" aria-hidden="true" style="position:fixed;inset:0;z-index:0;opacity:0;transition:opacity 1200ms ease;">
   <video id="bgv1" class="bgv" muted playsinline preload="auto"
-         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.9);opacity:1;" muted playsinline webkit-playsinline preload="auto">
+         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;" muted playsinline webkit-playsinline preload="auto">
     <source src="videos/fond-boucle-v2.mp4" type="video/mp4">
   </video>
   <video id="bgv2" class="bgv" muted playsinline preload="auto"
-         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.9);opacity:0;" muted playsinline webkit-playsinline preload="auto">
+         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;" muted playsinline webkit-playsinline preload="auto">
     <source src="videos/fond-boucle-v2.mp4" type="video/mp4">
   </video>
 </div>
@@ -231,7 +234,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- GATE -->
 <div id="gate">
   <div class="panel">
-    <h1>Vous avez été conviés par Franck…</h1>
+    <h1>Vous avez été conviés par Steven…</h1>
     
     <!-- Inline handler pour éviter tout problème de binding -->
     <button class="btn" type="button" onclick="startIntro()">Lancez-vous</button>
@@ -1193,7 +1196,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 
 <div id="roleVideoLayer" aria-hidden="true" hidden>
   <video id="roleVideo" muted loop playsinline webkit-playsinline preload="auto"
-         style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(.94)">
+         style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; ">
     <source src="videos/role-bg.mp4" type="video/mp4">
   </video>
 </div>
@@ -1278,29 +1281,34 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 </div>
 
 
-<script id="dual-av-controller">
+
+
+
+<script id="preload-sound-fix-js">
 (function(){
-  var intro = document.getElementById('gateVideo');           // intro.mp4
-  var bgv   = document.getElementById('bgv1') || document.getElementById('bgv2'); // fond-boucle-v2.mp4 (vidéo)
-  var bga   = document.getElementById('bgAudio');             // audio séparé
-  var cta   = document.getElementById('ctaOverlay');          // overlay "Lancez-vous"
-  var ctaBtn= cta ? cta.querySelector('.btn') : null;
-  var enter = document.getElementById('enterGameOverlay');
-  var enterBtn = document.getElementById('enterGameBtn');
-  var SHOW_AT = 88; // 1:28
+  var intro   = document.getElementById('gateVideo');
+  var bgv     = document.getElementById('bgv1') || document.getElementById('bgv2');
+  var bga     = document.getElementById('bgAudio');
+  var cta     = document.getElementById('ctaOverlay');
+  var ctaBtn  = cta ? cta.querySelector('.btn') : null;
+  var enterUI = document.getElementById('enterGameOverlay');
+  var enterBtn= document.getElementById('enterGameBtn');
+  var SHOW_AT = 88;
   var started = false, enterShown = false;
 
-  // Prépare la vidéo 2 (muette) + l'audio (préchargé)
   if (bgv){
-    try{
-      bgv.autoplay = false; bgv.loop = false; bgv.muted = true; // on utilisera la piste audio séparée
+    try {
+      bgv.removeAttribute('autoplay');
+      bgv.loop = false;
+      bgv.muted = true;
+      bgv.preload = 'auto';
       bgv.setAttribute('playsinline',''); bgv.setAttribute('webkit-playsinline','');
-      bgv.preload = 'auto'; bgv.load();
-    }catch(e){}
+      bgv.load();
+      var p = bgv.play();
+      if (p && typeof p.then === 'function') p.then(function(){ try{ bgv.pause(); }catch(e){} }).catch(function(){});
+    } catch(e){}
   }
-  if (bga){
-    try{ bga.preload = 'auto'; bga.load(); }catch(e){}
-  }
+
   if (intro){
     try{
       intro.muted = true; intro.volume = 0; intro.loop = false; intro.autoplay = true;
@@ -1308,68 +1316,56 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     }catch(e){}
   }
 
-  // Clic "Lancez-vous" -> lancer vidéo (muette) + audio en MÊME handler
-  function startBoth(ev){
+  function startSecond(){
     if (started) return;
     started = true;
 
-    // Stop/masque intro et CTA
+    try{ if (intro){ intro.pause(); intro.style.display='none'; } }catch(e){}
+    try{ if (cta){ cta.style.opacity=0; cta.style.pointerEvents='none'; } }catch(e){}
+
+    if (!bgv) return;
     try{
-      if (intro){ intro.pause(); intro.style.display='none'; }
-      if (cta){ cta.style.opacity = 0; cta.style.pointerEvents = 'none'; }
-    }catch(e){}
-
-    if (!bgv || !bga) return;
-
-    // Synchronisation stricte : réinitialiser et lancer les deux au même moment
-    try{
-      bgv.pause(); bga.pause();
-      bgv.currentTime = 0; bga.currentTime = 0;
-      bgv.play().catch(function(){});      // démarre l'image silencieuse
-      bga.volume = 0.45;
-      bga.play().catch(function(){});      // démarre l'audio dans le même clic (iOS OK)
-    }catch(e){}
-
-    // Correction de dérive simple : recale l'audio sur la vidéo si écart > 250 ms
-    var sync = function(){
-      if (!bgv || !bga) return;
-      var dt = Math.abs((bga.currentTime || 0) - (bgv.currentTime || 0));
-      if (dt > 0.25){
-        try{ bga.currentTime = bgv.currentTime; }catch(e){}
+      bgv.currentTime = 0;
+      if (bga){
+        bgv.muted = true;
+        try{ bga.currentTime = 0; bga.volume = 0.45; bga.play().catch(function(){}); }catch(e){}
+        try{ bgv.play().catch(function(){}); }catch(e){}
+      } else {
+        bgv.muted = false;
+        bgv.volume = 0.45;
+        try{ bgv.play().catch(function(){}); }catch(e){}
       }
-      // Afficher le bouton "Entrer" strictement à t>=88 sur la vidéo
-      if (!enterShown && bgv.currentTime >= SHOW_AT){
+    }catch(e){}
+
+    var onTime = function(){
+      if (enterShown) return;
+      if (bgv.currentTime >= SHOW_AT){
         enterShown = true;
-        if (enter){ enter.classList.add('show'); }
-      }
-      // Arrêt propre en fin de vidéo
-      if (bgv.ended){
-        try{ bga.pause(); }catch(e){}
+        if (enterUI){ enterUI.classList.add('show'); }
+        bgv.removeEventListener('timeupdate', onTime);
       }
     };
-    bgv.addEventListener('timeupdate', sync);
+    bgv.addEventListener('timeupdate', onTime);
+
+    bgv.addEventListener('ended', function(){
+      try{ if (bga) bga.pause(); }catch(e){}
+    }, {once:true});
   }
 
-  if (ctaBtn && !ctaBtn.dataset._dualBound){
-    ctaBtn.dataset._dualBound = "1";
-    ctaBtn.addEventListener('click', startBoth, {once:true});
+  if (ctaBtn && !ctaBtn.dataset._preloadBound){
+    ctaBtn.dataset._preloadBound = "1";
+    ctaBtn.addEventListener('click', startSecond, { once:true });
   }
 
-  // Bouton "Entrer dans le jeu": pause les deux puis navigate #app
-  function goToApp(e){
-    e && e.preventDefault && e.preventDefault();
-    try{ if (bga){ bga.pause(); } if (bgv){ bgv.pause(); } }catch(err){}
-    var qs = window.location.search || '';
-    window.location.href = window.location.pathname + qs + '#app';
-  }
   if (enterBtn && !enterBtn.dataset._nav){
     enterBtn.dataset._nav = "1";
-    enterBtn.addEventListener('click', goToApp);
+    enterBtn.addEventListener('click', function(e){
+      e.preventDefault();
+      try{ if (bga) bga.pause(); if (bgv) bgv.pause(); }catch(err){}
+      var qs = window.location.search || '';
+      window.location.href = window.location.pathname + qs + '#app';
+    });
   }
-
-  // Nettoyage d'UI legacy
-  var unlock = document.getElementById('audioUnlock'); if (unlock) unlock.remove();
-  var toggle = document.getElementById('bgSoundToggle'); if (toggle) toggle.remove();
 })();
 </script>
 
