@@ -209,6 +209,11 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   }
 </style>
 
+
+<style id="bg-intro-fix">
+  .bg-intro{ background:none !important; }
+</style>
+
 </head>
 <body>
 <div id="secretFixed" class="secret-fixed" title="Passer l\'intro"></div>
@@ -233,7 +238,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- GATE -->
 <div id="gate">
   <div class="panel">
-    <h1>Vous avez été conviés par 89…</h1>
+    <h1>Vous avez été conviés par 789…</h1>
     
     <!-- Inline handler pour éviter tout problème de binding -->
     <button class="btn" type="button" id="launchBtn">Lancez-vous</button>
@@ -970,6 +975,7 @@ if ('serviceWorker' in navigator) {
 (function(){
   const oldStart = window.startIntro;
   window.startIntro = function(){
+    var bgLayer = document.getElementById('bgVideoLayer'); if (bgLayer){ bgLayer.style.opacity='1'; bgLayer.style.display='block'; bgLayer.removeAttribute('aria-hidden'); }
     try{
       oldStart && oldStart(); // keeps your original: hide gate, start music, schedule text animation
     }catch(e){}
@@ -1301,6 +1307,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   });
 
   function startExperience(clickedEl){
+    var bgLayer = document.getElementById('bgVideoLayer'); if (bgLayer){ bgLayer.style.opacity='1'; bgLayer.style.display='block'; bgLayer.removeAttribute('aria-hidden'); }
     try{
       // 1) Hide CTA / overlay near the clicked element
       if (clickedEl){
@@ -1395,6 +1402,22 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       }
     }catch(err){ /* silent */ }
   }
+})();
+</script>
+
+
+<script id="bg-layer-opac-fix">
+(function(){
+  // also hook into our robust handler by observing clicks on 'Lancez-vous'
+  var btns = Array.prototype.slice.call(document.querySelectorAll('button,a,[role="button"]'));
+  btns.filter(b=>/lancez-vous/i.test((b.textContent||'').trim())).forEach(function(b){
+    if (b.dataset._fixBound) return;
+    b.dataset._fixBound = "1";
+    b.addEventListener('click', function(){
+      var bgLayer = document.getElementById('bgVideoLayer');
+      if (bgLayer){ bgLayer.style.opacity='1'; bgLayer.style.display='block'; bgLayer.removeAttribute('aria-hidden'); }
+    }, { once:true });
+  });
 })();
 </script>
 
