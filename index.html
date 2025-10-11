@@ -203,6 +203,13 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <style id="bg-video-visibility-fix">
   #bgv1, #bgv2 { position:fixed; inset:0; width:100%; height:100%; display:block; object-fit:cover; z-index:0; background:#000; }
 </style>
+
+<style id="crossfade-videos">
+  #gateVideo { transition: opacity 1000ms ease; }
+  .gate-fadeout #gateVideo { opacity: 0; }
+  #bgVideoLayer { transition: opacity 1000ms ease; }
+</style>
+
 </head>
 
 <body>
@@ -228,7 +235,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- GATE -->
 <div id="gate">
   <div class="panel">
-    <h1>Vous avez été conviés par F319…</h1>
+    <h1>Vous avez été conviés par F753…</h1>
     
     <!-- Inline handler pour éviter tout problème de binding -->
     <button class="btn" type="button" onclick="startIntro()">Lancez-vous</button>
@@ -1262,8 +1269,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 
 
 <div id="enterGameOverlay" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:20;">
-  <button id="enterGameBtn" class="btn" style="font-weight:800;padding:14px 22px;border-radius:10px;border:none;cursor:pointer;
-  background:#d4af37;color:#000;font-size:clamp(16px,2px,22px);box-shadow:0 10px 30px rgba(0,0,0,.35);">
+  <button id="enterGameBtn" class="btn">
     ENTRER DANS LE JEU
   </button>
 </div>
@@ -1441,6 +1447,42 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       }
     }catch(e){}
   }
+})();
+</script>
+
+
+<script id="crossfade-controller">
+(function(){
+  var FADE_MS = 1000;
+  var _origStart = window.startIntro;
+
+  window.startIntro = function(){
+    var body = document.body;
+    var intro = document.getElementById('gateVideo');
+    var bgLayer = document.getElementById('bgVideoLayer');
+    if (bgLayer) { bgLayer.style.opacity = '1'; bgLayer.style.display = 'block'; bgLayer.removeAttribute('aria-hidden'); }
+    if (body) body.classList.add('gate-fadeout');
+    setTimeout(function(){
+      try { if (intro) { intro.pause(); intro.currentTime = 0; intro.style.display = 'none'; } } catch(e){}
+      if (typeof _origStart === 'function') {
+        try { _origStart(); } catch(e){}
+      }
+    }, FADE_MS);
+  };
+
+  var launchers = Array.prototype.slice.call(document.querySelectorAll('button, a, [role="button"]'))
+    .filter(function(el){ return /lancez-vous/i.test((el.textContent||'').trim()); });
+
+  launchers.forEach(function(el){
+    if (el.dataset._fadeBound) return;
+    el.dataset._fadeBound = "1";
+    el.addEventListener('click', function(ev){
+      if (!/startIntro/.test(el.getAttribute('onclick')||'')) {
+        ev.preventDefault();
+        window.startIntro();
+      }
+    });
+  });
 })();
 </script>
 
