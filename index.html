@@ -201,12 +201,10 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 #ctaOverlay{opacity:0;pointer-events:none;transform:translateY(6px);transition:.4s ease;}
 </style>
 
-<style id="strict-audio-css">
-  #enterGameOverlay{display:none}
-  #enterGameOverlay.show{display:flex}
+<style id="dual-av-css">
   #bgSoundToggle, #audioUnlock { display:none !important; }
-  .bg-gate, .bg-intro { filter:none !important; }
-  .bg-intro::after, .intro-started .bg-intro::after { opacity:0 !important; }
+  #enterGameOverlay{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:20; }
+  #enterGameOverlay.show{ display:flex; }
 </style>
 
 </head>
@@ -1266,79 +1264,101 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 <!-- ===== /ROLE VIDEO ===== -->
 
 
-<div id="enterGameOverlay" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:20;">
+<!-- Audio de la boucle (séparé de la vidéo) -->
+<audio id="bgAudio" preload="auto">
+  <source src="audio/fond-boucle-v2.mp3" type="audio/mpeg">
+</audio>
+
+
+<div id="enterGameOverlay">
   <button id="enterGameBtn" class="btn" style="font-weight:800;padding:14px 22px;border-radius:10px;border:none;cursor:pointer;
-  background:#d4af37;color:#000;font-size:clamp(16px,2px,22px);box-shadow:0 10px 30px rgba(0,0,0,.35);">
+  background:#d4af37;color:#000;font-size:clamp(16px,2.4vw,22px);box-shadow:0 10px 30px rgba(0,0,0,.35);">
     ENTRER DANS LE JEU
   </button>
 </div>
 
 
-<script id="strict-audio-controller">
+<script id="dual-av-controller">
 (function(){
-  var intro = document.getElementById('gateVideo');
-  var bg = document.getElementById('bgv1') || document.getElementById('bgv2');
-  var cta = document.getElementById('ctaOverlay');
-  var ctaBtn = cta ? cta.querySelector('.btn') : null;
+  var intro = document.getElementById('gateVideo');           // intro.mp4
+  var bgv   = document.getElementById('bgv1') || document.getElementById('bgv2'); // fond-boucle-v2.mp4 (vidéo)
+  var bga   = document.getElementById('bgAudio');             // audio séparé
+  var cta   = document.getElementById('ctaOverlay');          // overlay "Lancez-vous"
+  var ctaBtn= cta ? cta.querySelector('.btn') : null;
   var enter = document.getElementById('enterGameOverlay');
   var enterBtn = document.getElementById('enterGameBtn');
-  var SHOW_AT = 88;
+  var SHOW_AT = 88; // 1:28
   var started = false, enterShown = false;
 
+  // Prépare la vidéo 2 (muette) + l'audio (préchargé)
+  if (bgv){
+    try{
+      bgv.autoplay = false; bgv.loop = false; bgv.muted = true; // on utilisera la piste audio séparée
+      bgv.setAttribute('playsinline',''); bgv.setAttribute('webkit-playsinline','');
+      bgv.preload = 'auto'; bgv.load();
+    }catch(e){}
+  }
+  if (bga){
+    try{ bga.preload = 'auto'; bga.load(); }catch(e){}
+  }
   if (intro){
     try{
       intro.muted = true; intro.volume = 0; intro.loop = false; intro.autoplay = true;
       intro.setAttribute('muted',''); intro.setAttribute('playsinline',''); intro.setAttribute('webkit-playsinline','');
     }catch(e){}
   }
-  if (bg){
-    try{
-      bg.autoplay = false; bg.loop = false; bg.muted = true;
-      bg.setAttribute('playsinline',''); bg.setAttribute('webkit-playsinline','');
-      bg.preload = 'auto';
-      bg.load();
-    }catch(e){}
-  }
 
-  function handleStartClick(ev){
+  // Clic "Lancez-vous" -> lancer vidéo (muette) + audio en MÊME handler
+  function startBoth(ev){
     if (started) return;
     started = true;
 
+    // Stop/masque intro et CTA
     try{
       if (intro){ intro.pause(); intro.style.display='none'; }
       if (cta){ cta.style.opacity = 0; cta.style.pointerEvents = 'none'; }
     }catch(e){}
 
-    if (bg){
-      try{
-        bg.muted = false;
-        bg.volume = 0.45;
-        bg.loop = false;
-        bg.currentTime = 0;
-        var p = bg.play();
-        if (p && typeof p.catch === 'function'){ p.catch(function(){}); }
-      }catch(e){}
-      var onTime = function(){
-        if (enterShown) return;
-        if (bg.currentTime >= SHOW_AT){
-          enterShown = true;
-          if (enter){ enter.classList.add('show'); }
-          bg.removeEventListener('timeupdate', onTime);
-        }
-      };
-      bg.addEventListener('timeupdate', onTime);
-      bg.addEventListener('ended', function(){ try{ bg.pause(); }catch(e){} }, {once:true});
-    }
+    if (!bgv || !bga) return;
+
+    // Synchronisation stricte : réinitialiser et lancer les deux au même moment
+    try{
+      bgv.pause(); bga.pause();
+      bgv.currentTime = 0; bga.currentTime = 0;
+      bgv.play().catch(function(){});      // démarre l'image silencieuse
+      bga.volume = 0.45;
+      bga.play().catch(function(){});      // démarre l'audio dans le même clic (iOS OK)
+    }catch(e){}
+
+    // Correction de dérive simple : recale l'audio sur la vidéo si écart > 250 ms
+    var sync = function(){
+      if (!bgv || !bga) return;
+      var dt = Math.abs((bga.currentTime || 0) - (bgv.currentTime || 0));
+      if (dt > 0.25){
+        try{ bga.currentTime = bgv.currentTime; }catch(e){}
+      }
+      // Afficher le bouton "Entrer" strictement à t>=88 sur la vidéo
+      if (!enterShown && bgv.currentTime >= SHOW_AT){
+        enterShown = true;
+        if (enter){ enter.classList.add('show'); }
+      }
+      // Arrêt propre en fin de vidéo
+      if (bgv.ended){
+        try{ bga.pause(); }catch(e){}
+      }
+    };
+    bgv.addEventListener('timeupdate', sync);
   }
 
-  if (ctaBtn && !ctaBtn.dataset._boundStrict){
-    ctaBtn.dataset._boundStrict = "1";
-    ctaBtn.addEventListener('click', handleStartClick, {once:true});
+  if (ctaBtn && !ctaBtn.dataset._dualBound){
+    ctaBtn.dataset._dualBound = "1";
+    ctaBtn.addEventListener('click', startBoth, {once:true});
   }
 
+  // Bouton "Entrer dans le jeu": pause les deux puis navigate #app
   function goToApp(e){
     e && e.preventDefault && e.preventDefault();
-    try{ if (bg){ bg.pause(); bg.muted = true; } }catch(err){}
+    try{ if (bga){ bga.pause(); } if (bgv){ bgv.pause(); } }catch(err){}
     var qs = window.location.search || '';
     window.location.href = window.location.pathname + qs + '#app';
   }
@@ -1347,6 +1367,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     enterBtn.addEventListener('click', goToApp);
   }
 
+  // Nettoyage d'UI legacy
   var unlock = document.getElementById('audioUnlock'); if (unlock) unlock.remove();
   var toggle = document.getElementById('bgSoundToggle'); if (toggle) toggle.remove();
 })();
