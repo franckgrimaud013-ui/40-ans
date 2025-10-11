@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Annonce — Révélation auto (médiévale + prologue)</title>
+  <title>Annonce — Révélation auto (fond noir + vidéo masque)</title>
   <!-- Fonts médiévales -->
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
   <!-- Firebase compat SDKs -->
@@ -11,27 +11,19 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <style>
     :root{
-      --bg:#090e18; --ink:#f3efe6; --mut:#c9c2b5; --gold:#e9d28f;
-      /* Remplace par des photos si tu veux */
-      --bg1: radial-gradient(1200px 700px at 30% -10%, rgba(233,210,143,.15), transparent 60%), #0b0f18;
-      --bg2: radial-gradient(1000px 600px at 70% 120%, rgba(170,153,255,.12), transparent 60%), #0a0d14;
-      --bg3: radial-gradient(1400px 800px at 50% -20%, rgba(255,153,170,.10), transparent 60%), #0a0b12;
+      --bg:#000; --ink:#f3efe6; --mut:#c9c2b5; --gold:#e9d28f;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;background:var(--bg);color:var(--ink);font-family:'Cormorant Garamond', serif;overflow:hidden}
 
+    /* Vidéo du masque (au-dessus du fond noir, en dessous de l'overlay) */
+    .video-wrap{position:fixed; inset:0; z-index:0; display:flex; justify-content:center; align-items:flex-start; pointer-events:none; background:#000;}
+    .mask-video{margin-top:60px; width:320px; height:auto; opacity:0.95; pointer-events:none}
+
     /* Fullscreen overlay */
     .overlay{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:9999; color:#fff; text-align:center;}
     .overlay .inner{position:relative; width:100%; max-width:1100px; padding:24px}
-
-    /* Background crossfade (3 layers) */
-    .bgstage{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden}
-    .bgslide{position:absolute; inset:0; background-size:cover; background-position:center; opacity:0}
-    .bg1{background:var(--bg1); animation:fade 9s linear infinite; }
-    .bg2{background:var(--bg2); animation:fade 9s linear infinite 3s;}
-    .bg3{background:var(--bg3); animation:fade 9s linear infinite 6s;}
-    @keyframes fade{ 0%{opacity:0} 7%{opacity:.8} 40%{opacity:.95} 70%{opacity:.8} 100%{opacity:0} }
 
     /* Prologue (slides de texte qui s'enchaînent) */
     .prologue-wrap{position:relative; min-height:22vh; margin:0 0 10px}
@@ -58,21 +50,11 @@
   </style>
 </head>
 <body>
-
-<!-- === BACKGROUND VIDEO (plein écran, sans voile) === -->
-<div id="bgVideoWrap" aria-hidden="true">
-  <video id="bgVoteVideo" autoplay muted loop playsinline webkit-playsinline preload="auto">
-    <source src="videos/vote-bg.mp4" type="video/mp4">
-  </video>
-</div>
-<!-- === /BACKGROUND VIDEO === -->
-
->
-  <!-- Fond en fondu -->
-  <div class="bgstage" aria-hidden="true">
-    <div class="bgslide bg1"></div>
-    <div class="bgslide bg2"></div>
-    <div class="bgslide bg3"></div>
+  <!-- Fond noir + vidéo du masque -->
+  <div class="video-wrap" aria-hidden="true">
+    <video class="mask-video" autoplay muted loop playsinline>
+      <source src="role-bg.mp4" type="video/mp4">
+    </video>
   </div>
 
   <!-- Overlay -->
@@ -197,78 +179,6 @@
     });
     $('#reload').addEventListener('click', ()=>location.reload());
   </script>
-
-<!-- Garder la vidéo visible pendant le compte à rebours -->
-<style id="keep-video-overlays-transparent">
-  /* La vidéo plein écran derrière tout */
-  #bgVideoWrap { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-  #bgVoteVideo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-
-  /* Le contenu utile passe au-dessus */
-  #app, main, .container, .wrap, .page, .content, #root, #__next {
-    position: relative; z-index: 1; background: transparent !important;
-  }
-
-  /* Le calque overlay et ses blocs n'ont AUCUN fond */
-  #overlay { position: relative; z-index: 1; background: transparent !important; }
-  #overlay::before, #overlay::after { background: transparent !important; }
-  #overlay .inner, #overlay .slide, #overlay .countdown, #cd, #overlay .bar {
-    background: transparent !important; box-shadow: none !important;
-  }
-
-  /* Neutralise des anciens fonds statiques éventuels */
-  .bgstage, .bgslide, #bg-role, .bg-fallback, .bg-intro {
-    display: none !important; opacity: 0 !important; pointer-events: none !important;
-  }
-
-  /* Base */
-  html, body { background: #000; margin: 0; }
-</style>
-
-
-<style id="name-top-white">
-  /* Nom du joueur : blanc, en haut, centré, même taille */
-  #overlay .name, .name {
-    color: #ffffff !important;
-    position: absolute !important;
-    top: 5vh !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    z-index: 5 !important;
-    text-align: center;
-    /* on ne touche pas à font-size / font-weight pour garder la même taille */
-  }
-</style>
-
-
-<style id="final-tweaks">
-  :root { --mask-scale: 0.5; } /* 50% */
-  /* 1) "Les traîtres..." en blanc pur */
-  .announcement h1 {
-    color:#ffffff !important;
-    -webkit-text-fill-color:#ffffff !important;
-    text-shadow:none !important;
-  }
-  /* 2) Les deux autres phrases +70% */
-  .announcement h2,
-  .announcement p {
-    font-size: 170% !important; /* +70% */
-    line-height: 1.15 !important;
-  }
-  /* 3) Masque deux fois plus petit (robuste : attrape id/class contenant 'mask') */
-  [id*="mask"],
-  [class*="mask"] {
-    transform: scale(var(--mask-scale)) !important;
-    transform-origin: center center !important;
-  }
-  [class*="mask"] img,
-  [class*="mask"] video {
-    max-width: 50% !important;
-    height: auto !important;
-  }
-</style>
-
 </body>
 </html>
-
 
