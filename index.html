@@ -21,19 +21,17 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 .bg-gate,.bg-intro{
   position:fixed; inset:0;
   background-size:cover; background-position:center;
-  z-index:0; 
-  opacity:1; transition:opacity 1200ms ease; will-change:opacity;
+  z-index:0;opacity:1; transition:opacity 1200ms ease; will-change:opacity;
 }
 .bg-gate{ background-image:url('photo1.jpg'); }
 .bg-intro{ background-image:url('chateau.jpg'); opacity:0; }
 .intro-started .bg-gate{ opacity:0; }
 .intro-started .bg-intro{ opacity:1; }
-/* 3e fond : écran joueur */
+.intro-started /* 3e fond : écran joueur */
 .bg-role{
   position:fixed; inset:0;
   background:none center/cover no-repeat;
-  z-index:0; display:none; 
-}
+  z-index:0; display:none;}
 .player-focus .bg-role{ display:block; }
 .player-focus .bg-gate, .player-focus .bg-intro{ display:none!important; }
 
@@ -199,40 +197,34 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   #enterGameOverlay.show{ display:flex; }
 </style>
 
-
-
-
 </head>
 <body>
 <div id="secretFixed" class="secret-fixed" title="Passer l\'intro"></div>
 <section class="bg-gate" aria-hidden="true" style="position:fixed;inset:0;z-index:0;">
   <video id="gateVideo" muted playsinline preload="auto"
          style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" autoplay muted playsinline webkit-playsinline preload="auto">
-  <source src="videos/intro-gate.mp4" type="video/mp4">
-  <source src="videos/intro–gate.mp4" type="video/mp4">
-</video>
+    <source src="videos/intro-gate.mp4" type="video/mp4">
+  </video>
 </section>
 <div id="bgVideoLayer" class="bg-intro" aria-hidden="true" style="position:fixed;inset:0;z-index:0;opacity:0;transition:opacity 1200ms ease;">
   <video id="bgv1" class="bgv" muted playsinline preload="auto"
          style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;" muted playsinline webkit-playsinline preload="auto">
-  <source src="videos/fond-boucle-v2.mp4" type="video/mp4">
-  <source src="videos/fond–boucle–v2.mp4" type="video/mp4">
-</video>
+    <source src="videos/fond-boucle-v2.mp4" type="video/mp4">
+  </video>
   <video id="bgv2" class="bgv" muted playsinline preload="auto"
          style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;" muted playsinline webkit-playsinline preload="auto">
-  <source src="videos/fond-boucle-v2.mp4" type="video/mp4">
-  <source src="videos/fond–boucle–v2.mp4" type="video/mp4">
-</video>
+    <source src="videos/fond-boucle-v2.mp4" type="video/mp4">
+  </video>
 </div>
 <div class="bg-role bg-fallback" aria-hidden="true"></div>
 
 <!-- GATE -->
 <div id="gate">
   <div class="panel">
-    <h1>Vous avez été conviés par bob…</h1>
+    <h1>Vous avez été conviés par bilou…</h1>
     
     <!-- Inline handler pour éviter tout problème de binding -->
-    <button class="btn" type="button" onclick="startIntro()">Lancez-vous</button>
+    <button class="btn" type="button" id="launchBtn">Lancez-vous</button>
   </div>
 </div>
 
@@ -341,79 +333,991 @@ Arnaud"></textarea>
 </audio>
 <div id="audioUnlock">🔊 Le son est bloqué. <button id="unlockBtn">Activer le son</button></div>
 
+<script>
+function parseToken(){try{var p=new URLSearchParams(location.search||'');if(p.has('t')){return JSON.parse(decodeURIComponent(atob(p.get('t'))));}}catch(e){} return null;}
+var PAYLOAD=null;
+
+/* Démarrage intro */
+)
+           .catch(()=>{ var au=document.getElementById('audioUnlock'); if(au) au.style.display='block'; });
+        }
+      };
+      if(audio.readyState >= 2){ tryPlay(); }
+      else{ audio.addEventListener('canplaythrough', tryPlay, {once:true}); tryPlay(); }
+      var unlockBtn = document.getElementById('unlockBtn');
+      if (unlockBtn && !unlockBtn._bound){
+        unlockBtn._bound = true;
+        unlockBtn.addEventListener('click', function(){
+          audio.play().then(function(){ var au=document.getElementById('audioUnlock'); if(au) au.style.display='none'; }).catch(function(){});
+        });
+      }
+    }
+
+    // lancer le texte après 2s
+    setTimeout(function(){
+      document.documentElement.classList.add('intro-text-start');
+    }, 2000);
+  }catch(e){ console.error(e); alert('Erreur de démarrage'); }
+}
+
+/* Mode joueur */
+function onEnterApp(){
+  try{
+    if (PAYLOAD){
+      document.documentElement.classList.add('player-focus');
+      var cta=document.getElementById('ctaOverlay'); if(cta) cta.style.display='none';
+      var org=document.getElementById('orgCard'); if(org) org.style.display='none';
+      var pIntro=document.getElementById('playerIntro'); 
+      if(pIntro && PAYLOAD.name){
+        pIntro.innerHTML = "<b>"+PAYLOAD.name+"</b>, es-tu prêt ? Quand tu es seul, découvre ta carte.<br>" +
+                           "<span style='color:#ccc;font-size:18px'>Petit secret : c’est bien Franck qui a eu l’idée de ce jeu 😉… mais rassurez-vous, il ne connaît pas vos rôles.</span>";
+      }
+      var playerName=document.getElementById('playerName'); if(playerName && PAYLOAD.name){ playerName.textContent = PAYLOAD.name; }
+      var center=document.getElementById('playerCenter'); if(center) center.style.display='flex';
+      var btn=document.getElementById('revealBtn');
+      if(btn && !btn._bound){
+        btn._bound=true;
+        btn.addEventListener('click', function(){ revealRole(PAYLOAD); });
+      }
+    }
+  }catch(e){ console.error(e); }
+}
+function onHashChange(){ if (location.hash==="#app"){ onEnterApp(); } }
+window.addEventListener('hashchange', onHashChange);
+
+/* Init + invitations */
+document.addEventListener('DOMContentLoaded', function(){
+  try{
+    PAYLOAD=parseToken();
+    if (location.hash==="#app"){ onEnterApp(); }
+
+    var b=document.getElementById('genBtn');
+    if(b){
+      b.addEventListener('click', function(){
+        var raw=(document.getElementById('names').value||'').trim();
+        var names=raw.split(/[,;\n]+/).map(function(s){return s.trim();}).filter(function(x){return x;});
+        if(names.length<4){alert('Minimum 4 joueurs');return;}
+
+        var els=document.getElementsByName('mode'); var mode='pct'; 
+        for(var i=0;i<els.length;i++){if(els[i].checked){mode=els[i].value;break;}}
+        var nT=1;
+        if(mode==='pct'){var pct=Math.max(10,Math.min(60,parseInt(document.getElementById('pct').value||'25',10)));nT=Math.max(1,Math.round(names.length*pct/100));}
+        else{var nb=Math.max(1,parseInt(document.getElementById('nb').value||'2',10));nT=Math.min(nb,names.length-1);}
+
+        var a=names.slice(); for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)); var tmp=a[i]; a[i]=a[j]; a[j]=tmp;}
+        var traitors={}; for(var k=0;k<nT;k++){ traitors[a[k]]=true; }
+
+        var QA=[
+          {q:"Quelle heure est-il ?", a:()=>{const h=String(Math.floor(Math.random()*24)).padStart(2,'0');const m=String(Math.floor(Math.random()*60)).padStart(2,'0');return h+"h"+m;}},
+          {q:"Quel jour sommes-nous ?", a:()=>["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"][Math.floor(Math.random()*7)]},
+          {q:"Quel est le mot de passe ?", a:()=>["ombre","azur","lune","piano","velours","nuit","brume","mystère"][Math.floor(Math.random()*8)]},
+          {q:"Quel est ton chiffre porte-bonheur ?", a:()=>String(Math.floor(Math.random()*90)+10)},
+          {q:"Quelle est la couleur du soir ?", a:()=>["indigo","cobalt","ardoise","saphir","nuit","prune","minuit"][Math.floor(Math.random()*7)]},
+          {q:"Quel animal te vient à l'esprit ?", a:()=>["renard","corbeau","chat","hibou","loup","lynx","chouette"][Math.floor(Math.random()*7)]},
+          {q:"Boisson du soir ?", a:()=>["thé","café","vin","eau","tisane","tonic"][Math.floor(Math.random()*6)]},
+          {q:"Ville secrète ?", a:()=>["Rome","Londres","Berlin","Porto","Lyon","Nice","Séville"][Math.floor(Math.random()*7)]},
+          {q:"Premier instrument qui te vient ?", a:()=>["piano","violon","harpe","flûte","guitare","tambour"][Math.floor(Math.random()*6)]},
+          {q:"Un mot en 5 lettres ?", a:()=>["ombre","velin","plume","noble","clave","trace"][Math.floor(Math.random()*6)]},
+          {q:"Nord, Sud, Est ou Ouest ?", a:()=>["Nord","Sud","Est","Ouest"][Math.floor(Math.random()*4)]},
+          {q:"Pair ou impair ?", a:()=>["pair","impair"][Math.floor(Math.random()*2)]},
+          {q:"Pierre, feuille ou ciseaux ?", a:()=>["pierre","feuille","ciseaux"][Math.floor(Math.random()*3)]},
+          {q:"Un mois de l'année ?", a:()=>["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"][Math.floor(Math.random()*12)]},
+          {q:"Un fruit ?", a:()=>["pomme","poire","raisin","figue","mûre","prune"][Math.floor(Math.random()*6)]},
+          {q:"Un numéro de 1 à 9 ?", a:()=>String(Math.floor(Math.random()*9)+1)},
+          {q:"Un métal ?", a:()=>["or","argent","cuivre","fer","plomb","étain"][Math.floor(Math.random()*6)]},
+          {q:"Jour ou nuit ?", a:()=>["jour","nuit"][Math.floor(Math.random()*2)]},
+          {q:"Silence ou musique ?", a:()=>["silence","musique"][Math.floor(Math.random()*2)]},
+          {q:"Clair ou obscur ?", a:()=>["clair","obscur"][Math.floor(Math.random()*2)]},
+          {q:"Un code simple ?", a:()=>String(100+Math.floor(Math.random()*900))}
+        ];
+        var pick=QA[Math.floor(Math.random()*QA.length)]; var secretQ=pick.q, secretA=pick.a();
+
+        var invites=document.getElementById('invites'); invites.innerHTML='';
+        var header=document.createElement('div'); header.className='small'; header.textContent='Invitations :'; invites.appendChild(header);
+
+        var origin=(location.origin || (location.protocol+'//'+location.host));
+        var path=location.pathname.replace(/[^\\/]*$/,''); 
+        var filename=location.pathname.split('/').pop() || 'index.html';
+
+        for(var n=0;n<names.length;n++){
+          var name=names[n];
+          var role=traitors[name]?'TRAITRE':'LOYAL';
+          var payload={v:1,name:name,role:role};
+          if(role==='TRAITRE'){payload.codeQ=secretQ;payload.codeA=secretA;}
+          var token=btoa(encodeURIComponent(JSON.stringify(payload)));
+
+          var url=origin+path+filename+'?t='+encodeURIComponent(token);
+
+          var row=document.createElement('div'); row.className='inv-row';
+          var left=document.createElement('div'); left.className='inv-left';
+          var pill=document.createElement('div'); pill.className='pill'; pill.textContent=name;
+          left.appendChild(pill);
+
+          var actions=document.createElement('div'); actions.className='inv-actions';
+          var openA=document.createElement('a'); openA.className='btn'; openA.href=url; openA.target='_blank'; openA.rel='noopener'; openA.textContent='Ouvrir';
+          var copyBtn=document.createElement('button'); copyBtn.className='btn'; copyBtn.type='button'; copyBtn.textContent='Copier';
+          (function(u){
+            copyBtn.addEventListener('click', function(){
+              try{ if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(u).then(function(){alert('Lien copié');}).catch(function(){throw 0;}); } else { throw 0; } }
+              catch(e){ var tmp=document.createElement('textarea'); tmp.value=u; document.body.appendChild(tmp); tmp.select(); try{document.execCommand('copy');}catch(e2){} document.body.removeChild(tmp); alert('Lien copié'); }
+            });
+          })(url);
+          actions.appendChild(openA); actions.appendChild(copyBtn);
+
+          row.appendChild(left); row.appendChild(actions);
+          invites.appendChild(row);
+
+          var rawLine=document.createElement('div'); rawLine.className='url-raw'; rawLine.textContent=url;
+          invites.appendChild(rawLine);
+        }
+      });
+    }
+  }catch(e){ console.error(e); }
+});
+
+/* Modale rôle */
+function revealRole(payload){
+  var modal=document.getElementById('roleModal'); var inner=document.getElementById('roleInner'); var title=document.getElementById('roleTitle'); var sub=document.getElementById('roleSub'); var extra=document.getElementById('roleExtra');
+  modal.style.display='flex';
+  if(payload.role==='TRAITRE'){
+    inner.style.background='linear-gradient(180deg,#4a0b0b,#220606)';
+    title.innerHTML='<span class="mask-red">🎭</span> TRAÎTRE'; title.style.color='#fff';
+    var q=payload.codeQ||"Quelle heure est-il ?"; var a=payload.codeA||"11h23";
+    sub.innerHTML='Ton objectif est d’éliminer les Loyaux sans te faire démasquer.<br><br>' +
+      'Pour reconnaître tes alliés traîtres, tu disposes d’une <b>consigne secrète</b> :<br>' +
+      '<b>Question :</b> « '+q+' »<br>' +
+      '<b>Réponse :</b> « '+a+' » (même si c’est faux).<br><br>' +
+      '👉 Tu peux soit <b>poser toi-même la question</b> pour tester quelqu’un,<br>' +
+      '👉 soit <b>répondre avec le code</b> si on te la pose.';
+    extra.innerHTML='<ul style="margin:6px 0 8px 18px">\
+<li><b>Conseils (après repas)</b> : débats + vote → 1 joueur éliminé.</li>\
+<li><b>Nuits (ven & sam)</b> : les traîtres éliminent un Loyal.</li>\
+<li><b>Jeu</b> : reste crédible, évite les certitudes trop rapides.</li>\
+<li><b>Discrétion</b> : ne révèle jamais ton rôle ni ton écran.</li>\
+</ul>\
+<div style="margin-top:6px;color:#f2b3b3"><b>⚠️ Ne révèle jamais ton code directement, utilise-le subtilement.</b></div>';
+  } else {
+    inner.style.background='linear-gradient(180deg,#0b1f4a,#061022)';
+    title.innerHTML='<span class="mask-blue">🎭</span> LOYAL'; title.style.color='#fff';
+    sub.innerHTML='Ton rôle : observer, discuter et <b>démasquer les traîtres</b>.';
+    extra.innerHTML='<ul style="margin:6px 0 0 18px">\
+<li><b>Conseils (après repas)</b> : débats + vote → 1 éliminé.</li>\
+<li><b>Nuits</b> : seuls les traîtres agissent (élimination d’un Loyal).</li>\
+<li><b>Indices</b> : incohérences, alliances soudaines, votes étranges…</li>\
+<li><b>Stratégie</b> : construis une histoire cohérente, ne te fie pas qu’aux apparences.</li>\
+</ul>';
+  }
+  document.getElementById('closeRoleBtn').onclick=function(){ modal.style.display='none'; };
+}
+</script>
+
+<script>
+// Secret skip intro: go straight to #app
+(function(){
+  var dot = document.getElementById('secretFixed');
+  function showApp(){
+    try{ location.hash='#app'; }catch(e){}
+    document.documentElement.classList.add('app-shown');
+    // Also try hiding typical intro layers
+    try{
+      ['.intro','#intro','.landing','.splash','.cover','.intro-container'].forEach(function(sel){
+        document.querySelectorAll(sel).forEach(function(n){ n.style.display='none'; });
+      });
+    }catch(e){}
+  }
+  if(dot){
+    var t; dot.addEventListener('click', showApp);
+    dot.addEventListener('touchstart', function(){ t=setTimeout(showApp,600); }, {passive:true});
+    dot.addEventListener('touchend', function(){ clearTimeout(t); }, {passive:true});
+  }
+  // On load, if already #app, mark visible
+  document.addEventListener('DOMContentLoaded', function(){
+    if(location.hash==='#app'){ document.documentElement.classList.add('app-shown'); }
+  });
+})();
+
+// Role reveal (inline first; modal fallback if no inline container)
+(function(){
+  function parseToken(){
+    try{
+      var p = new URLSearchParams(location.search||'');
+      if(p.has('t')) return JSON.parse(decodeURIComponent(atob(p.get('t'))));
+    }catch(e){}
+    return null;
+  }
+  function openInline(){
+    var wrap = document.getElementById('roleInline');
+    var blue = document.getElementById('roleBlue');
+    var red  = document.getElementById('roleRed');
+    var voteCta = document.getElementById('voteCta');
+    if(!wrap) return false;
+    var pay = parseToken();
+    wrap.style.display='block';
+    blue.style.display='none'; red.style.display='none';
+    if(pay && pay.role==='TRAITRE'){
+      red.style.display='block';
+      var t = new URLSearchParams(location.search).get('t') || '';
+      if(voteCta){ voteCta.href = 'traitor_vote.html' + (t ? ('?t='+encodeURIComponent(t)) : ''); }
+    } else if(pay && pay.role){
+      blue.style.display='block';
+    } else {
+      // No token: keep the inline panels hidden, use modal instead to show message
+      wrap.style.display='none';
+      return false;
+    }
+    // scroll to panels
+    try{ document.getElementById('roleInline').scrollIntoView({behavior:'smooth', block:'start'}); }catch(e){}
+    return true;
+  }
+  function openModal(){
+    var wrap = document.getElementById('roleModal');
+    var box  = document.getElementById('roleContent');
+    if(!wrap || !box) return;
+    var pay = parseToken();
+    if(pay && pay.role){
+      var name = pay.name || 'Joueur';
+      var role = pay.role;
+      var emoji = role==='TRAITRE' ? '🕵️‍♂️' : '🛡️';
+      box.innerHTML = '<div>'+emoji+' <b>'+name+'</b>, ton rôle est :</div><div style="margin-top:8px;font-size:1.2em"><b>'+role+'</b></div>';
+    } else {
+      box.innerHTML = "🔒 Ce lien ne contient pas ton rôle. Ouvre d’abord ton lien d’invitation personnel.<br><span style='font-size:14px;color:#cfd5dc'>L’organisateur doit d’abord créer et envoyer les invitations.</span>";
+    }
+    wrap.style.display='flex';
+  }
+  function closeModal(){ var wrap=document.getElementById('roleModal'); if(wrap) wrap.style.display='none'; }
+  document.addEventListener('DOMContentLoaded', function(){
+    var btn = document.getElementById('gotoReveal');
+    if(btn && !btn._b){ btn._b=true; btn.addEventListener('click', function(){ if(!openInline()) openModal(); }); }
+    var c = document.getElementById('roleClose');
+    if(c && !c._b){ c._b=true; c.addEventListener('click', closeModal); }
+  });
+})();
+</script>
+
+
+<!-- PATCH v7: remplace #closeRoleBtn par un lien "Voter la nuit..." pour les Traîtres -->
+<script>
+(function(){
+  // Helpers
+  function safeAtob(s){
+    try { return decodeURIComponent(atob(s)); }
+    catch(e){ try { return decodeURIComponent(escape(atob(s))); } catch(e2){ return null; } }
+  }
+  function normRole(r){
+    if(!r) return '';
+    try{ return String(r).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,''); }
+    catch(e){ return String(r).toLowerCase(); }
+  }
+  function isTraitor(){
+    try{
+      var t = new URLSearchParams(location.search).get('t') || '';
+      if(!t) return false;
+      var raw = safeAtob(t) || t;
+      var data = JSON.parse(raw);
+      return normRole(data && data.role).includes('trait'); // traître/traitre/traitor
+    }catch(e){ return false; }
+  }
+  function voteHref(){
+    try{
+      var t = new URLSearchParams(location.search).get('t') || '';
+      return 'traitor_vote.html' + (t ? ('?t='+encodeURIComponent(t)) : '');
+    }catch(e){ return 'traitor_vote.html'; }
+  }
+
+  if(!isTraitor()) return; // n'agit que pour les Traîtres
+
+  function replaceBtn(){
+    var btn = document.getElementById('closeRoleBtn');
+    if(!btn || btn.dataset.__votedone) return false;
+
+    // Crée un <a> à la place du bouton, style doré
+    var a = document.createElement('a');
+    a.textContent = 'Voter la nuit pour éliminer un Loyal';
+    a.href = voteHref();
+    a.target = '_blank'; a.rel = 'noopener';
+
+    // Conserver classes pour ton style, sinon appliquer un style or
+    a.className = btn.className || '';
+    if(!a.className){
+      a.style.display = 'inline-block';
+      a.style.padding = '10px 16px';
+      a.style.borderRadius = '12px';
+      a.style.background = '#ffd87a';
+      a.style.color = '#000';
+      a.style.fontWeight = '900';
+      a.style.textDecoration = 'none';
+      a.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
+    } else {
+      // Si classe .btn dorée, force couleurs or/noir
+      try{
+        a.style.background = '#ffd87a';
+        a.style.color = '#000';
+        a.style.fontWeight = '900';
+      }catch(e){}
+    }
+
+    // Neutraliser toute fermeture via propagation
+    a.addEventListener('click', function(ev){ ev.stopPropagation(); });
+
+    // Remplacer le noeud (évite les anciens listeners)
+    btn.parentNode.replaceChild(a, btn);
+    a.dataset.__votedone = "1";
+    return true;
+  }
+
+  // Essaye immédiatement, puis surveille jusqu'à ce que le bouton existe
+  if (replaceBtn()) return;
+
+  var tries = 0;
+  var tmr = setInterval(function(){
+    tries++;
+    if (replaceBtn() || tries>80) clearInterval(tmr); // ~8s
+  }, 100);
+
+  var obs = new MutationObserver(function(){ replaceBtn(); });
+  obs.observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:['class','style']});
+})();
+</script>
+
+
+<!-- PATCH: auto-tag p3 title, darken panels, and fix secret skip -->
+<script id="patch-p3-script">
+(function(){
+  function textIncludes(node, needles){
+    const t = (node.textContent||"").toLowerCase();
+    return needles.some(n=>t.includes(n));
+  }
+  function tagP3Title(){
+    // Try to find a heading on page 3 that mentions Franck/créé/jeu
+    const candidates = document.querySelectorAll("h1,h2,h3,h4");
+    const needles = ["franck", "créé", "cree", "jeu", "week-end", "week end"];
+    for(const el of candidates){
+      if(textIncludes(el, needles)){
+        el.id = "p3Title";
+        break;
+      }
+    }
+  }
+  function darkenPanels(){
+    // Add panel-dark to likely rule/planning containers on page 3
+    const sel = [
+      ".panel", ".rules", ".planning", ".notice", ".card", ".bloc", ".section"
+    ];
+    const needles = ["règle","regle","planning","déroulé","deroule","week-end","week end"];
+    const nodes = document.querySelectorAll(sel.join(","));
+    nodes.forEach(el => {
+      if(textIncludes(el, needles)){
+        el.classList.add("panel-dark");
+      }
+    });
+  }
+  function fixSecretSkip(){
+    const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
+    if(!secret) return;
+    function goToP3(){
+      // Only toggle .page visibility to avoid breaking background layers
+      document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
+      const p3 = document.getElementById("p3") || document.querySelector("[data-page='3']") || document.querySelector(".page:nth-of-type(3)");
+      if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
+      document.documentElement.classList.add("app-shown");
+    }
+    secret.addEventListener("click", goToP3);
+    let tId;
+    secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3, 500); }, {passive:true});
+    secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId);   }, {passive:true});
+  }
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", ()=>{ tagP3Title(); darkenPanels(); fixSecretSkip(); });
+  }else{
+    tagP3Title(); darkenPanels(); fixSecretSkip();
+  }
+})();
+</script>
+
+
+<!-- PATCH: strong skip — masque aussi tous les fonds/overlays d'intro -->
+<script id="patch-strongskip">
+(function(){
+  const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
+  if(!secret) return;
+
+  function injectHideCSS(){
+    if (document.getElementById("skipHideCSS")) return;
+    const css = `
+      /* cache les couches visuelles d'intro potentiellement encore visibles */
+      .intro, .intro-layer, .bg, .bg-intro, .overlay, .overlay-intro,
+      .image-hero, .image-bg, .img-bg, .bg-img, .hero-bg,
+      .slide, .slides, .parallax, .page-bg, [data-intro] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+      /* coupe les animations/vidéos éventuelles */
+      video, audio { display: none !important; }
+      * { animation: none !important; transition: none !important; }
+    `;
+    const style = document.createElement("style");
+    style.id = "skipHideCSS";
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  function goToP3Strong(){
+    // 1) désactive toutes les pages actives
+    document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
+    // 2) masque agressivement les backgrounds/overlays d'intro
+    injectHideCSS();
+
+    // 3) masque tous les éléments fixed/absolute qui ne sont pas dans p3
+    const p3 = document.getElementById("p3");
+    const rectP3 = p3 ? p3.getBoundingClientRect() : null;
+    const all = Array.from(document.body.querySelectorAll("*"));
+    all.forEach(el=>{
+      const st = getComputedStyle(el);
+      if ((st.position === "fixed" || st.position === "absolute") && !p3?.contains(el)) {
+        el.style.display = "none";
+      }
+    });
+
+    // 4) affiche la page 3 proprement
+    if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
+    document.documentElement.classList.add("app-shown");
+    try { (document.getElementById('bgAudio')||{}).pause?.(); } catch(e){}
+  }
+
+  secret.addEventListener("click", goToP3Strong);
+  let tId;
+  secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
+  secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
+})();
+</script>
+
+
+<!-- PATCH v2: strong skip ++ — masque explicitement la page #p1 et le bloc "Un week‑end..." -->
+<script id="patch-strongskip-v2">
+(function(){
+  const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
+  if(!secret) return;
+
+  function injectHideCSS(){
+    if (document.getElementById("skipHideCSSv2")) return;
+    const css = `
+      /* Masquer dur #p1 et #p2 */
+      #p1, #p2 { display:none !important; visibility:hidden !important; opacity:0 !important; }
+      /* Masquer toutes couches intro possibles */
+      .intro, .intro-layer, .bg, .bg-intro, .overlay, .overlay-intro,
+      .image-hero, .image-bg, .img-bg, .bg-img, .hero-bg,
+      .slide, .slides, .parallax, .page-bg, [data-intro] {
+        display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important;
+      }
+      video, audio { display: none !important; }
+      * { animation: none !important; transition: none !important; }
+    `;
+    const style = document.createElement("style");
+    style.id = "skipHideCSSv2";
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  function hideWelcomeBlockByText(){
+    const needles = ["Un week", "pas comme les autres", "Lancez‑vous", "Lancez-vous"];
+    const all = Array.from(document.body.querySelectorAll("*"));
+    for(const el of all){
+      const t = (el.textContent||"").trim();
+      if(!t) continue;
+      const ok = needles.every(n => t.toLowerCase().includes(n.toLowerCase()));
+      if(ok){
+        // Masquer l'élément le plus grand contenant ce texte (panel de p1)
+        let n = el;
+        for(let i=0;i<4 && n && n.parentElement;i++){ // remonte un peu pour cacher le bloc
+          n = n.parentElement;
+          if(n.classList && (n.classList.contains('panel') || n.classList.contains('wrap') || n.classList.contains('page'))){
+            n.style.display = 'none';
+            break;
+          }
+        }
+        // Sécurité : masque aussi el
+        el.style.display = 'none';
+        break;
+      }
+    }
+  }
+
+  function goToP3Strong(){
+    // Retire les .active de toutes les pages puis force p1/p2 masqués
+    document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
+    ['#p1','#p2','#intro','#welcome','.welcome','.hero-section'].forEach(sel=>{
+      document.querySelectorAll(sel).forEach(el=>{ el.style.display='none'; el.style.visibility='hidden'; el.style.opacity='0'; });
+    });
+
+    injectHideCSS();
+    hideWelcomeBlockByText();
+
+    const p3 = document.getElementById("p3");
+    // Masque tous les fixed/absolute hors p3
+    const all = Array.from(document.body.querySelectorAll("*"));
+    all.forEach(el=>{
+      const st = getComputedStyle(el);
+      if ((st.position === "fixed" || st.position === "absolute") && !p3?.contains(el)) {
+        el.style.display = "none";
+      }
+    });
+
+    if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
+    document.documentElement.classList.add("app-shown");
+    try { (document.getElementById('bgAudio')||{}).pause?.(); } catch(e){}
+  }
+
+  secret.addEventListener("click", goToP3Strong);
+  let tId;
+  secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
+  secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(console.error);
+  });
+}
+</script>
+
+<script>
+(function(){
+  var cta = document.getElementById('ctaOverlay');
+  if(!cta) return;
+  function showCTA(){
+    cta.style.opacity = '1';
+    cta.style.pointerEvents = 'auto';
+    cta.style.transform = 'none';
+  }
+  var last = document.getElementById('intro-last');
+  if (last) {
+    last.addEventListener('animationend', showCTA, { once: true });
+  } else {
+    // Fallback: if not found, reveal after 35s
+    setTimeout(showCTA, 35000);
+  }
+})();
+</script>
+
+
+<script>
+// Crossfade loop for background videos
+(function(){
+  const layer = document.getElementById('bgVideoLayer');
+  if(!layer) return;
+  const v1 = document.getElementById('bgv1');
+  const v2 = document.getElementById('bgv2');
+  const CROSSFADE = 2.8;
+  let active = v1, next = v2, armed = false;
+
+  function armLoop(video){
+    if (armed) return;
+    armed = true;
+    const dur = video.duration || 0;
+    if (!dur || !isFinite(dur)) {
+      video.addEventListener('loadedmetadata', ()=>{ armed=false; armLoop(video); }, {once:true});
+      return;
+    }
+    const tick = () => {
+      if (video.paused || video.ended) return;
+      const t = video.currentTime;
+      if (dur - t <= CROSSFADE + 0.6) {
+        try{ next.currentTime = 0; }catch(e){}
+        next.play().catch(()=>{});
+        active.classList.remove('is-active');
+        next.classList.add('is-active');
+        const old = active; active = next; next = old;
+        armed = false;
+        armLoop(active);
+      } else {
+        requestAnimationFrame(tick);
+      }
+    };
+    requestAnimationFrame(tick);
+  }
+
+  window.__bgVideoStart = function start(){
+    try{
+      layer.style.opacity = '1';
+      v1.currentTime = 0; v2.currentTime = 0;
+      v1.muted = true; v2.muted = true;
+      v1.playsInline = true; v2.playsInline = true;
+      v1.play().catch(()=>{});
+      v2.load();
+    }catch(e){}
+    v1.classList.add('is-active');
+    armLoop(v1);
+  }
+})();
+
+// Hook into startIntro to play the intro video and then switch to bg loop + intro text
+(function(){
+  const oldStart = window.startIntro;
+  window.startIntro = function(){
+    try{
+      oldStart && oldStart(); // keeps your original: hide gate, start music, schedule text animation
+    }catch(e){}
+    try{
+      const gateVideo = document.getElementById('gateVideo');
+      if (gateVideo){
+        gateVideo.currentTime = 0;
+        gateVideo.muted = true; gateVideo.playsInline = true;
+        gateVideo.play().catch(()=>{});
+        gateVideo.onended = function(){
+          // when intro video finishes: reveal bg loop, start it, and force intro text start (just in case)
+          document.documentElement.classList.add('intro-started');
+          if (window.__bgVideoStart) window.__bgVideoStart();
+// Safe gate for bg readiness
+(function(){var bgv1=document.getElementById('bgv1');var started=false;function ok(){if(started)return; if(bgv1&&bgv1.readyState>=2){started=true;startParagraphs();}}
+if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',ok);}setTimeout(function(){if(!started){started=true;startParagraphs();}},1800);})();
+          // Ensure text animation starts even if timing differs
+          setTimeout(function(){
+            document.documentElement.classList.add('intro-text-start');
+          }, 300);
+        };
+      } else {
+        // No video? fallback: start bg loop immediately
+        document.documentElement.classList.add('intro-started');
+        if (window.__bgVideoStart) window.__bgVideoStart();
+// Safe gate for bg readiness
+(function(){var bgv1=document.getElementById('bgv1');var started=false;function ok(){if(started)return; if(bgv1&&bgv1.readyState>=2){started=true;startParagraphs();}}
+if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',ok);}setTimeout(function(){if(!started){started=true;startParagraphs();}},1800);})();
+      }
+    }catch(e){ console.error(e); }
+  };
+})();
+</script>
+
+
+<script>
+// === Robust intro video start ===
+(function(){
+  const gateVideo = document.getElementById('gateVideo');
+  if (!gateVideo) return;
+  gateVideo.muted = true;
+  gateVideo.playsInline = true;
+  function forcePlay(){
+    gateVideo.currentTime = 0;
+    const p = gateVideo.play();
+    if (p && typeof p.then==='function'){
+      p.catch(()=>{ /* will try again on user interaction */ });
+    }
+  }
+  gateVideo.addEventListener('loadeddata', forcePlay, {once:true});
+  // also bind a one-time user interaction to ensure playback if blocked
+  const resume = ()=>{
+    document.removeEventListener('touchend', resume);
+    document.removeEventListener('click', resume);
+    forcePlay();
+  };
+  document.addEventListener('touchend', resume, {once:true, passive:true});
+  document.addEventListener('click', resume, {once:true});
+})();
+</script>
+
+
+<script>
+// === iOS/Safari robust autoplay patch ===
+(function(){
+  var interacted = false;
+  function markInteracted(){ interacted = true; }
+  ['touchstart','touchend','click'].forEach(function(evt){
+    document.addEventListener(evt, markInteracted, {once:true, passive:true});
+  });
+
+  function forcePlay(video){
+    if (!video) return;
+    try{
+      video.muted = true;
+      video.playsInline = true;
+      video.setAttribute('playsinline','');
+      video.setAttribute('webkit-playsinline','');
+      var p = video.play();
+      if (p && typeof p.then==='function'){ p.catch(function(){}); }
+    }catch(e){}
+  }
+
+  // 1) Force intro video after interaction and on load retries
+  var gateVideo = document.getElementById('gateVideo');
+  if (gateVideo){
+    gateVideo.addEventListener('loadeddata', function(){ if (interacted) forcePlay(gateVideo); }, {once:true});
+    setTimeout(function(){ forcePlay(gateVideo); }, 300);
+    setTimeout(function(){ forcePlay(gateVideo); }, 1000);
+    setTimeout(function(){ forcePlay(gateVideo); }, 2000);
+  }
+
+  // 2) Sur le bouton "Lancez-vous" (ton code existant déclenche startIntro) → on force la vidéo
+  var startBtn = document.querySelector('[data-action="start-intro"], #startIntroBtn, .btn-start');
+  if (startBtn){
+    startBtn.addEventListener('click', function(){
+      forcePlay(gateVideo);
+    });
+  }
+
+  // 3) Quand on bascule vers la vidéo de fond, démarrer après 1er geste si besoin
+  var origBgStart = window.__bgVideoStart;
+  window.__bgVideoStart = function(){
+    function realStart(){
+      try{ origBgStart && origBgStart(); }catch(e){}
+      // "débloquer" le player actif
+      try{
+        var v1 = document.getElementById('bgv1');
+        forcePlay(v1);
+      }catch(e){}
+    }
+    if (interacted){ realStart(); }
+    else{
+      var once = function(){
+        document.removeEventListener('touchend', once);
+        document.removeEventListener('click', once);
+        realStart();
+      };
+      document.addEventListener('touchend', once, {once:true, passive:true});
+      document.addEventListener('click', once, {once:true});
+    }
+  };
+})();
+</script>
+
+
+<script>
+// Preload the looping background while intro plays (mobile-friendly)
+(function(){
+  try{
+    var bgv1 = document.getElementById('bgv1');
+    if (bgv1){
+      bgv1.setAttribute('preload','auto');
+      // Kick a load early so iOS starts fetching while intro runs
+      bgv1.load();
+    }
+  }catch(e){}
+})();
+</script>
+
+
+<script>
+(function(){
+  function forcePlay(video){
+    if (!video) return;
+    try{
+      video.muted = true;
+      video.playsInline = true;
+      video.setAttribute('playsinline','');
+      video.setAttribute('webkit-playsinline','');
+      var p = video.play();
+      if (p && typeof p.then==='function'){ p.catch(function(){}); }
+    }catch(e){}
+  }
+  // Enhance CTA behavior
+  var enterBtn = document.getElementById('enterBtn') || document.querySelector('#ctaOverlay button');
+  var rules = document.getElementById('rulesScreen');
+  var roleLayer = document.getElementById('roleVideoLayer');
+  var roleVideo = document.getElementById('roleVideo');
+  if (enterBtn && rules && roleLayer && roleVideo){
+    enterBtn.addEventListener('click', function(){
+      // Show the rules screen UI
+      rules.style.display = 'block';
+      // Start and fade in the role video behind
+      roleLayer.style.opacity = '0';
+      roleLayer.style.display = 'block';
+      forcePlay(roleVideo);
+      requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ roleLayer.style.opacity = '1'; }); });
+    }, {once:false});
+  }
+})();
+</script>
+
+
+<script>
+// Ensure the role video can start after first gesture on iOS if needed
+(function(){
+  var interacted = false;
+  function mark(){ interacted = true; }
+  ['touchstart','touchend','click'].forEach(evt => document.addEventListener(evt, mark, {once:true, passive:true}));
+  var orig = document.getElementById('roleVideo');
+  if (!orig) return;
+  function unlock(){
+    try{
+      orig.muted = true; orig.playsInline = true;
+      orig.setAttribute('playsinline',''); orig.setAttribute('webkit-playsinline','');
+      var p = orig.play(); if (p && p.catch) p.catch(()=>{});
+    }catch(e){}
+  }
+  // Attempt a couple retries early
+  setTimeout(unlock, 500);
+  setTimeout(unlock, 1200);
+  document.addEventListener('click', unlock, {once:true});
+  document.addEventListener('touchend', unlock, {once:true, passive:true});
+})();
+</script>
+
+
+<!-- ===== ROLE VIDEO : drop-in garanti ===== -->
+<style>
+  /* La vidéo passe SOUS le contenu (z-index négatif) */
+  #roleVideoLayer{
+    position:fixed; inset:0;
+    z-index:-1;
+    opacity:0; pointer-events:none;
+    transition:opacity 900ms ease;
+  }
+  /* S’assure que la section règles est au-dessus */
+  #rulesScreen, #welcomeSection{ position:relative; z-index:10; }
+</style>
+
+<div id="roleVideoLayer" aria-hidden="true" hidden>
+  <video id="roleVideo" muted loop playsinline webkit-playsinline preload="auto"
+         style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;">
+    <source src="videos/role-bg.mp4" type="video/mp4">
+  </video>
+</div>
+
+<script>
+(function(){
+  function forcePlay(v){
+    if(!v) return Promise.resolve();
+    try{
+      v.muted = true; v.playsInline = true;
+      v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
+      const p = v.play(); return p && p.catch ? p.catch(()=>{}) : Promise.resolve();
+    }catch(e){ return Promise.resolve(); }
+  }
+  function visible(el){
+    if(!el) return false;
+    const cs = getComputedStyle(el);
+    if (cs.display==='none' || cs.visibility==='hidden' || +cs.opacity===0) return false;
+    const r = el.getBoundingClientRect(); return r.width>0 && r.height>0;
+  }
+  function hideFallbacks(){
+    ['bg-role','bg-intro','bg-gate','bgVideoLayer'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el){ el.style.opacity='0'; el.style.pointerEvents='none'; el.style.display='none'; }
+    });
+    document.querySelectorAll('.bg-fallback').forEach(el=>{
+      el.style.opacity='0'; el.style.pointerEvents='none'; el.style.display='none';
+    });
+  }
+  function startRole(){
+    const layer = document.getElementById('roleVideoLayer');
+    const video = document.getElementById('roleVideo');
+    if(!layer || !video) return;
+    hideFallbacks();
+    layer.hidden = false;
+    try{ video.currentTime = 0; }catch(_){}
+    forcePlay(video).then(()=>{
+      requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ layer.style.opacity='1'; }); });
+    });
+    // iOS : retentes
+    let tries=0, iv=setInterval(()=>{
+      if(!video.paused){ clearInterval(iv); return; }
+      tries++; forcePlay(video); if(tries>6) clearInterval(iv);
+    }, 600);
+  }
+  function bind(){
+    const rules = document.getElementById('rulesScreen') || document.getElementById('welcomeSection') || document.querySelector('[data-section="rules"]');
+    if(!rules) return;
+    if(visible(rules)) { startRole(); }
+    // Observe quand ça devient visible
+    const obs = new MutationObserver(()=>{ if(visible(rules)){ try{obs.disconnect();}catch(_){ } startRole(); }});
+    obs.observe(rules, {attributes:true, attributeFilter:['style','class']});
+    // Si ta navigation utilise #app, déclenche à l'arrivée
+    window.addEventListener('hashchange', ()=>{
+      if(location.hash==="#app"){ setTimeout(()=>{ if(visible(rules)) startRole(); }, 150); }
+    });
+    // Safety : premier geste utilisateur
+    ['click','touchend','keydown'].forEach(ev=>{
+      document.addEventListener(ev, ()=>{ if(visible(rules)) startRole(); }, {passive:true});
+    });
+    // Si on est déjà sur #app au chargement
+    if(location.hash==="#app"){ setTimeout(()=>{ if(visible(rules)) startRole(); }, 300); }
+  }
+  if(document.readyState!=='loading') bind();
+  else document.addEventListener('DOMContentLoaded', bind);
+})();
+</script>
+<!-- ===== /ROLE VIDEO ===== -->
+
+
+<!-- Audio de la boucle (séparé de la vidéo) -->
+<audio id="bgAudio" preload="auto">
+  <source src="audio/fond-boucle-v2.mp3" type="audio/mpeg">
+</audio>
+
+
+<div id="enterGameOverlay">
+  <button id="enterGameBtn" class="btn" style="font-weight:800;padding:14px 22px;border-radius:10px;border:none;cursor:pointer;
+  background:#d4af37;color:#000;font-size:clamp(16px,2.4vw,22px);box-shadow:0 10px 30px rgba(0,0,0,.35);">
+    ENTRER DANS LE JEU
+  </button>
+</div>
+
+
 
 
 
 <script id="click-sync-controller">
-// Démarrage audio+vidéo garanti sur le même clic "Lancez-vous"
 (function(){
-  const intro    = document.getElementById('gateVideo');                   // <video> intro-gate.mp4
-  const bgv      = document.getElementById('bgv1') || document.getElementById('bgv2'); // <video> fond-boucle-v2.mp4
-  const bga      = document.getElementById('bgAudio');                     // <audio> fond-boucle-v2.mp3
-  const ctaBlock = document.getElementById('ctaOverlay');
-  const startBtn = (ctaBlock && ctaBlock.querySelector('.btn')) || document.querySelector('#gate .btn'); // "Lancez-vous"
+  const intro    = document.getElementById('gateVideo');                    // intro-gate.mp4 (muette)
+  const bgv      = document.getElementById('bgv1') || document.getElementById('bgv2'); // fond-boucle-v2.mp4 (muette)
+  const bga      = document.getElementById('bgAudio');                      // fond-boucle-v2.mp3
+  const startBtn = document.getElementById('launchBtn');                    // "Lancez-vous"
   const enterUI  = document.getElementById('enterGameOverlay');
   const enterBtn = document.getElementById('enterGameBtn');
   const SHOW_AT  = 88; // 1:28
-  if (!startBtn || !bgv) return;
 
-  // Sécuriser les attributs des vidéos
-  try{
-    bgv.removeAttribute('autoplay'); bgv.removeAttribute('loop');
-    bgv.setAttribute('playsinline',''); bgv.setAttribute('webkit-playsinline','');
+  if (!bgv || !startBtn) return;
+
+  // Préparation iOS inline
+  try {
+    bgv.removeAttribute('autoplay');
+    bgv.removeAttribute('loop');
     bgv.preload = 'auto';
-  }catch(e){}
+    bgv.setAttribute('playsinline','');
+    bgv.setAttribute('webkit-playsinline','');
+  } catch(e){}
 
-  // Éliminer tout ancien écouteur sur le bouton (évitons que l'intro se relance)
-  const freshBtn = startBtn.cloneNode(true);
-  startBtn.parentNode.replaceChild(freshBtn, startBtn);
+  // Clic "Lancez-vous" : lancer image (vidéo muette) + son (audio séparé) dans le même geste
+  startBtn.addEventListener('click', function(e){
+    e.preventDefault();
+    try { if (intro){ intro.pause(); intro.style.display = 'none'; } } catch(e){}
 
-  freshBtn.addEventListener('click', function(ev){
-    ev.preventDefault();
-
-    // 1) Stop net de l'intro (et empêcher tout redémarrage)
-    try{
-      if (intro){ intro.pause(); intro.currentTime = 0; intro.style.display = 'none'; }
-      if (ctaBlock){ ctaBlock.style.opacity = 0; ctaBlock.style.pointerEvents = 'none'; }
-      // Essayer de neutraliser un éventuel startIntro global
-      if (window.startIntro) { window.startIntro = function(){}; }
-    }catch(e){}
-
-    // 2) Démarrer la vidéo 2 + le son dans *le même handler*
     try{
       bgv.currentTime = 0;
-      if (bga){
-        // audio séparé = vidéo muette + audio on
-        bgv.muted = true;
-        bga.muted = false; bga.volume = 0.5; bga.currentTime = 0;
-        bga.play().catch(()=>{});
-      } else {
-        // son depuis la vidéo
-        bgv.muted = false; bgv.volume = 0.5;
-      }
+      bgv.muted = true;               // la vidéo 2 reste muette (le son vient de l'audio)
       bgv.play().catch(()=>{});
+
+      if (bga){
+        bga.muted = false;
+        bga.volume = 0.5;
+        bga.currentTime = 0;
+        bga.play().catch(()=>{});
+      }
     }catch(e){}
 
-    // 3) Afficher "Entrer dans le jeu" uniquement à 88s de lecture réelle
+    // Affichage du bouton "Entrer" à 88 s réelles
     let shown = false;
     const onTime = () => {
       if (!shown && bgv.currentTime >= SHOW_AT){
         shown = true;
-        if (enterUI) enterUI.classList.add('show');
+        if (enterUI) enterUI.style.display = 'flex';
         bgv.removeEventListener('timeupdate', onTime);
       }
     };
-    bgv.addEventListener('timeupdate', onTime, { passive:true });
+    bgv.addEventListener('timeupdate', onTime, { passive: true });
 
-    // 4) Fin propre : couper audio séparé si la vidéo s'arrête
-    bgv.addEventListener('ended', () => { try{ if (bga) bga.pause(); }catch(e){} }, { once:true });
+    // Fin : couper l'audio si la vidéo se termine
+    bgv.addEventListener('ended', () => { try { if (bga) bga.pause(); } catch(e){} }, { once:true });
   }, { once:true });
 
-  // "Entrer dans le jeu" : couper puis naviguer
+  // "Entrer dans le jeu" : couper A/V puis naviguer
   if (enterBtn){
-    enterBtn.addEventListener('click', function(e){
-      e.preventDefault();
-      try{ if (bga) bga.pause(); if (bgv) bgv.pause(); }catch(e){}
+    enterBtn.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      try { if (bga) bga.pause(); if (bgv) bgv.pause(); } catch(e){}
       const qs = window.location.search || '';
       window.location.href = window.location.pathname + qs + '#app';
     });
