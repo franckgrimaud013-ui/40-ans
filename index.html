@@ -233,7 +233,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- GATE -->
 <div id="gate">
   <div class="panel">
-    <h1>Vous avez été conviés par 12…</h1>
+    <h1>Vous avez été conviés par 89…</h1>
     
     <!-- Inline handler pour éviter tout problème de binding -->
     <button class="btn" type="button" id="launchBtn">Lancez-vous</button>
@@ -1274,73 +1274,126 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 
 
 
+
+
+
 <script id="start-intro-fn">
 (function(){
-  // Keep globals minimal
-  window.startIntro = function(){
-    var intro   = document.getElementById('gateVideo');
-    var bgv     = document.getElementById('bgv1') || document.getElementById('bgv2');
-    var bga     = document.getElementById('bgAudio');
-    var cta     = document.getElementById('ctaOverlay');
-    var enterUI = document.getElementById('enterGameOverlay');
-    var enterBtn= document.getElementById('enterGameBtn');
-    var SHOW_AT = 88;
-    try {
-      // Hide CTA overlay block
-      if (cta){ cta.style.opacity = 0; cta.style.pointerEvents = 'none'; cta.style.display='none'; }
-      // Also hide the closest container if it still covers screen
-      var btn = document.getElementById('launchBtn');
-      if (btn && btn.parentElement && !cta){
-        btn.parentElement.style.display = 'none';
+  function norm(t){ return (t||"").replace(/\s+/g,' ').trim().toLowerCase(); }
+
+  // Find all potential "Lancez-vous" buttons/links
+  var launchers = Array.prototype.slice.call(document.querySelectorAll('button, a, [role="button"]'))
+    .filter(function(el){
+      return norm(el.textContent).includes('lancez-vous');
+    });
+
+  // Also support inline startIntro()
+  window.startIntro = startExperience;
+
+  // Attach listeners
+  launchers.forEach(function(el){
+    if (el.dataset._lvBound) return;
+    el.dataset._lvBound = "1";
+    el.addEventListener('click', function(ev){
+      ev.preventDefault();
+      startExperience(ev.currentTarget);
+    }, { once:true });
+  });
+
+  function startExperience(clickedEl){
+    try{
+      // 1) Hide CTA / overlay near the clicked element
+      if (clickedEl){
+        var node = clickedEl;
+        for (var i=0; i<5 && node && node !== document.body; i++){
+          // Hide the container that likely holds the CTA
+          if (node.id && /cta|gate/i.test(node.id)) { node.style.display = 'none'; break; }
+          if (node.className && /cta|gate|overlay/i.test(node.className.toString())) { node.style.display='none'; break; }
+          node = node.parentElement;
+        }
+        // As a safety, also hide common IDs if present
+        ['ctaOverlay','gate','gateOverlay'].forEach(function(id){
+          var el = document.getElementById(id); if (el){ el.style.display='none'; el.style.pointerEvents='none'; el.style.opacity='0'; }
+        });
       }
-      // Stop and hide intro
-      if (intro){ intro.pause(); intro.currentTime = 0; intro.style.display = 'none'; }
-      // Prepare bg video attributes
-      if (bgv){
-        bgv.removeAttribute('autoplay'); bgv.removeAttribute('loop');
-        bgv.setAttribute('playsinline',''); bgv.setAttribute('webkit-playsinline','');
-        bgv.preload = 'auto';
-        bgv.currentTime = 0;
-        bgv.muted = true; // image muette (on a un audio séparé)
-        try { bgv.play().catch(function(){}); } catch(e){}
-      }
-      // Start separate audio
-      if (bga){
-        bga.muted = false; bga.volume = 0.5; bga.currentTime = 0;
-        try { bga.play().catch(function(){}); } catch(e){}
-      }
-      // Show Enter at 88s (real playback time)
-      if (bgv){
-        var shown=false;
-        var onTime = function(){
-          if (!shown && bgv.currentTime >= SHOW_AT){
-            shown = true;
-            if (enterUI){ enterUI.style.display = 'flex'; }
-            bgv.removeEventListener('timeupdate', onTime);
+
+      // 2) Stop & hide intro
+      var intro = document.getElementById('gateVideo');
+      if (intro){ try{ intro.pause(); intro.currentTime=0; }catch(e){} intro.style.display='none'; }
+
+      // 3) Find background video element
+      var bgv = document.getElementById('bgv1') || document.getElementById('bgv2');
+      if (!bgv){
+        // fallback: find by filename match
+        var vids = document.querySelectorAll('video');
+        for (var k=0;k<vids.length;k++){
+          var v = vids[k];
+          var sources = v.querySelectorAll('source');
+          for (var s=0;s<sources.length;s++){
+            if (/fond.?boucle.?v2\.mp4/i.test(sources[s].src) || /fond.?boucle/i.test(sources[s].src)){ bgv = v; break; }
           }
-        };
-        bgv.addEventListener('timeupdate', onTime, { passive:true });
-        // End: cut audio
-        bgv.addEventListener('ended', function(){ try{ if (bga) bga.pause(); }catch(e){} }, { once:true });
+          if (bgv) break;
+        }
       }
-      // Bind "Entrer" if present
+      if (!bgv){ return; }
+
+      // Ensure attributes for iOS inline playback
+      try {
+        bgv.removeAttribute('autoplay');
+        bgv.removeAttribute('loop');
+        bgv.preload = 'auto';
+        bgv.setAttribute('playsinline',''); bgv.setAttribute('webkit-playsinline','');
+        // Make sure it is visible and above background
+        bgv.style.position = bgv.style.position || 'fixed';
+        bgv.style.inset = bgv.style.inset || '0';
+        bgv.style.width = bgv.style.width || '100%';
+        bgv.style.height = bgv.style.height || '100%';
+        bgv.style.objectFit = bgv.style.objectFit || 'cover';
+        bgv.style.zIndex = bgv.style.zIndex || '0';
+        bgv.style.display = 'block';
+      } catch(e){}
+
+      // 4) Start bg video (image) + audio in the SAME click
+      try{
+        bgv.currentTime = 0;
+        bgv.muted = true;                 // video is image only (audio is separate)
+        var vplay = bgv.play(); if (vplay && vplay.catch) vplay.catch(function(){});
+      }catch(e){}
+
+      var bga = document.getElementById('bgAudio');
+      if (bga){
+        try{
+          bga.muted = false; bga.volume = 0.5; bga.currentTime = 0;
+          var aplay = bga.play(); if (aplay && aplay.catch) aplay.catch(function(){});
+        }catch(e){}
+      }
+
+      // 5) Show "Entrer dans le jeu" at 88s of real playback
+      var enterUI = document.getElementById('enterGameOverlay');
+      var enterBtn= document.getElementById('enterGameBtn');
+      var SHOW_AT = 88, shown=false;
+      var onTime = function(){
+        if (!bgv) return;
+        if (!shown && bgv.currentTime >= SHOW_AT){
+          shown = true;
+          if (enterUI){ enterUI.style.display = 'flex'; }
+          bgv.removeEventListener('timeupdate', onTime);
+        }
+      };
+      bgv.addEventListener('timeupdate', onTime, { passive:true });
+
+      bgv.addEventListener('ended', function(){ try{ if (bga) bga.pause(); }catch(e){} }, { once:true });
+
       if (enterBtn && !enterBtn.dataset._nav){
         enterBtn.dataset._nav = "1";
-        enterBtn.addEventListener('click', function(ev){
-          ev.preventDefault();
-          try{ if (bga) bga.pause(); if (bgv) bgv.pause(); }catch(e){}
+        enterBtn.addEventListener('click', function(e){
+          e.preventDefault();
+          try{ if (bga) bga.pause(); if (bgv) bgv.pause(); }catch(err){}
           var qs = window.location.search || '';
           window.location.href = window.location.pathname + qs + '#app';
         });
       }
-    } catch(err){ /* silent */ }
-  };
-
-  // If button has id="launchBtn" (no inline onclick), bind it too
-  var lb = document.getElementById('launchBtn');
-  if (lb && !lb.dataset._bound){
-    lb.dataset._bound = "1";
-    lb.addEventListener('click', function(e){ e.preventDefault(); window.startIntro(); }, { once:true });
+    }catch(err){ /* silent */ }
   }
 })();
 </script>
