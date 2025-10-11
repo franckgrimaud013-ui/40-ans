@@ -203,6 +203,23 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <style id="bg-video-visibility-fix">
   #bgv1, #bgv2 { position:fixed; inset:0; width:100%; height:100%; display:block; object-fit:cover; z-index:0; background:#000; }
 </style>
+
+<style id="seq-steps-css">
+  /* Affichage étape par étape */
+  .sequenced .step{ display:none; }
+  .sequenced .step.active{ display:block; }
+  .sequenced .step.fade{ animation: fadeIn .45s ease; }
+  .seq-actions{ display:flex; gap:10px; margin-top:12px; }
+
+  /* Supprime toute carte/transparence éventuelle */
+  .wc-card{ background:transparent !important; box-shadow:none !important; border:none !important; padding:0 !important; }
+
+  @keyframes fadeIn{
+    from{ opacity:0; transform:translateY(8px); }
+    to{ opacity:1; transform:none; }
+  }
+</style>
+
 </head>
 
 <body>
@@ -228,7 +245,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- GATE -->
 <div id="gate">
   <div class="panel">
-    <h1>Vous avez été conviés par z92…</h1>
+    <h1>Vous avez été conviés par z56…</h1>
     
     <!-- Inline handler pour éviter tout problème de binding -->
     <button class="btn" type="button" onclick="startIntro()">Lancez-vous</button>
@@ -249,7 +266,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   <!-- Planning & Règles -->
   
 <section id="welcomeSection" class="welcome-section sequenced">
-  <!-- ÉTAPE 1 : planning (fond noir) -->
+  <!-- ÉTAPE 1 : planning (sans carte, fond noir) -->
   <div class="step active fade" data-i="0" aria-live="polite">
     <h2 style="text-align:center;color:#ffd98a;margin:0 0 10px">Le déroulé du week-end</h2>
     <h3 style="text-align:center;margin:0 0 12px">🗓️ Le planning</h3>
@@ -267,7 +284,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     </div>
   </div>
 
-  <!-- ÉTAPE 2 : esprit & règles -->
+  <!-- ÉTAPE 2 : esprit & règles (sans carte) -->
   <div class="step" data-i="1" aria-live="polite">
     <h3 style="text-align:center;margin:0 0 12px">🎭 Esprit & règles</h3>
     <ul style="max-width:860px;margin:0 auto 10px;line-height:1.4">
@@ -282,7 +299,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     </div>
   </div>
 
-  <!-- ÉTAPE 3 : texte final + bouton -->
+  <!-- ÉTAPE 3 : texte final + CTA "Découvre ton rôle" -->
   <div class="step" data-i="2" aria-live="polite">
     <h3 style="text-align:center;color:#ffd98a;margin:0 0 10px">1, es-tu prêt ? Quand tu es seul, découvre ta carte.</h3>
     <p style="text-align:center;color:#cfd5dc;margin:0 0 16px">
@@ -322,9 +339,7 @@ Arnaud"></textarea>
     <div class="card" id="playerCard">
       <h3 id="playerName">Espace joueur</h3>
       <div id="playerIntro" class="small">Ouvre le lien reçu de l’organisateur pour voir ton rôle.</div>
-      <div id="playerCenter" class="centered" style="display:none;margin-top:12px">
-        <button id="revealBtn" class="btn" type="button">🎭 Découvre ton rôle</button>
-      </div>
+      <div id="playerCenter" class="centered" style="display:none;margin-top:12px"></div>
       <div id="roleBox" style="margin-top:12px"></div>
     </div>
   </div>
@@ -1451,16 +1466,6 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 </script>
 
 
-<style id="seq-steps-css">
-  .sequenced .step { display:none; }
-  .sequenced .step.active { display:block; }
-  .sequenced .step.fade { animation: fadeIn .45s ease; }
-  .seq-actions { display:flex; gap:10px; margin-top:12px; justify-content:center; }
-  /* au cas où d'anciens styles de "cartes" trainent */
-  .wc-card { background:transparent !important; box-shadow:none !important; border:none !important; padding:0 !important; }
-  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
-</style>
-
 <script id="seq-steps-js">
 (function(){
   const wrap = document.querySelector('#welcomeSection.sequenced');
@@ -1474,7 +1479,10 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     steps.forEach((s,idx)=>{
       s.classList.toggle('active', idx===n);
       if(idx===n && !first){
-        s.classList.remove('fade'); void s.offsetWidth; s.classList.add('fade');
+        s.classList.remove('fade'); // restart animation
+        // force reflow
+        void s.offsetWidth;
+        s.classList.add('fade');
       }
     });
     i = n;
@@ -1487,7 +1495,6 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     if(prev){ show(Math.max(i-1, 0)); }
   });
 
-  // Bouton "Découvre ton rôle" : conserve ta logique existante
   const showRole = document.getElementById('showRole');
   if(showRole){
     showRole.addEventListener('click', function(){
@@ -1500,6 +1507,26 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     });
   }
 })();
+</script>
+
+
+<script id="bind-showrole">
+document.addEventListener('DOMContentLoaded', function(){
+  var btn = document.getElementById('showRole');
+  if(!btn || btn._bound) return;
+  btn._bound = true;
+  btn.addEventListener('click', function(){
+    try{
+      if (typeof window.openInline === 'function' && openInline()) return;
+    }catch(e){}
+    try{
+      var old = document.getElementById('revealBtn');
+      if (old){ old.click(); return; }
+    }catch(e){}
+    var m = document.getElementById('roleModal');
+    if (m){ m.style.display = 'flex'; }
+  });
+});
 </script>
 
 </body>
