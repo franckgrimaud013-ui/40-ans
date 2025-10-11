@@ -197,6 +197,20 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   #enterGameOverlay.show{ display:flex; }
 </style>
 
+
+<style id="bg-video-visibility-fix">
+  #bgv1, #bgv2 {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #000;
+    display: block;
+    z-index: 0;
+  }
+</style>
+
 </head>
 <body>
 <div id="secretFixed" class="secret-fixed" title="Passer l\'intro"></div>
@@ -209,19 +223,21 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <div id="bgVideoLayer" class="bg-intro" aria-hidden="true" style="position:fixed;inset:0;z-index:0;opacity:0;transition:opacity 1200ms ease;">
   <video id="bgv1" class="bgv" muted playsinline preload="auto"
          style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;" muted playsinline webkit-playsinline preload="auto">
-    <source src="videos/fond-boucle-v2.mp4" type="video/mp4">
-  </video>
+  <source src="videos/fond-boucle-v2.mp4" type="video/mp4">
+  <source src="videos/fond–boucle–v2.mp4" type="video/mp4">
+</video>
   <video id="bgv2" class="bgv" muted playsinline preload="auto"
          style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;" muted playsinline webkit-playsinline preload="auto">
-    <source src="videos/fond-boucle-v2.mp4" type="video/mp4">
-  </video>
+  <source src="videos/fond-boucle-v2.mp4" type="video/mp4">
+  <source src="videos/fond–boucle–v2.mp4" type="video/mp4">
+</video>
 </div>
 <div class="bg-role bg-fallback" aria-hidden="true"></div>
 
 <!-- GATE -->
 <div id="gate">
   <div class="panel">
-    <h1>Vous avez été conviés par bilou…</h1>
+    <h1>Vous avez été conviés par seb…</h1>
     
     <!-- Inline handler pour éviter tout problème de binding -->
     <button class="btn" type="button" id="launchBtn">Lancez-vous</button>
@@ -1322,6 +1338,20 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       window.location.href = window.location.pathname + qs + '#app';
     });
   }
+})();
+</script>
+
+
+<script id="bg-video-guard">
+(function(){
+  var v = document.getElementById('bgv1') || document.getElementById('bgv2');
+  if (!v) return;
+  v.addEventListener('error', function(){
+    var o = document.createElement('div');
+    o.textContent = 'Erreur de chargement de la vidéo fond-boucle-v2.mp4';
+    o.style.cssText = 'position:fixed;inset:10px auto auto 10px;background:#c00;color:#fff;padding:8px 10px;border-radius:6px;z-index:9999;font-weight:700;font-family:sans-serif';
+    document.body.appendChild(o);
+  }, { once:true });
 })();
 </script>
 
