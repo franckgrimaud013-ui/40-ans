@@ -120,7 +120,7 @@
       const v = snap.val();
       const arr = Object.keys(v||{}).map(k=>v[k]);
       const counts = groupCounts(arr);
-      statusEl.textContent = 'Prêt.';
+      statusEl.textContent = '';
       return counts.length ? counts[0][0] : '';
     }
 
