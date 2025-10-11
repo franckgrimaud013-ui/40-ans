@@ -28,9 +28,6 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 .bg-intro{ background-image:url('chateau.jpg'); opacity:0; }
 .intro-started .bg-gate{ opacity:0; }
 .intro-started .bg-intro{ opacity:1; }
-.bg-intro::after { content: none !important; }
-
-
 /* 3e fond : écran joueur */
 .bg-role{
   position:fixed; inset:0;
@@ -203,12 +200,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 </style>
 
 
-<style id="preload-sound-fix-css">
-  #enterGameOverlay { position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:20; }
-  #enterGameOverlay.show { display:flex; }
-  #bgSoundToggle, #audioUnlock { display:none !important; }
-  .bg-intro::after { content: none !important; }
-</style>
+
 
 </head>
 <body>
@@ -216,25 +208,28 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <section class="bg-gate" aria-hidden="true" style="position:fixed;inset:0;z-index:0;">
   <video id="gateVideo" muted playsinline preload="auto"
          style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" autoplay muted playsinline webkit-playsinline preload="auto">
-    <source src="videos/intro-gate.mp4" type="video/mp4">
-  </video>
+  <source src="videos/intro-gate.mp4" type="video/mp4">
+  <source src="videos/intro–gate.mp4" type="video/mp4">
+</video>
 </section>
 <div id="bgVideoLayer" class="bg-intro" aria-hidden="true" style="position:fixed;inset:0;z-index:0;opacity:0;transition:opacity 1200ms ease;">
   <video id="bgv1" class="bgv" muted playsinline preload="auto"
          style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;" muted playsinline webkit-playsinline preload="auto">
-    <source src="videos/fond-boucle-v2.mp4" type="video/mp4">
-  </video>
+  <source src="videos/fond-boucle-v2.mp4" type="video/mp4">
+  <source src="videos/fond–boucle–v2.mp4" type="video/mp4">
+</video>
   <video id="bgv2" class="bgv" muted playsinline preload="auto"
          style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;" muted playsinline webkit-playsinline preload="auto">
-    <source src="videos/fond-boucle-v2.mp4" type="video/mp4">
-  </video>
+  <source src="videos/fond-boucle-v2.mp4" type="video/mp4">
+  <source src="videos/fond–boucle–v2.mp4" type="video/mp4">
+</video>
 </div>
 <div class="bg-role bg-fallback" aria-hidden="true"></div>
 
 <!-- GATE -->
 <div id="gate">
   <div class="panel">
-    <h1>Vous avez été conviés par Steven…</h1>
+    <h1>Vous avez été conviés par Nat…</h1>
     
     <!-- Inline handler pour éviter tout problème de binding -->
     <button class="btn" type="button" onclick="startIntro()">Lancez-vous</button>
@@ -379,9 +374,7 @@ function startIntro(){
     }
 
     // lancer le texte après 2s
-    setTimeout(function(){
-      document.documentElement.classList.add('intro-text-start');
-    }, 2000);
+}, 2000);
   }catch(e){ console.error(e); alert('Erreur de démarrage'); }
 }
 
@@ -552,7 +545,8 @@ function revealRole(payload){
   }
   if(dot){
     var t; dot.addEventListener('click', showApp);
-    dot.addEventListener('touchstart', function(){ t=setTimeout(showApp,600); }, {passive:true});
+    dot.addEventListener('touchstart', function(){ t=
+}, {passive:true});
     dot.addEventListener('touchend', function(){ clearTimeout(t); }, {passive:true});
   }
   // On load, if already #app, mark visible
@@ -748,7 +742,8 @@ function revealRole(payload){
     }
     secret.addEventListener("click", goToP3);
     let tId;
-    secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3, 500); }, {passive:true});
+    secret.addEventListener("touchstart", ()=>{ tId=
+}, {passive:true});
     secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId);   }, {passive:true});
   }
   if(document.readyState === "loading"){
@@ -813,7 +808,8 @@ function revealRole(payload){
 
   secret.addEventListener("click", goToP3Strong);
   let tId;
-  secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
+  secret.addEventListener("touchstart", ()=>{ tId=
+}, {passive:true});
   secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
 })();
 </script>
@@ -896,7 +892,8 @@ function revealRole(payload){
 
   secret.addEventListener("click", goToP3Strong);
   let tId;
-  secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
+  secret.addEventListener("touchstart", ()=>{ tId=
+}, {passive:true});
   secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
 })();
 </script>
@@ -923,8 +920,7 @@ if ('serviceWorker' in navigator) {
     last.addEventListener('animationend', showCTA, { once: true });
   } else {
     // Fallback: if not found, reveal after 35s
-    setTimeout(showCTA, 35000);
-  }
+}
 })();
 </script>
 
@@ -998,11 +994,10 @@ if ('serviceWorker' in navigator) {
           if (window.__bgVideoStart) window.__bgVideoStart();
 // Safe gate for bg readiness
 (function(){var bgv1=document.getElementById('bgv1');var started=false;function ok(){if(started)return; if(bgv1&&bgv1.readyState>=2){started=true;startParagraphs();}}
-if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',ok);}setTimeout(function(){if(!started){started=true;startParagraphs();}},1800);})();
+if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',ok);}
+{started=true;startParagraphs();}},1800);})();
           // Ensure text animation starts even if timing differs
-          setTimeout(function(){
-            document.documentElement.classList.add('intro-text-start');
-          }, 300);
+}, 300);
         };
       } else {
         // No video? fallback: start bg loop immediately
@@ -1010,7 +1005,8 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
         if (window.__bgVideoStart) window.__bgVideoStart();
 // Safe gate for bg readiness
 (function(){var bgv1=document.getElementById('bgv1');var started=false;function ok(){if(started)return; if(bgv1&&bgv1.readyState>=2){started=true;startParagraphs();}}
-if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',ok);}setTimeout(function(){if(!started){started=true;startParagraphs();}},1800);})();
+if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',ok);}
+{started=true;startParagraphs();}},1800);})();
       }
     }catch(e){ console.error(e); }
   };
@@ -1070,9 +1066,9 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   var gateVideo = document.getElementById('gateVideo');
   if (gateVideo){
     gateVideo.addEventListener('loadeddata', function(){ if (interacted) forcePlay(gateVideo); }, {once:true});
-    setTimeout(function(){ forcePlay(gateVideo); }, 300);
-    setTimeout(function(){ forcePlay(gateVideo); }, 1000);
-    setTimeout(function(){ forcePlay(gateVideo); }, 2000);
+}, 300);
+}, 1000);
+}, 2000);
   }
 
   // 2) Sur le bouton "Lancez-vous" (ton code existant déclenche startIntro) → on force la vidéo
@@ -1173,9 +1169,8 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     }catch(e){}
   }
   // Attempt a couple retries early
-  setTimeout(unlock, 500);
-  setTimeout(unlock, 1200);
-  document.addEventListener('click', unlock, {once:true});
+
+document.addEventListener('click', unlock, {once:true});
   document.addEventListener('touchend', unlock, {once:true, passive:true});
 })();
 </script>
@@ -1251,14 +1246,16 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     obs.observe(rules, {attributes:true, attributeFilter:['style','class']});
     // Si ta navigation utilise #app, déclenche à l'arrivée
     window.addEventListener('hashchange', ()=>{
-      if(location.hash==="#app"){ setTimeout(()=>{ if(visible(rules)) startRole(); }, 150); }
+      if(location.hash==="#app"){
+}, 150); }
     });
     // Safety : premier geste utilisateur
     ['click','touchend','keydown'].forEach(ev=>{
       document.addEventListener(ev, ()=>{ if(visible(rules)) startRole(); }, {passive:true});
     });
     // Si on est déjà sur #app au chargement
-    if(location.hash==="#app"){ setTimeout(()=>{ if(visible(rules)) startRole(); }, 300); }
+    if(location.hash==="#app"){
+}, 300); }
   }
   if(document.readyState!=='loading') bind();
   else document.addEventListener('DOMContentLoaded', bind);
@@ -1270,6 +1267,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 <!-- Audio de la boucle (séparé de la vidéo) -->
 <audio id="bgAudio" preload="auto">
   <source src="audio/fond-boucle-v2.mp3" type="audio/mpeg">
+  <source src="audio/fond–boucle–v2.mp3" type="audio/mpeg">
 </audio>
 
 
@@ -1284,85 +1282,71 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 
 
 
-<script id="preload-sound-fix-js">
+
+
+
+<script>
+// Contrôleur minimal — propre, sans patchs ni délais
 (function(){
-  var intro   = document.getElementById('gateVideo');
-  var bgv     = document.getElementById('bgv1') || document.getElementById('bgv2');
-  var bga     = document.getElementById('bgAudio');
-  var cta     = document.getElementById('ctaOverlay');
-  var ctaBtn  = cta ? cta.querySelector('.btn') : null;
-  var enterUI = document.getElementById('enterGameOverlay');
-  var enterBtn= document.getElementById('enterGameBtn');
-  var SHOW_AT = 88;
-  var started = false, enterShown = false;
+  const intro  = document.getElementById('gateVideo');        // intro.mp4 (muette)
+  const bgv    = document.getElementById('bgv1') || document.getElementById('bgv2'); // fond-boucle-v2.mp4
+  const bga    = document.getElementById('bgAudio');          // piste audio séparée (optionnelle)
+  const ctaBtn = document.querySelector('#ctaOverlay .btn');  // bouton "Lancez-vous"
+  const enter  = document.getElementById('enterGameOverlay'); // overlay "Entrer dans le jeu"
+  const enterBtn = document.getElementById('enterGameBtn');
+  const SHOW_AT = 88; // 1:28
 
-  if (bgv){
-    try {
-      bgv.removeAttribute('autoplay');
-      bgv.loop = false;
-      bgv.muted = true;
-      bgv.preload = 'auto';
-      bgv.setAttribute('playsinline',''); bgv.setAttribute('webkit-playsinline','');
-      bgv.load();
-      var p = bgv.play();
-      if (p && typeof p.then === 'function') p.then(function(){ try{ bgv.pause(); }catch(e){} }).catch(function(){});
-    } catch(e){}
-  }
+  if (!bgv || !ctaBtn) return;
 
-  if (intro){
-    try{
-      intro.muted = true; intro.volume = 0; intro.loop = false; intro.autoplay = true;
-      intro.setAttribute('muted',''); intro.setAttribute('playsinline',''); intro.setAttribute('webkit-playsinline','');
-    }catch(e){}
-  }
+  // Préparation discrète : charger les buffers (sans délai ni play/pause forçé)
+  try {
+    bgv.removeAttribute('autoplay');
+    bgv.removeAttribute('loop');
+    bgv.preload = 'auto';
+    bgv.setAttribute('playsinline',''); bgv.setAttribute('webkit-playsinline','');
+  } catch(e){}
 
-  function startSecond(){
-    if (started) return;
-    started = true;
+  // Clic "Lancez-vous" : démarrer immédiatement (même geste utilisateur)
+  ctaBtn.addEventListener('click', function(e){
+    // Masquer/stopper l'intro sans animation bloquante
+    try { if (intro){ intro.pause(); intro.style.display = 'none'; } } catch(e){}
 
-    try{ if (intro){ intro.pause(); intro.style.display='none'; } }catch(e){}
-    try{ if (cta){ cta.style.opacity=0; cta.style.pointerEvents='none'; } }catch(e){}
-
-    if (!bgv) return;
+    // Lecture A/V dans le même handler (clé pour iOS)
     try{
       bgv.currentTime = 0;
       if (bga){
+        // Vidéo reste muette; le son vient de la piste audio
         bgv.muted = true;
-        try{ bga.currentTime = 0; bga.volume = 0.45; bga.play().catch(function(){}); }catch(e){}
-        try{ bgv.play().catch(function(){}); }catch(e){}
+        bga.currentTime = 0; bga.volume = 0.45;
+        bga.play().catch(()=>{});
       } else {
-        bgv.muted = false;
-        bgv.volume = 0.45;
-        try{ bgv.play().catch(function(){}); }catch(e){}
+        // Son intégré à la vidéo
+        bgv.muted = false; bgv.volume = 0.45;
       }
+      bgv.play().catch(()=>{});
     }catch(e){}
 
-    var onTime = function(){
-      if (enterShown) return;
-      if (bgv.currentTime >= SHOW_AT){
-        enterShown = true;
-        if (enterUI){ enterUI.classList.add('show'); }
+    // Afficher le bouton "Entrer" uniquement à 88s réelles
+    let shown = false;
+    const onTime = () => {
+      if (!shown && bgv.currentTime >= SHOW_AT){
+        shown = true;
+        if (enter) enter.classList.add('show');
         bgv.removeEventListener('timeupdate', onTime);
       }
     };
-    bgv.addEventListener('timeupdate', onTime);
+    bgv.addEventListener('timeupdate', onTime, { passive:true });
 
-    bgv.addEventListener('ended', function(){
-      try{ if (bga) bga.pause(); }catch(e){}
-    }, {once:true});
-  }
+    // Fin propre: si piste audio, on la coupe quand la vidéo termine
+    bgv.addEventListener('ended', () => { try{ if (bga) bga.pause(); }catch(e){} }, { once:true });
+  }, { once:true });
 
-  if (ctaBtn && !ctaBtn.dataset._preloadBound){
-    ctaBtn.dataset._preloadBound = "1";
-    ctaBtn.addEventListener('click', startSecond, { once:true });
-  }
-
-  if (enterBtn && !enterBtn.dataset._nav){
-    enterBtn.dataset._nav = "1";
-    enterBtn.addEventListener('click', function(e){
-      e.preventDefault();
-      try{ if (bga) bga.pause(); if (bgv) bgv.pause(); }catch(err){}
-      var qs = window.location.search || '';
+  // "Entrer dans le jeu" : couper A/V puis naviguer
+  if (enterBtn){
+    enterBtn.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      try{ if (bga) bga.pause(); if (bgv) bgv.pause(); }catch(e){}
+      const qs = window.location.search || '';
       window.location.href = window.location.pathname + qs + '#app';
     });
   }
