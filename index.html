@@ -21,29 +21,19 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 .bg-gate,.bg-intro{
   position:fixed; inset:0;
   background-size:cover; background-position:center;
-  z-index:0; filter:brightness(.7);
-  opacity:1; transition:opacity 1200ms ease; will-change:opacity;
-}
+  z-index:0;opacity:1; transition:opacity 1200ms ease; will-change:opacity;
+ background:none; }
 .bg-gate{ background-image:url('photo1.jpg'); }
-.bg-intro{ background-image:url('chateau.jpg'); opacity:0; }
+.bg-intro{  opacity:0;  background:none; }
 .intro-started .bg-gate{ opacity:0; }
-.intro-started .bg-intro{ opacity:1; }
-.bg-intro::after{
-  content:""; position:absolute; inset:0; pointer-events:none;
-  background:radial-gradient(ellipse at center, rgba(0,0,0,.05) 0%, rgba(0,0,0,.15) 60%, rgba(0,0,0,.25) 100%),
-             linear-gradient(to bottom, rgba(0,0,0,.05), rgba(0,0,0,.15));
-  opacity:.85; transition:opacity 1200ms ease;
-}
-.intro-started .bg-intro::after{ opacity:.6; }
-
-/* 3e fond : écran joueur */
+.intro-started .bg-intro{ opacity:1;  background:none; }
+.intro-started /* 3e fond : écran joueur */
 .bg-role{
   position:fixed; inset:0;
   background:none center/cover no-repeat;
-  z-index:0; display:none; filter:brightness(.7);
-}
+  z-index:0; display:none;}
 .player-focus .bg-role{ display:block; }
-.player-focus .bg-gate, .player-focus .bg-intro{ display:none!important; }
+.player-focus .bg-gate, .player-focus .bg-intro{ display:none!important;  background:none; }
 
 /* UI */
 .btn{padding:12px 18px;border-radius:14px;font-size:clamp(16px,2.6vw,22px);color:#fff;text-decoration:none;cursor:pointer;
@@ -205,26 +195,31 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   #enterGameOverlay{display:none}
   #enterGameOverlay.show{display:flex}
   #bgSoundToggle, #audioUnlock { display:none !important; }
-  .bg-gate, .bg-intro { filter:none !important; }
-  .bg-intro::after, .intro-started .bg-intro::after { opacity:0 !important; }
-</style>
+  .bg-gate, .bg-intro { filter:none !important;  background:none; }
+  .bg-intro::after, .intro-started </style>
 
+<style id="bg-intro-fix">.bg-intro{background:none!important;}</style>
+
+<style id="bg-video-visibility-fix">
+  #bgv1, #bgv2 { position:fixed; inset:0; width:100%; height:100%; display:block; object-fit:cover; z-index:0; background:#000; }
+</style>
 </head>
+
 <body>
 <div id="secretFixed" class="secret-fixed" title="Passer l\'intro"></div>
 <section class="bg-gate" aria-hidden="true" style="position:fixed;inset:0;z-index:0;">
   <video id="gateVideo" muted playsinline preload="auto"
-         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.7)" autoplay muted playsinline webkit-playsinline preload="auto">
+         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" autoplay muted playsinline webkit-playsinline preload="auto">
     <source src="videos/intro-gate.mp4" type="video/mp4">
   </video>
 </section>
 <div id="bgVideoLayer" class="bg-intro" aria-hidden="true" style="position:fixed;inset:0;z-index:0;opacity:0;transition:opacity 1200ms ease;">
   <video id="bgv1" class="bgv" muted playsinline preload="auto"
-         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.9);opacity:1;" muted playsinline webkit-playsinline preload="auto">
+         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;" muted playsinline webkit-playsinline preload="auto">
     <source src="videos/fond-boucle-v2.mp4" type="video/mp4">
   </video>
   <video id="bgv2" class="bgv" muted playsinline preload="auto"
-         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.9);opacity:0;" muted playsinline webkit-playsinline preload="auto">
+         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;" muted playsinline webkit-playsinline preload="auto">
     <source src="videos/fond-boucle-v2.mp4" type="video/mp4">
   </video>
 </div>
@@ -233,7 +228,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- GATE -->
 <div id="gate">
   <div class="panel">
-    <h1>Vous avez été conviés par F31…</h1>
+    <h1>Vous avez été conviés par F319…</h1>
     
     <!-- Inline handler pour éviter tout problème de binding -->
     <button class="btn" type="button" onclick="startIntro()">Lancez-vous</button>
@@ -1195,7 +1190,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 
 <div id="roleVideoLayer" aria-hidden="true" hidden>
   <video id="roleVideo" muted loop playsinline webkit-playsinline preload="auto"
-         style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(.94)">
+         style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;">
     <source src="videos/role-bg.mp4" type="video/mp4">
   </video>
 </div>
@@ -1352,5 +1347,103 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 })();
 </script>
 
+
+<audio id="bgAudio" preload="auto">
+  <source src="audio/fond-boucle-v2.mp3" type="audio/mpeg">
+</audio>
+
+<script id="start-intro-fn">
+(function(){
+  function norm(t){ return (t||"").replace(/\s+/g,' ').trim().toLowerCase(); }
+  window.startIntro = startExperience;
+
+  var launchers = Array.prototype.slice.call(document.querySelectorAll('button, a, [role="button"]'))
+    .filter(function(el){ return norm(el.textContent).includes('lancez-vous'); });
+
+  launchers.forEach(function(el){
+    if (el.dataset._lvBound) return;
+    el.dataset._lvBound = "1";
+    el.addEventListener('click', function(ev){
+      ev.preventDefault();
+      startExperience(ev.currentTarget);
+    }, { once:true });
+  });
+
+  function startExperience(clickedEl){
+    try{
+      if (clickedEl){
+        var node = clickedEl;
+        for (var i=0;i<5 && node && node!==document.body;i++){
+          if (node.id && /cta|gate/i.test(node.id)) { node.style.display='none'; break; }
+          if (node.className && /cta|gate|overlay/i.test(node.className.toString())) { node.style.display='none'; break; }
+          node = node.parentElement;
+        }
+      }
+      var cta = document.getElementById('ctaOverlay');
+      if (cta){ cta.style.display='none'; cta.style.opacity='0'; cta.style.pointerEvents='none'; }
+    }catch(e){}
+
+    try{
+      var intro = document.getElementById('gateVideo');
+      if (intro){ intro.pause(); intro.currentTime=0; intro.style.display='none'; }
+      var bgLayer = document.getElementById('bgVideoLayer');
+      if (bgLayer){ bgLayer.style.opacity='1'; bgLayer.style.display='block'; bgLayer.removeAttribute('aria-hidden'); }
+    }catch(e){}
+
+    try{
+      var bgv = document.getElementById('bgv1') || document.getElementById('bgv2');
+      if (!bgv){
+        var vids = document.querySelectorAll('video');
+        for (var k=0;k<vids.length;k++){
+          var v=vids[k], srcs=v.querySelectorAll('source');
+          for (var s=0;s<srcs.length;s++){ if (/fond.?boucle.?v2\.mp4/i.test(srcs[s].src)) { bgv=v; break; } }
+          if (bgv) break;
+        }
+      }
+      if (bgv){
+        bgv.removeAttribute('autoplay'); bgv.removeAttribute('loop');
+        bgv.preload='auto'; bgv.setAttribute('playsinline',''); bgv.setAttribute('webkit-playsinline','');
+        bgv.style.position='fixed'; bgv.style.inset='0'; bgv.style.width='100%'; bgv.style.height='100%'; bgv.style.objectFit='cover'; bgv.style.display='block';
+        bgv.currentTime=0; bgv.muted=true;
+        var vp = bgv.play(); if (vp && vp.catch) vp.catch(function(){});
+      }
+      var bga = document.getElementById('bgAudio');
+      if (bga){
+        bga.muted=false; bga.volume=0.5; bga.currentTime=0;
+        var ap = bga.play(); if (ap && ap.catch) ap.catch(function(){});
+      }
+    }catch(e){}
+
+    try{
+      var enterUI = document.getElementById('enterGameOverlay');
+      var enterBtn= document.getElementById('enterGameBtn');
+      var bgv2 = document.getElementById('bgv1') || document.getElementById('bgv2');
+      var SH=88, shown=false;
+      if (bgv2){
+        var onTime = function(){
+          if (!shown && bgv2.currentTime >= SH){
+            shown = true;
+            if (enterUI){ enterUI.style.display='flex'; }
+            bgv2.removeEventListener('timeupdate', onTime);
+          }
+        };
+        bgv2.addEventListener('timeupdate', onTime, { passive:true });
+      }
+      if (enterBtn && !enterBtn.dataset._onlyHide){
+        enterBtn.dataset._onlyHide="1";
+        enterBtn.addEventListener('click', function(e){
+          try{
+            if (enterUI){ enterUI.style.display='none'; enterUI.style.opacity='0'; enterUI.style.pointerEvents='none'; }
+            var v = document.getElementById('bgv1') || document.getElementById('bgv2'); if (v) v.pause();
+            var a = document.getElementById('bgAudio'); if (a) a.pause();
+          }catch(err){}
+        });
+      }
+    }catch(e){}
+  }
+})();
+</script>
+
 </body>
+
 </html>
