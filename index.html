@@ -1174,7 +1174,6 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   /* S’assure que la section règles est au-dessus */
   #rulesScreen, #welcomeSection{ position:relative; z-index:10; }
 </style>
-
 <script>
 (function(){
   function forcePlay(v){
@@ -1537,6 +1536,38 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   function run(){ dedupe(); }
   if(document.readyState!=='loading') run(); else document.addEventListener('DOMContentLoaded', run);
   setTimeout(run,300); setTimeout(run,1500);
+})();
+</script><script id="fix-clean-page3-strong">
+(function(){
+  function removeExtraInWelcome(){
+    var ws = document.getElementById('welcomeSection');
+    if(!ws) return;
+    Array.prototype.slice.call(ws.children).forEach(function(ch){
+      if(ch.matches && (ch.matches('.top-video') || ch.matches('#p3-steps'))) return;
+      // keep innocuous whitespace/text nodes are not in children list
+      if(ch.tagName && ch.tagName !== 'SCRIPT' && ch.tagName !== 'STYLE'){
+        try{ ch.parentNode.removeChild(ch); }catch(e){}
+      }
+    });
+  }
+  function removeForeignFixed(){
+    var ws = document.getElementById('welcomeSection');
+    var rect = ws ? ws.getBoundingClientRect() : null;
+    var inView = rect ? (rect.top < window.innerHeight*0.6 && rect.bottom > window.innerHeight*0.4) : true;
+    if(!inView) return;
+    Array.prototype.slice.call(document.querySelectorAll('body *')).forEach(function(el){
+      if(ws && ws.contains(el)) return;
+      try{
+        var s = getComputedStyle(el);
+        if(s.position === 'fixed'){ el.style.display = 'none'; }
+      }catch(e){}
+    });
+  }
+  function run(){ removeExtraInWelcome(); removeForeignFixed(); }
+  if(document.readyState!=='loading') run(); else document.addEventListener('DOMContentLoaded', run);
+  setTimeout(run, 200); setTimeout(run, 800); setTimeout(run, 2000);
+  window.addEventListener('scroll', function(){ removeForeignFixed(); }, {passive:true});
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) run(); });
 })();
 </script></body>
 </html>
