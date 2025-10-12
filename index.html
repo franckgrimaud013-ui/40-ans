@@ -233,7 +233,15 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     .top-video{padding-top:6px}
   }
 </style>
-<meta content="no-cache, no-store, must-revalidate" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="12" name="version"/></head>
+<meta content="no-cache, no-store, must-revalidate" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="13" name="version"/><style id="p3-anti-bg-css">
+    /* Neutralise tout overlay/vidéo de fond global */
+    body, html { background:#000 !important; }
+    body::before, body::after, html::before, html::after { content:none !important; display:none !important; }
+    .bg, .bg *,
+    .background, .background *,
+    .video-bg, .video-bg *,
+    .hero, .hero * { background:none !important; }
+    </style></head>
 <body>
 <div class="secret-fixed" id="secretFixed" title="Passer l\'intro"></div>
 <section aria-hidden="true" class="bg-gate" style="position:fixed;inset:0;z-index:0;">
@@ -272,7 +280,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <div class="top-video" style="max-width:1100px;margin:0 auto;padding-top:10px;">
 <div class="video-frame" style="position:relative;width:100%;aspect-ratio:16/9;background:#000;">
 <video autoplay="" class="p3-topvid" loop="" muted="" playsinline="" preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;background:#000;">
-<source src="videos/role-bg.mp4?v=12" type="video/mp4"/>
+<source src="videos/role-bg.mp4?v=13" type="video/mp4"/>
 </video>
 </div>
 </div>
@@ -1180,7 +1188,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 </style>
 <div aria-hidden="true" hidden="" id="roleVideoLayer">
 <video id="roleVideo" loop="" muted="" playsinline="" preload="auto" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" webkit-playsinline="">
-<source src="videos/role-bg.mp4?v=12" type="video/mp4"/>
+<source src="videos/role-bg.mp4?v=13" type="video/mp4"/>
 </video>
 </div>
 <script>
@@ -1518,5 +1526,39 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   else document.addEventListener('DOMContentLoaded', removeBg);
 })();
 </script>
-</body>
+<script id="p3-robust-cleanup">
+    (function(){
+      function norm(s){return (s||'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();}
+      function isDiscover(el){ return /decouvre ton role/.test(norm(el.textContent||'')); }
+      function removeForeignVideos(){
+        var container = document.querySelector('#welcomeSection .top-video');
+        document.querySelectorAll('video').forEach(function(v){
+          if(!container || !container.contains(v)){ try{ v.remove(); }catch(e){} }
+        });
+        // containers typiques
+        document.querySelectorAll('.bg, .background, .video-bg, #bgVideo').forEach(function(n){ try{ n.remove(); }catch(e){} });
+      }
+      function dedupePanels(){
+        var keeper = document.querySelector('#p3-steps');
+        if(!keeper) return;
+        var nodes = Array.prototype.slice.call(document.querySelectorAll('a,button')).filter(isDiscover);
+        if(nodes.length<=1) return;
+        nodes.forEach(function(btn){
+          var p = btn;
+          for(var i=0;i<10 && p;i++){
+            if(/^(SECTION|DIV)$/i.test(p.tagName)) break;
+            p = p.parentElement;
+          }
+          if(p && !keeper.contains(p)){ try{ p.remove(); }catch(e){} }
+        });
+      }
+      function run(){ removeForeignVideos(); dedupePanels(); }
+      if(document.readyState!=='loading') run();
+      else document.addEventListener('DOMContentLoaded', run);
+      // relances retardées (iOS/wkwebview)
+      setTimeout(run, 300); setTimeout(run, 1200); setTimeout(run, 3000);
+      window.addEventListener('pageshow', run);
+      document.addEventListener('visibilitychange', function(){ if(!document.hidden) run(); });
+    })();
+    </script></body>
 </html>
