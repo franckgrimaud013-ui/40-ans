@@ -229,22 +229,34 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     .top-video{padding-top:6px}
   }
 </style>
-<meta content="24" name="version"/><style id="p3-cover-css">
-/* Page 3 doit couvrir l'écran et rester seule visible quand on y est */
-#welcomeSection{position:relative;min-height:100vh;background:#000;padding:0 16px 24px;z-index:10}
-</style><style id="kill-bigbg-css">
-/* Supprime les vidéos plein écran parasites, mais GARDE celles de la page 2 et la petite de la page 3 */
-#roleVideoLayer, #bgVideo, .video-bg, .background, video.bg {
-  display:none !important; visibility:hidden !important; opacity:0 !important; pointer-events:none !important;
+<meta content="24.1" name="version"/><style id="neutralize-fullscreen-bg">
+/* Neutralise tout style "plein écran derrière" sans supprimer les vidéos */
+#roleVideoLayer, #roleVideoLayer video,
+#bgVideo, #bgVideo video,
+video.bg, .video-bg, .background {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  top: auto !important; left: auto !important; right: auto !important; bottom: auto !important;
+  inset: auto !important;
+  transform: none !important;
+  z-index: auto !important;
+  object-fit: contain !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  background: none !important;
+  opacity: 1 !important;              /* on ne masque pas la vidéo, on enlève juste le mode plein écran */
+  pointer-events: auto !important;
 }
-/* Exceptions explicites */
-#page2 video, #page2 .video, #page2 .intro-video { 
-  display:block !important; visibility:visible !important; opacity:1 !important; pointer-events:auto !important; 
+/* Sur la page 3 (#welcomeSection), on ne veut voir que sa propre petite vidéo en haut.
+   On cache donc SPECIFIQUEMENT le calque #roleVideoLayer s'il existe encore. */
+#welcomeSection ~ #roleVideoLayer,
+#welcomeSection #roleVideoLayer {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
-.top-video video, .p3-topvid { display:block !important; visibility:visible !important; opacity:1 !important; pointer-events:auto !important; }
-</style><style id="hide-block-css">
-/* utilitaire pour masquer complètement une section */
-.hidden-soft { display:none !important; visibility:hidden !important; opacity:0 !important; pointer-events:none !important; }
 </style></head>
 <body>
 <div class="secret-fixed" id="secretFixed" title="Passer l\'intro"></div>
@@ -311,12 +323,12 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <li>Pas de prise de tête : les écrans clés s’affichent au bon moment.</li>
 <li>On garde la bonne entente : fun et fair-play.</li>
 </ul>
-<div class="p3-actions"><button class="btn" id="p3-b1" type="button">Précédent</button><button class="btn" id="p3-n2" type="button">Suivant</button></div>
+<div class="p3-actions"><button class="btn" id="p3-n2" type="button">Suivant</button></div>
 </section>
 <section class="step" id="p3-s3">
 <h3 class="p3-title" id="p3-playerLine">Es-tu prêt ? Quand tu es seul, découvre ta carte.</h3>
 <p class="p3-note">Petit secret : c’est bien Franck qui a eu l’idée de ce jeu 😉… rassurez-vous, il ne connaît pas vos rôles.</p>
-<div class="p3-actions"><button class="btn" id="p3-b2" type="button">Précédent</button><a class="btn" href="#" id="p3-revealLink">Découvre ton rôle</a></div>
+<div class="p3-actions"><a class="btn" href="#" id="p3-revealLink">Découvre ton rôle</a></div>
 </section>
 </div>
 </div>
@@ -1541,132 +1553,6 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       startMusic();
     }, {once:true});
   }
-})();
-</script><script id="p3-stepper-prevnext">
-(function(){
-  function qs(s,c){return (c||document).querySelector(s);}
-  var s1=qs('#p3-s1'), s2=qs('#p3-s2'), s3=qs('#p3-s3');
-  var steps=[s1,s2,s3].filter(Boolean);
-  if(!steps.length) return;
-
-  function show(i){
-    steps.forEach(function(el,idx){ if(el){ el.classList.toggle('active', idx===i); } });
-    try{ steps[i].scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
-  }
-  var n1=qs('#p3-n1'), n2=qs('#p3-n2'), b1=qs('#p3-b1'), b2=qs('#p3-b2');
-  if(n1) n1.addEventListener('click', function(){ show(1); });
-  if(n2) n2.addEventListener('click', function(){ show(2); });
-  if(b1) b1.addEventListener('click', function(){ show(0); });
-  if(b2) b2.addEventListener('click', function(){ show(1); });
-})();
-</script><script id="p3-sibling-clean">
-(function(){
-  function isCardish(el){
-    if(!el || !el.classList) return false;
-    var c = el.className+'';
-    return /card|panel|grid|box|displayplayercard/i.test(c);
-  }
-  function area(el){ try{ var r=el.getBoundingClientRect(); return r.width*r.height; }catch(e){ return 0; } }
-  function removeAround(){
-    var ws = document.getElementById('welcomeSection');
-    if(!ws) return;
-    // Remove immediate sibling blocks that look like old cards
-    var prev = ws.previousElementSibling, next = ws.nextElementSibling;
-    [prev, next].forEach(function(el){
-      if(el && isCardish(el) && area(el) > 10000){
-        try{ el.remove(); }catch(e){}
-      }
-    });
-    // Also scan BODY for big fixed/absolute card-like elements not inside ws
-    Array.prototype.slice.call(document.querySelectorAll('body > *')).forEach(function(el){
-      if(ws.contains(el)) return;
-      if(isCardish(el) && area(el) > 15000){
-        try{ el.remove(); }catch(e){}
-      }
-    });
-  }
-  function onVisible(){
-    removeAround();
-  }
-  // Run once now and again shortly (iOS late paints)
-  if(document.readyState!=='loading') onVisible();
-  else document.addEventListener('DOMContentLoaded', onVisible);
-  setTimeout(onVisible, 250); setTimeout(onVisible, 1200); setTimeout(onVisible, 3000);
-})();
-</script><script id="kill-bigbg-js">
-(function(){
-  function area(el){ try{ var r=el.getBoundingClientRect(); return r.width*r.height; }catch(e){ return 0; } }
-  function isTopVideo(v){
-    if(!v) return false;
-    if(v.classList && v.classList.contains('p3-topvid')) return true;
-    // inside .top-video container (page 3)
-    var p=v; for(var i=0;i<5 && p;i++){ if(p.classList && p.classList.contains('top-video')) return true; p=p.parentElement; }
-    return false;
-  }
-  function isPage2Video(v){
-    var p=v; for(var i=0;i<6 && p;i++){ if(p.id==='page2') return true; p=p.parentElement; }
-    return false;
-  }
-  function kill(){
-    document.querySelectorAll('#roleVideoLayer,#bgVideo,video.bg,.video-bg,.background').forEach(function(el){
-      if(el.tagName==='VIDEO'){
-        if(isTopVideo(el) || isPage2Video(el)) return;
-      }
-      try{ el.remove(); }catch(e){}
-    });
-    // Sécurité: toute <video> fixe/absolue géante en arrière-plan, sauf celles de #page2 et la top-video p3
-    Array.prototype.slice.call(document.querySelectorAll('video')).forEach(function(v){
-      if(!v || isTopVideo(v) || isPage2Video(v)) return;
-      try{
-        var s=getComputedStyle(v);
-        if((s.position==='fixed'||s.position==='absolute') && area(v) > 120000 && parseInt(s.zIndex||'0',10) < 1000){
-          v.remove();
-        }
-      }catch(e){}
-    });
-  }
-  if(document.readyState!=='loading') kill(); else document.addEventListener('DOMContentLoaded', kill);
-  setTimeout(kill, 200); setTimeout(kill, 1200); setTimeout(kill, 4000);
-})();
-</script><script id="hide-page1-once-js">
-(function(){
-  var KEY='hidePage1Once';
-  function hidePage1(){
-    var p1=document.getElementById('page1');
-    if(p1){ p1.classList.add('hidden-soft'); }
-    // par sécurité : masquer tout doublon éventuel du bloc intro en overlay
-    setTimeout(function(){
-      document.querySelectorAll('[data-intro], .intro, .gate, [class*="intro"]').forEach(function(el){
-        try{ el.style.display='none'; }catch(e){}
-      });
-    },300);
-  }
-  // Si déjà cliqué avant dans cette session, on masque directement
-  try{ if(sessionStorage.getItem(KEY)==='1') hidePage1(); }catch(e){}
-
-  var btn=document.getElementById('goPage2');
-  if(btn){
-    btn.addEventListener('click', function(){
-      try{ sessionStorage.setItem(KEY,'1'); }catch(e){}
-      hidePage1();
-    });
-  }
-})(); 
-</script><script id="ensure-page2-visible">
-(function(){
-  function ensure(){
-    var p2 = document.getElementById('page2');
-    if(p2){
-      p2.style.removeProperty('display');
-      p2.hidden = false;
-      // Show any button "Entrer dans le jeu"
-      var btn = document.getElementById('enterGame') || Array.prototype.slice.call(p2.querySelectorAll('button,a')).find(function(b){
-        return /entrer dans le jeu/i.test((b.textContent||''));
-      });
-      if(btn){ btn.style.display = 'inline-flex'; btn.hidden = false; }
-    }
-  }
-  if(document.readyState!=='loading') ensure(); else document.addEventListener('DOMContentLoaded', ensure);
 })();
 </script></body>
 </html>
