@@ -229,7 +229,10 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     .top-video{padding-top:6px}
   }
 </style>
-<meta content="24" name="version"/></head>
+<meta content="24" name="version"/><style id="p3-cover-css">
+/* Page 3 doit couvrir l'écran et rester seule visible quand on y est */
+#welcomeSection{position:relative;min-height:100vh;background:#000;padding:0 16px 24px;z-index:10}
+</style></head>
 <body>
 <div class="secret-fixed" id="secretFixed" title="Passer l\'intro"></div>
 <section aria-hidden="true" class="bg-gate" style="position:fixed;inset:0;z-index:0;">
@@ -272,7 +275,38 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 </video>
 </div>
 </div>
-
+<div class="bottom-steps" style="max-width:980px;margin:14px auto 0;">
+<div id="p3-steps">
+<section class="step active" id="p3-s1">
+<h3 class="p3-title">Le planning</h3>
+<ul class="p3-list">
+<li>Vendredi soir : conseil et vote d’élimination.</li>
+<li>Nuit ven → sam : les Traîtres choisissent discrètement une victime via leur lien.</li>
+<li>Samedi matin : annonce au groupe du résultat de la nuit.</li>
+<li>Samedi midi : nouveau conseil et vote.</li>
+<li>Samedi soir : conseil et vote.</li>
+<li>Nuit sam → dim : les Traîtres éliminent à nouveau via leur lien.</li>
+<li>Dimanche matin : annonce au groupe de la victime de la nuit.</li>
+</ul>
+<div class="p3-actions"><button class="btn" id="p3-n1" type="button">Suivant</button></div>
+</section>
+<section class="step" id="p3-s2">
+<h3 class="p3-title">Esprit et règles</h3>
+<ul class="p3-list">
+<li>Les Traîtres jouent en secret via un lien privé.</li>
+<li>Les Loyaux observent, discutent et votent avec stratégie.</li>
+<li>Pas de prise de tête : les écrans clés s’affichent au bon moment.</li>
+<li>On garde la bonne entente : fun et fair-play.</li>
+</ul>
+<div class="p3-actions"><button class="btn" id="p3-b1" type="button">Précédent</button><button class="btn" id="p3-n2" type="button">Suivant</button></div>
+</section>
+<section class="step" id="p3-s3">
+<h3 class="p3-title" id="p3-playerLine">Es-tu prêt ? Quand tu es seul, découvre ta carte.</h3>
+<p class="p3-note">Petit secret : c’est bien Franck qui a eu l’idée de ce jeu 😉… rassurez-vous, il ne connaît pas vos rôles.</p>
+<div class="p3-actions"><button class="btn" id="p3-b2" type="button">Précédent</button><a class="btn" href="#" id="p3-revealLink">Découvre ton rôle</a></div>
+</section>
+</div>
+</div>
 </section>
 <div class="grid">
 <!-- Organisateur -->
@@ -1143,7 +1177,11 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   /* S’assure que la section règles est au-dessus */
   #rulesScreen, #welcomeSection{ position:relative; z-index:10; }
 </style>
-
+<div aria-hidden="true" hidden="" id="roleVideoLayer">
+<video id="roleVideo" loop="" muted="" playsinline="" preload="auto" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" webkit-playsinline="">
+<source src="videos/role-bg.mp4?v=24" type="video/mp4"/>
+</video>
+</div>
 <script>
 (function(){
   function forcePlay(v){
@@ -1491,26 +1529,56 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     }, {once:true});
   }
 })();
-</script><script id="p3-fullclean">
+</script><script id="p3-stepper-prevnext">
 (function(){
-  function fullClean(){
-    var ws=document.getElementById('welcomeSection'); if(!ws) return;
-    // Delete any leftover legacy panels/cards/grids inside Page 3
-    ws.querySelectorAll('.card,.cards,.panel,.panel-group,.grid,.box,[class*="card"],[class*="panel"],[class*="grid"]').forEach(function(el){
-      try{ el.remove(); }catch(e){}
+  function qs(s,c){return (c||document).querySelector(s);}
+  var s1=qs('#p3-s1'), s2=qs('#p3-s2'), s3=qs('#p3-s3');
+  var steps=[s1,s2,s3].filter(Boolean);
+  if(!steps.length) return;
+
+  function show(i){
+    steps.forEach(function(el,idx){ if(el){ el.classList.toggle('active', idx===i); } });
+    try{ steps[i].scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
+  }
+  var n1=qs('#p3-n1'), n2=qs('#p3-n2'), b1=qs('#p3-b1'), b2=qs('#p3-b2');
+  if(n1) n1.addEventListener('click', function(){ show(1); });
+  if(n2) n2.addEventListener('click', function(){ show(2); });
+  if(b1) b1.addEventListener('click', function(){ show(0); });
+  if(b2) b2.addEventListener('click', function(){ show(1); });
+})();
+</script><script id="p3-sibling-clean">
+(function(){
+  function isCardish(el){
+    if(!el || !el.classList) return false;
+    var c = el.className+'';
+    return /card|panel|grid|box|displayplayercard/i.test(c);
+  }
+  function area(el){ try{ var r=el.getBoundingClientRect(); return r.width*r.height; }catch(e){ return 0; } }
+  function removeAround(){
+    var ws = document.getElementById('welcomeSection');
+    if(!ws) return;
+    // Remove immediate sibling blocks that look like old cards
+    var prev = ws.previousElementSibling, next = ws.nextElementSibling;
+    [prev, next].forEach(function(el){
+      if(el && isCardish(el) && area(el) > 10000){
+        try{ el.remove(); }catch(e){}
+      }
     });
-    // Keep only top-video and #p3-steps as children of welcomeSection
-    Array.prototype.slice.call(ws.children).forEach(function(el){
-      if(!(el.matches && (el.matches('.top-video') || el.matches('#p3-steps')))){
+    // Also scan BODY for big fixed/absolute card-like elements not inside ws
+    Array.prototype.slice.call(document.querySelectorAll('body > *')).forEach(function(el){
+      if(ws.contains(el)) return;
+      if(isCardish(el) && area(el) > 15000){
         try{ el.remove(); }catch(e){}
       }
     });
   }
-  if(document.readyState!=='loading') fullClean();
-  else document.addEventListener('DOMContentLoaded', fullClean);
-  setTimeout(fullClean, 300);
-  setTimeout(fullClean, 1200);
-  setTimeout(fullClean, 3000);
+  function onVisible(){
+    removeAround();
+  }
+  // Run once now and again shortly (iOS late paints)
+  if(document.readyState!=='loading') onVisible();
+  else document.addEventListener('DOMContentLoaded', onVisible);
+  setTimeout(onVisible, 250); setTimeout(onVisible, 1200); setTimeout(onVisible, 3000);
 })();
 </script></body>
 </html>
