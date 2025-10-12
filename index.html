@@ -221,7 +221,6 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   /* Sécurité : si une vidéo de fond globale est encore injectée, on la masque */
   .bg video, #bgVideo, video.bg, .background video, .video-bg video { display:none !important; }
 </style>
-
 <style id="p3-simple-css">
   .layout-simple{background:#000;}
   #p3-steps .step{display:none;opacity:0;transform:translateY(8px);transition:opacity .35s ease, transform .35s ease;}
@@ -234,7 +233,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     .top-video{padding-top:6px}
   }
 </style>
-</head>
+<meta content="no-cache, no-store, must-revalidate" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/></head>
 <body>
 <div class="secret-fixed" id="secretFixed" title="Passer l\'intro"></div>
 <section aria-hidden="true" class="bg-gate" style="position:fixed;inset:0;z-index:0;">
@@ -1429,7 +1428,6 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 <script id="p3-stepper-js">
 (function(){
   function qs(s,c){return (c||document).querySelector(s);}
-  function qsa(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s));}
   function getToken(){ try{ var p=new URLSearchParams(location.search||''); return p.get('t'); }catch(e){ return null; } }
   function decodeName(t){ try{ return JSON.parse(decodeURIComponent(atob(t))).name||null; }catch(e){ return null; } }
 
@@ -1437,11 +1435,13 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     var s1=qs('#p3-s1'),s2=qs('#p3-s2'),s3=qs('#p3-s3');
     var steps=[s1,s2,s3];
     function show(i){
-    try{ steps.forEach(function(el){ if(el) el.style.removeProperty('display'); }); }catch(e){}
- steps.forEach(function(el,j){ if(el){ el.classList.toggle('active', j===i); } }); try{ steps[i].scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){} }
+      try{ steps.forEach(function(el){ if(el) el.style.removeProperty('display'); }); }catch(e){}
+      steps.forEach(function(el,j){ if(el){ el.classList.toggle('active', j===i); } });
+      try{ steps[i].scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
+    }
     var b1=qs('#p3-n1'), b2=qs('#p3-n2');
-    if(b1 && !b1._b){ b1._b=true; b1.addEventListener('click', function(){ show(1); }); }
-    if(b2 && !b2._b){ b2._b=true; b2.addEventListener('click', function(){ show(2); }); }
+    if(b1) b1.addEventListener('click', function(){ show(1); });
+    if(b2) b2.addEventListener('click', function(){ show(2); });
 
     var t = getToken();
     var name = t ? decodeName(t) : null;
@@ -1449,27 +1449,24 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     if(name && line){ line.textContent = name + ', es-tu prêt ? Quand tu es seul, découvre ta carte.'; }
 
     var link = qs('#p3-revealLink');
-    if(link && !link._b){
-      link._b = true;
+    if(link){
       link.addEventListener('click', function(ev){
         ev.preventDefault();
         try{
-          // Si le site connaît déjà PAYLOAD + revealRole, on l'utilise directement
           if (window.PAYLOAD && window.PAYLOAD.role && typeof window.revealRole === 'function'){
             window.revealRole(window.PAYLOAD);
             return;
           }
         }catch(e){}
-        // Sinon, on navigue vers #app pour déclencher la logique existante
-        var base = 'index.html';
-        try{ base = location.pathname.split('/').pop() || 'index.html'; }catch(e){}
+        var base;
+        try{ base = location.pathname.split('/').pop() || 'index.html'; }catch(e){ base = 'index.html'; }
         var sep = base.includes('?') ? '&' : '?';
         var url = t ? (base + sep + 't=' + encodeURIComponent(t) + '#app') : (base + '#app');
         location.href = url;
       });
     }
   }
-  if(document.readyState !== 'loading') init();
+  if(document.readyState!=='loading') init();
   else document.addEventListener('DOMContentLoaded', init);
 })();
 </script>
@@ -1525,4 +1522,3 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 </script>
 </body>
 </html>
-
