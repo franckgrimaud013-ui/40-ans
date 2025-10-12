@@ -232,6 +232,14 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <meta content="24" name="version"/><style id="p3-cover-css">
 /* Page 3 doit couvrir l'écran et rester seule visible quand on y est */
 #welcomeSection{position:relative;min-height:100vh;background:#000;padding:0 16px 24px;z-index:10}
+</style><style id="kill-bigbg-css">
+/* Supprime toute vidéo plein écran de fond si elle est réinjectée */
+#roleVideoLayer, #bgVideo, .video-bg, .background, video.bg { 
+  display:none !important; visibility:hidden !important; opacity:0 !important; pointer-events:none !important;
+}
+</style><style id="hide-block-css">
+/* utilitaire pour masquer complètement une section */
+.hidden-soft { display:none !important; visibility:hidden !important; opacity:0 !important; pointer-events:none !important; }
 </style></head>
 <body>
 <div class="secret-fixed" id="secretFixed" title="Passer l\'intro"></div>
@@ -1580,6 +1588,52 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   else document.addEventListener('DOMContentLoaded', onVisible);
   setTimeout(onVisible, 250); setTimeout(onVisible, 1200); setTimeout(onVisible, 3000);
 })();
+</script><script id="kill-bigbg-js">
+(function(){
+  function area(el){ try{ var r=el.getBoundingClientRect(); return r.width*r.height; }catch(e){ return 0; } }
+  function kill(){
+    // Cibles connues
+    document.querySelectorAll('#roleVideoLayer,#bgVideo,video.bg,.video-bg,.background').forEach(function(el){
+      try{ el.remove(); }catch(e){}
+    });
+    // Sécurité: toute <video> fixe/absolue géante en arrière-plan
+    Array.prototype.slice.call(document.querySelectorAll('video')).forEach(function(v){
+      if(!v) return;
+      try{
+        var s=getComputedStyle(v);
+        if((s.position==='fixed'||s.position==='absolute') && area(v) > 100000 && s.zIndex < 1000){
+          v.remove();
+        }
+      }catch(e){}
+    });
+  }
+  if(document.readyState!=='loading') kill(); else document.addEventListener('DOMContentLoaded', kill);
+  setTimeout(kill, 200); setTimeout(kill, 1200); setTimeout(kill, 4000);
+})();
+</script><script id="hide-page1-once-js">
+(function(){
+  var KEY='hidePage1Once';
+  function hidePage1(){
+    var p1=document.getElementById('page1');
+    if(p1){ p1.classList.add('hidden-soft'); }
+    // par sécurité : masquer tout doublon éventuel du bloc intro en overlay
+    setTimeout(function(){
+      document.querySelectorAll('[data-intro], .intro, .gate, [class*="intro"]').forEach(function(el){
+        try{ el.style.display='none'; }catch(e){}
+      });
+    },300);
+  }
+  // Si déjà cliqué avant dans cette session, on masque directement
+  try{ if(sessionStorage.getItem(KEY)==='1') hidePage1(); }catch(e){}
+
+  var btn=document.getElementById('goPage2');
+  if(btn){
+    btn.addEventListener('click', function(){
+      try{ sessionStorage.setItem(KEY,'1'); }catch(e){}
+      hidePage1();
+    });
+  }
+})(); 
 </script></body>
 </html>
 
