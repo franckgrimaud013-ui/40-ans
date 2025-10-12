@@ -228,7 +228,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- GATE -->
 <div id="gate">
   <div class="panel">
-    <h1>Vous avez été conviés par f25…</h1>
+    <h1>Vous avez été conviés par b256</h1>
     
     <!-- Inline handler pour éviter tout problème de binding -->
     <button class="btn" type="button" onclick="startIntro()">Lancez-vous</button>
@@ -248,10 +248,31 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <div class="app" id="app">
   <!-- Planning & Règles -->
   <section id="welcomeSection" class="welcome-section">
-    <h2 style="text-align:center;color:#ffd98a;margin:0 0 6px">Le déroulé du week-end</h2>
-    
-    <div class="welcome-grid">
-      <div class="wc-card">
+
+  <h2 id="p3Title" style="text-align:center;color:#ffd98a;margin:0 0 6px">Le déroulé du week-end</h2>
+  <style>
+    /* Étapes p3 */
+    #p3Steps .step{opacity:0; transform:translateY(10px); transition:opacity .5s ease, transform .5s ease}
+    #p3Steps .step.show{opacity:1; transform:none}
+    #p3Steps .panel{ background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.10); border-radius:16px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.35); }
+    #p3Steps h3{ margin:0 0 8px; color:#ffd98a; font-size:clamp(20px,4vw,26px) }
+    #p3Steps ul{ margin:6px 0 0 18px }
+    #p3Steps .actions{ display:flex; justify-content:center; margin-top:14px }
+    #p3Steps .btn{ padding:12px 18px; border-radius:14px; cursor:pointer; border:1px solid rgba(212,175,55,.9);
+      background:linear-gradient(180deg, rgba(212,175,55,.25), rgba(212,175,55,.12));
+      color:#fff; font-size:clamp(16px,2.6vw,20px); text-decoration:none; box-shadow:inset 0 0 0 2px rgba(212,175,55,.15), 0 0 22px rgba(212,175,55,.35);
+      transition:transform .15s ease, box-shadow .15s ease;
+    }
+    #p3Steps .bigBtn{ display:inline-block; margin-top:8px; padding:14px 20px; border-radius:16px; font-weight:800; color:#000;
+      background:#ffd87a; text-decoration:none; border:1px solid #ffd87a; box-shadow:0 8px 24px rgba(0,0,0,.35) }
+    #p3Steps .note{ color:#cfd5dc; text-align:center }
+    #p3Steps .roleTitle{ font-size:clamp(22px,4.4vw,28px); margin:0 0 10px; color:#ffd98a; text-align:center; font-weight:700 }
+  </style>
+
+  <div id="p3Steps">
+    <!-- Étape 1 -->
+    <section class="step show" id="p3s1">
+      <div class="panel">
         <h3>🗓️ Le planning</h3>
         <ul>
           <li><b>Vendredi soir</b> : conseil et vote d’élimination.</li>
@@ -262,32 +283,53 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
           <li><b>Nuit sam → dim</b> : les Traîtres éliminent à nouveau via leur lien.</li>
           <li><b>Dimanche matin</b> : annonce au groupe de la victime de la nuit.</li>
         </ul>
+        <div class="actions"><button class="btn" id="p3n1" type="button">Suivant</button></div>
       </div>
-      <div class="wc-card">
+    </section>
+
+    <!-- Étape 2 -->
+    <section class="step" id="p3s2">
+      <div class="panel">
         <h3>🎭 Esprit & règles</h3>
         <ul>
           <li>Les Traîtres jouent <b>en secret</b> via un lien privé (personne ne sait qui ils sont).</li>
           <li>Les Loyaux observent, discutent et votent avec stratégie.</li>
-          <li>Pas de prise de tête : les écrans clés s’affichent au bon moment pour le groupe.</li>
-          <li>On garde la <b>bonne entente</b> : fun & fair-play.</li>
+          <li>Pas de prise de tête : les écrans clés s’affichent au bon moment.</li>
+          <li>On garde la bonne entente : fun & fair-play.</li>
         </ul>
+        <div class="actions"><button class="btn" id="p3n2" type="button">Suivant</button></div>
       </div>
-    </div>
-    <!-- Role panels appear here after click -->
-    <div id="roleInline" class="role-wrap" style="display:none">
-      <div id="roleBlue" class="role-box-blue" style="display:none">
-        <h3>Ton rôle : LOYAL 🛡️</h3>
-        
+    </section>
+
+    <!-- Étape 3 -->
+    <section class="step" id="p3s3">
+      <div class="panel" style="text-align:center">
+        <p class="roleTitle"><span id="p3PlayerName" style="display:none"></span><span id="p3PlayerLine">Es-tu prêt ? Quand tu es seul, découvre ta carte.</span></p>
+        <p class="note">Petit secret : c’est bien Franck qui a eu l’idée de ce jeu 😉… rassurez-vous, il ne connaît pas vos rôles.</p>
+        <a id="gotoReveal" class="bigBtn" href="#app">Découvre ton rôle</a>
       </div>
-      <div id="roleRed" class="role-box-red" style="display:none">
-        <h3>Ton rôle : TRAÎTRE 🕵️‍♂️</h3>
-        
-        <div style="text-align:center;margin-top:8px">
-          <a id="voteCta" class="cta-traitor" href="#" target="_blank" rel="noopener">Voter la nuit pour éliminer un Loyal</a>
-        </div>
-      </div>
-    </div>
-  </section>
+    </section>
+  </div>
+
+  <script>
+    (function(){
+      const s1=document.getElementById('p3s1'), s2=document.getElementById('p3s2'), s3=document.getElementById('p3s3');
+      function show(el){ [s1,s2,s3].forEach(e=>e.classList.remove('show')); el.classList.add('show'); el.scrollIntoView({behavior:'smooth', block:'start'}); }
+      const n1=document.getElementById('p3n1'), n2=document.getElementById('p3n2');
+      if(n1) n1.addEventListener('click', ()=>show(s2));
+      if(n2) n2.addEventListener('click', ()=>show(s3));
+      // Personnalisation prénom depuis PAYLOAD si présent
+      try {
+        const name = (window.PAYLOAD && window.PAYLOAD.name) ? window.PAYLOAD.name : null;
+        if(name){
+          const line=document.getElementById('p3PlayerLine');
+          line.textContent = name + ', es-tu prêt ? Quand tu es seul, découvre ta carte.';
+        }
+      } catch(e){}
+    })();
+  </script>
+
+</section>
 
   <div class="grid">
     <!-- Organisateur -->
@@ -1439,70 +1481,6 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
         });
       }
     }catch(e){}
-  }
-})();
-</script>
-
-
-<style id="rules-banner-clean">
-  #rulesScreen .bgstage,
-  #rulesScreen .bgslide,
-  #rulesScreen .overlay,
-  #rulesScreen [class*="veil"],
-  #rulesScreen [class*="backdrop"] { display: none !important; }
-
-  #rulesScreen { position: relative; overflow-x: hidden; }
-  #rulesScreen #roleBannerScoped {
-    width: 100%;
-    height: 30vh;
-    overflow: hidden;
-    background: #000;
-    position: relative;
-    z-index: 1;
-  }
-  #rulesScreen #roleBannerScoped video {
-    width: 100%; height: 100%; object-fit: cover; display: block;
-  }
-  #rulesScreen #welcomeSection { position: relative; z-index: 2; margin-top: 4vh; }
-  #rulesScreen .panel, #rulesScreen .card, #rulesScreen .wc-card, #rulesScreen .rule-card {
-    background: transparent !important; box-shadow: none !important; border: none !important;
-  }
-</style>
-
-
-<script id="unify-final-role-button">
-(function(){
-  const allBtns = Array.from(document.querySelectorAll('a,button'));
-  const oldBtn = allBtns.find(el =>
-    /d[ée]couvre\s+ton\s+r[oô]le/i.test((el.textContent||'').trim()) &&
-    !el.closest('#welcomeSection')
-  );
-  if (!oldBtn) return;
-  const oldBlock = oldBtn.closest('section,div,article') || oldBtn.parentElement;
-  if (oldBlock) oldBlock.style.display = 'none';
-
-  const step3 = document.querySelector('#welcomeSection .step[data-i="2"]') || document.querySelector('#welcomeSection .step:last-child');
-  if (!step3) return;
-
-  let newBtn = step3.querySelector('#showRole');
-  if (!newBtn) {
-    let actions = step3.querySelector('.seq-actions');
-    if (!actions) { actions = document.createElement('div'); actions.className = 'seq-actions'; step3.appendChild(actions); }
-    newBtn = document.createElement('button');
-    newBtn.id = 'showRole'; newBtn.className = 'btn'; newBtn.textContent = '🎭 Découvre ton rôle';
-    actions.appendChild(newBtn);
-  }
-  newBtn.addEventListener('click', function(){
-    if (oldBtn.tagName === 'A' && oldBtn.href) { window.location.href = oldBtn.href; return; }
-    oldBtn.click();
-  });
-
-  const nameCand = (oldBlock && (oldBlock.querySelector('.gold, .player-name, .name, strong, h3, [data-player-name]'))) ||
-                   document.querySelector('#cd .name, .player-name, #playerName, [data-player-name]');
-  const nom = nameCand && nameCand.textContent ? nameCand.textContent.trim() : '';
-  if (nom) {
-    const titleGold = step3.querySelector('h3 .gold') || step3.querySelector('.gold');
-    if (titleGold) titleGold.textContent = nom;
   }
 })();
 </script>
