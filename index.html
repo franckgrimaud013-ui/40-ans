@@ -198,7 +198,6 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <style id="bg-video-visibility-fix">
   #bgv1, #bgv2 { position:fixed; inset:0; width:100%; height:100%; display:block; object-fit:cover; z-index:0; background:#000; }
 </style>
-
 <style id="p3-stepper-css">
   #p3-steps .step{display:none;opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease}
   #p3-steps .step.active{display:block;opacity:1;transform:none}
@@ -230,7 +229,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- GATE -->
 <div id="gate">
 <div class="panel">
-<h1>Vous avez été conviés par m35…</h1>
+<h1>Vous avez été conviés par f69…</h1>
 <!-- Inline handler pour éviter tout problème de binding -->
 <button class="btn" onclick="startIntro()" type="button">Lancez-vous</button>
 </div>
@@ -245,7 +244,6 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- APP -->
 <div class="app" id="app">
 <!-- Planning & Règles -->
-
 <section class="welcome-section" id="welcomeSection">
 <h2 class="title" style="text-align:center;color:#ffd98a;margin:0 0 6px">Le déroulé du week-end</h2>
 <div id="p3-steps">
@@ -287,7 +285,6 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 </section>
 </div>
 </section>
-
 <div class="grid">
 <!-- Organisateur -->
 <div class="card" id="orgCard">
@@ -1402,7 +1399,6 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   }
 })();
 </script>
-
 <script id="p3-stepper-js">
 (function(){
   function qs(s,c){return (c||document).querySelector(s);}
@@ -1446,6 +1442,40 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   }
   if(document.readyState !== 'loading') init();
   else document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+
+<script id="p3-dedupe-js">
+(function(){
+  function norm(s){return (s||'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();}
+  function isDiscover(el){ return /decouvre ton role/.test(norm(el.textContent||'')); }
+  function findPanel(node){
+    var n=node, i=0;
+    while(n && i<10){
+      if(/^(SECTION|DIV)$/i.test(n.tagName) && (n.textContent||'').length>40) return n;
+      n=n.parentElement; i++;
+    }
+    return node.parentElement||node;
+  }
+  function removeExtra(){
+    var keeperContainer = document.querySelector('#p3-steps') || document.querySelector('#p3-rolePanel') || document.body;
+    var btns = Array.prototype.slice.call(document.querySelectorAll('a,button')).filter(isDiscover);
+    if(btns.length<=1) return;
+    // Panels set
+    var panels=[];
+    btns.forEach(function(b){
+      var p=findPanel(b);
+      if(p && panels.indexOf(p)===-1) panels.push(p);
+    });
+    // Keep the one inside the stepper
+    panels.forEach(function(p){
+      var keep = keeperContainer.contains(p);
+      if(!keep && document.body.contains(p)){ p.remove(); }
+    });
+  }
+  // Run after DOM load and again after a small delay in case of late-rendered blocks
+  if(document.readyState!=='loading'){ removeExtra(); setTimeout(removeExtra, 400); }
+  else document.addEventListener('DOMContentLoaded', function(){ removeExtra(); setTimeout(removeExtra, 400); });
 })();
 </script>
 </body>
