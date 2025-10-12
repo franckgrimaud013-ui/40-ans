@@ -233,7 +233,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     .top-video{padding-top:6px}
   }
 </style>
-<meta content="no-cache, no-store, must-revalidate" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="19" name="version"/><style id="p3-anti-bg-css">
+<meta content="no-cache, no-store, must-revalidate" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="20" name="version"/><style id="p3-anti-bg-css">
     /* Neutralise tout overlay/vidéo de fond global */
     body, html { background:#000 !important; }
     body::before, body::after, html::before, html::after { content:none !important; display:none !important; }
@@ -296,7 +296,7 @@ body :not(#welcomeSection) [style*="position:fixed"] { display:none !important; 
 <div class="top-video" style="max-width:1100px;margin:0 auto;padding-top:10px;">
 <div class="video-frame" style="position:relative;width:100%;aspect-ratio:16/9;background:#000;">
 <video autoplay="" class="p3-topvid" loop="" muted="" playsinline="" preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;background:#000;">
-<source src="videos/role-bg.mp4?v=19" type="video/mp4"/>
+<source src="videos/role-bg.mp4?v=20" type="video/mp4"/>
 </video>
 </div>
 </div>
@@ -1204,7 +1204,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 </style>
 <div aria-hidden="true" hidden="" id="roleVideoLayer">
 <video id="roleVideo" loop="" muted="" playsinline="" preload="auto" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" webkit-playsinline="">
-<source src="videos/role-bg.mp4?v=19" type="video/mp4"/>
+<source src="videos/role-bg.mp4?v=20" type="video/mp4"/>
 </video>
 </div>
 <script>
@@ -1641,6 +1641,37 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       if(cs.position === 'fixed'){ el.style.display = 'none'; }
     }catch(e){}
   });
+})();
+</script><script id="p3-wall-fix">
+(function(){
+  // Abaisse le mur quand la carte de rôle s'affiche, puis le remet ensuite
+  function lowerWall(){
+    var wall = document.getElementById('p3-wall');
+    if(!wall) return;
+    wall.style.zIndex = '1000'; // laisse passer la modale
+  }
+  function restoreWall(){
+    var wall = document.getElementById('p3-wall');
+    if(!wall) return;
+    wall.style.zIndex = '2147483646';
+  }
+  // Hook sur revealRole()
+  const originalReveal = window.revealRole;
+  window.revealRole = function(payload){
+    lowerWall();
+    if(typeof originalReveal === 'function'){
+      try{ originalReveal(payload); }catch(e){}
+    }
+    setTimeout(restoreWall, 8000);
+  };
+  // Fallback sur clic du lien
+  const link = document.getElementById('p3-revealLink');
+  if(link){
+    link.addEventListener('click', function(){
+      lowerWall();
+      setTimeout(restoreWall, 8000);
+    });
+  }
 })();
 </script></body>
 </html>
