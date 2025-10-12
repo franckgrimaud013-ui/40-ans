@@ -209,7 +209,6 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   #p3-steps .roleTitle{font-family:Cinzel,serif;font-size:clamp(22px,4.4vw,28px);margin:0 0 10px;color:#ffd98a}
   #p3-steps .note{color:#cfd5dc;text-align:center}
 </style>
-
 <style id="p3-split-css">
   .layout-split{display:flex; flex-direction:column; min-height:100vh;}
   #p3-steps .step{display:none; opacity:0; transform:translateY(8px); transition:opacity .4s ease, transform .4s ease;}
@@ -217,6 +216,15 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   @media (max-width:520px){
     .layout-split .top-video{flex-basis:28vh; min-height:180px;}
   }
+
+/* Compact split: no spacer between video and steps */
+.layout-split{display:block; min-height:initial;}
+.layout-split .top-video{width:100%; height:auto; flex:none; max-height:none; min-height:0;}
+.layout-split .bottom-steps{padding:16px 20px 32px; display:block;}
+</style>
+<style id="p3-nobg-css">
+  /* Sécurité : si une vidéo de fond globale est encore injectée, on la masque */
+  .bg video, #bgVideo, video.bg, .background video, .video-bg video { display:none !important; }
 </style>
 </head>
 <body>
@@ -253,11 +261,10 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- APP -->
 <div class="app" id="app">
 <!-- Planning & Règles -->
-
 <section class="welcome-section layout-split" id="welcomeSection" style="background:#000;">
 <!-- Zone vidéo en haut -->
-<div class="top-video" style="position:relative;flex:0 0 32vh;max-height:360px;min-height:200px;overflow:hidden;border-bottom:1px solid rgba(255,255,255,.08);">
-<video autoplay="" loop="" muted="" playsinline="" preload="auto" style="width:100%;height:100%;object-fit:cover;display:block;">
+<div class="top-video" style="position:relative; width:100%; aspect-ratio: 16/9; overflow:hidden; border-bottom:1px solid rgba(255,255,255,.08);">
+<video autoplay="" class="p3-topvid" loop="" muted="" playsinline="" preload="auto" style="width:100%; height:100%; object-fit:cover; display:block;">
 <source src="videos/role-bg.mp4" type="video/mp4"/>
 </video>
 </div>
@@ -311,7 +318,6 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 </div>
 </div>
 </section>
-
 <div class="grid">
 <!-- Organisateur -->
 <div class="card" id="orgCard">
@@ -1502,6 +1508,23 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   // Run after DOM load and again after a small delay in case of late-rendered blocks
   if(document.readyState!=='loading'){ removeExtra(); setTimeout(removeExtra, 400); }
   else document.addEventListener('DOMContentLoaded', function(){ removeExtra(); setTimeout(removeExtra, 400); });
+})();
+</script>
+<script id="p3-remove-bg-js">
+(function(){
+  function removeBg(){
+    var sels = ['#bgVideo','video.bg','.background video','.video-bg video'];
+    // remove direct video nodes
+    sels.forEach(function(sel){
+      document.querySelectorAll(sel).forEach(function(v){
+        if(v && v.parentElement){ v.parentElement.removeChild(v); }
+      });
+    });
+    // remove containers like .bg
+    document.querySelectorAll('.bg').forEach(function(node){ node.remove(); });
+  }
+  if(document.readyState !== 'loading'){ removeBg(); }
+  else document.addEventListener('DOMContentLoaded', removeBg);
 })();
 </script>
 </body>
