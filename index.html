@@ -268,24 +268,34 @@ video.bg, .video-bg, .background {
   opacity:1 !important;
   visibility:visible !important;
 }
-</style><style id="rolebg-small-only-css">
-/* N'affiche role-bg.mp4 QUE dans la petite vidéo du haut (.top-video).
-   Toute autre occurrence (anciens fonds plein écran) est masquée. */
-video:not(.p3-topvid)[src*="role-bg.mp4"],
-video:not(.p3-topvid) source[src*="role-bg.mp4"] { display:none !important; }
-
-/* Sécurité : si le <source> porte le chemin, on cible le parent <video> */
-video:not(.p3-topvid) source[src*="role-bg.mp4"] { display:none !important; }
-video:not(.p3-topvid):has(source[src*="role-bg.mp4"]) { display:none !important; }
-
-/* La petite vidéo du haut reste visible et limitée */
+</style><style id="p3-small-static-video-css">
+/* Petite vidéo en haut de la page 3, jamais plein écran */
 .top-video{max-width:1100px;margin:0 auto;padding-top:10px}
-.top-video .p3-topvid{display:block !important; width:100% !important; height:auto !important; object-fit:contain !important;}
-</style><style id="p3-steps-ensure-css">
-#p3-steps{max-width:980px;margin:14px auto 0}
-#p3-steps .step{display:none;opacity:0;transform:translateY(8px);transition:opacity .35s ease, transform .35s ease}
+.top-video .p3-topvid{
+  position: static !important;
+  display:block !important;
+  width:100% !important;
+  height:auto !important;
+  max-height:40vh !important;
+  object-fit:contain !important;
+  z-index:auto !important;
+}
+
+/* Empêche TOUTE vidéo role-bg.mp4 hors de .top-video */
+video:not(.p3-topvid)[src*="role-bg.mp4"]{display:none!important;}
+video:not(.p3-topvid):has(source[src*="role-bg.mp4"]){display:none!important;}
+
+/* Étapes visibles et empilées sous la vidéo */
+#p3-steps{max-width:980px;margin:14px auto 24px}
+#p3-steps .step{display:none;opacity:0;transform:translateY(8px);transition:opacity .3s ease, transform .3s ease}
 #p3-steps .step.active{display:block;opacity:1;transform:none}
 .p3-actions .btn{display:inline-flex}
+
+/* Sécurité : aucune couche "fixed/absolute" ne doit recouvrir page 3 */
+#welcomeSection *{position:relative}
+#welcomeSection .overlay, #welcomeSection [style*="position:fixed"], #welcomeSection [style*="position:absolute"]{
+  position:static !important;
+}
 </style></head>
 <body>
 <div class="secret-fixed" id="secretFixed" title="Passer l\'intro"></div>
@@ -1551,28 +1561,25 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   var p2 = document.getElementById('page2');
   if(p2){ p2.style.removeProperty('display'); p2.hidden = false; }
 })();
-</script><script id="rolebg-prune-js">
+</script><script id="p3-enforce-small-video-js">
 (function(){
-  function insideTopVideo(el){
-    var p=el; for(var i=0;i<6 && p;i++){ if(p.classList && p.classList.contains('top-video')) return true; p=p.parentElement; }
+  function insideTop(el){
+    var p=el; for(var i=0;i<8 && p;i++){ if(p.classList && p.classList.contains('top-video')) return true; p=p.parentElement; }
     return false;
   }
-  function prune(){
-    var vids = document.querySelectorAll('video');
-    vids.forEach(function(v){
-      try{
-        var ok = insideTopVideo(v) || (v.classList && v.classList.contains('p3-topvid'));
-        var hasRoleBg = (v.currentSrc && v.currentSrc.indexOf('role-bg.mp4')>-1) ||
-                        Array.prototype.some.call(v.querySelectorAll('source'), function(s){ return (s.src||'').indexOf('role-bg.mp4')>-1; });
-        if(hasRoleBg && !ok){
-          v.parentNode && v.parentNode.removeChild(v);
-        }
-      }catch(e){}
+  function clean(){
+    document.querySelectorAll('video').forEach(function(v){
+      var hasRole = (v.currentSrc && v.currentSrc.indexOf('role-bg.mp4')>-1) ||
+        Array.prototype.some.call(v.querySelectorAll('source'), function(s){ return (s.src||'').indexOf('role-bg.mp4')>-1; });
+      if(hasRole && !insideTop(v)){
+        try{ v.remove(); }catch(e){}
+      }
     });
+    // s'assurer que la première étape est visible
+    var s1=document.getElementById('p3-s1'); if(s1){ s1.classList.add('active'); }
   }
-  if(document.readyState!=='loading') prune(); else document.addEventListener('DOMContentLoaded', prune);
-  setTimeout(prune, 200); setTimeout(prune, 1000); setTimeout(prune, 3000);
-})();
-</script></body>
+  if(document.readyState!=='loading') clean(); else document.addEventListener('DOMContentLoaded', clean);
+  setTimeout(clean, 200); setTimeout(clean, 1000); setTimeout(clean, 3000);
+})();</script></body>
 </html>
 
