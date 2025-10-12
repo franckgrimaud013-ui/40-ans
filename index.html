@@ -229,17 +229,10 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     .top-video{padding-top:6px}
   }
 </style>
-<meta content="24" name="version"/><style id="p3-fullcover-fix">
-#welcomeSection {
-  position: relative !important;
-  min-height: 100vh !important;
-  background: #000 !important;
-  padding: 0 16px 24px !important;
-  z-index: 10 !important;
-}
-#app:target ~ .bg-gate,
-#app:target ~ .bg-intro,
-#app:target ~ .bg-role { display:none !important; opacity:0 !important; pointer-events:none !important; }
+<meta content="24" name="version"/><style id="p3-strict-cover-css">
+/* Page 3 couvre tout l'écran et ne garde que la vidéo haute + steps */
+#welcomeSection{position:relative!important;min-height:100vh!important;background:#000!important;padding:0 16px 24px!important;z-index:10!important;overflow:hidden!important;}
+#welcomeSection > :not(.top-video):not(#p3-steps){display:none!important;}
 </style></head>
 <body>
 <div class="secret-fixed" id="secretFixed" title="Passer l\'intro"></div>
@@ -1120,12 +1113,135 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   }catch(e){}
 })();
 </script>
-
-
+<script>
+(function(){
+  function forcePlay(video){
+    if (!video) return;
+    try{
+      video.muted = true;
+      video.playsInline = true;
+      video.setAttribute('playsinline','');
+      video.setAttribute('webkit-playsinline','');
+      var p = video.play();
+      if (p && typeof p.then==='function'){ p.catch(function(){}); }
+    }catch(e){}
+  }
+  // Enhance CTA behavior
+  var enterBtn = document.getElementById('enterBtn') || document.querySelector('#ctaOverlay button');
+  var rules = document.getElementById('rulesScreen');
+  var roleLayer = document.getElementById('roleVideoLayer');
+  var roleVideo = document.getElementById('roleVideo');
+  if (enterBtn && rules && roleLayer && roleVideo){
+    enterBtn.addEventListener('click', function(){
+      // Show the rules screen UI
+      rules.style.display = 'block';
+      // Start and fade in the role video behind
+      roleLayer.style.opacity = '0';
+      roleLayer.style.display = 'block';
+      forcePlay(roleVideo);
+      requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ roleLayer.style.opacity = '1'; }); });
+    }, {once:false});
+  }
+})();
+</script>
+<script>
+// Ensure the role video can start after first gesture on iOS if needed
+(function(){
+  var interacted = false;
+  function mark(){ interacted = true; }
+  ['touchstart','touchend','click'].forEach(evt => document.addEventListener(evt, mark, {once:true, passive:true}));
+  var orig = document.getElementById('roleVideo');
+  if (!orig) return;
+  function unlock(){
+    try{
+      orig.muted = true; orig.playsInline = true;
+      orig.setAttribute('playsinline',''); orig.setAttribute('webkit-playsinline','');
+      var p = orig.play(); if (p && p.catch) p.catch(()=>{});
+    }catch(e){}
+  }
+  // Attempt a couple retries early
+  setTimeout(unlock, 500);
+  setTimeout(unlock, 1200);
+  document.addEventListener('click', unlock, {once:true});
+  document.addEventListener('touchend', unlock, {once:true, passive:true});
+})();
+</script>
 <!-- ===== ROLE VIDEO : drop-in garanti ===== -->
+<style>
+  /* La vidéo passe SOUS le contenu (z-index négatif) */
+  #roleVideoLayer{
+    position:fixed; inset:0;
+    z-index:-1;
+    opacity:0; pointer-events:none;
+    transition:opacity 900ms ease;
+  }
+  /* S’assure que la section règles est au-dessus */
+  #rulesScreen, #welcomeSection{ position:relative; z-index:10; }
+</style>
 
-
-
+<script>
+(function(){
+  function forcePlay(v){
+    if(!v) return Promise.resolve();
+    try{
+      v.muted = true; v.playsInline = true;
+      v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
+      const p = v.play(); return p && p.catch ? p.catch(()=>{}) : Promise.resolve();
+    }catch(e){ return Promise.resolve(); }
+  }
+  function visible(el){
+    if(!el) return false;
+    const cs = getComputedStyle(el);
+    if (cs.display==='none' || cs.visibility==='hidden' || +cs.opacity===0) return false;
+    const r = el.getBoundingClientRect(); return r.width>0 && r.height>0;
+  }
+  function hideFallbacks(){
+    ['bg-role','bg-intro','bg-gate','bgVideoLayer'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el){ el.style.opacity='0'; el.style.pointerEvents='none'; el.style.display='none'; }
+    });
+    document.querySelectorAll('.bg-fallback').forEach(el=>{
+      el.style.opacity='0'; el.style.pointerEvents='none'; el.style.display='none';
+    });
+  }
+  function startRole(){
+    const layer = document.getElementById('roleVideoLayer');
+    const video = document.getElementById('roleVideo');
+    if(!layer || !video) return;
+    hideFallbacks();
+    layer.hidden = false;
+    try{ video.currentTime = 0; }catch(_){}
+    forcePlay(video).then(()=>{
+      requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ layer.style.opacity='1'; }); });
+    });
+    // iOS : retentes
+    let tries=0, iv=setInterval(()=>{
+      if(!video.paused){ clearInterval(iv); return; }
+      tries++; forcePlay(video); if(tries>6) clearInterval(iv);
+    }, 600);
+  }
+  function bind(){
+    const rules = document.getElementById('rulesScreen') || document.getElementById('welcomeSection') || document.querySelector('[data-section="rules"]');
+    if(!rules) return;
+    if(visible(rules)) { startRole(); }
+    // Observe quand ça devient visible
+    const obs = new MutationObserver(()=>{ if(visible(rules)){ try{obs.disconnect();}catch(_){ } startRole(); }});
+    obs.observe(rules, {attributes:true, attributeFilter:['style','class']});
+    // Si ta navigation utilise #app, déclenche à l'arrivée
+    window.addEventListener('hashchange', ()=>{
+      if(location.hash==="#app"){ setTimeout(()=>{ if(visible(rules)) startRole(); }, 150); }
+    });
+    // Safety : premier geste utilisateur
+    ['click','touchend','keydown'].forEach(ev=>{
+      document.addEventListener(ev, ()=>{ if(visible(rules)) startRole(); }, {passive:true});
+    });
+    // Si on est déjà sur #app au chargement
+    if(location.hash==="#app"){ setTimeout(()=>{ if(visible(rules)) startRole(); }, 300); }
+  }
+  if(document.readyState!=='loading') bind();
+  else document.addEventListener('DOMContentLoaded', bind);
+})();
+</script>
 <!-- ===== /ROLE VIDEO ===== -->
 <div id="enterGameOverlay" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:20;">
 <button class="btn" id="enterGameBtn">
@@ -1410,17 +1526,18 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     }, {once:true});
   }
 })();
-</script><script id="p3-hide-fixed-extras">
+</script><script id="p3-strict-prune-js">
 (function(){
-  function hideIfInApp(){
-    if(location.hash !== '#app') return;
-    document.querySelectorAll('.bg-gate,.bg-intro,.bg-role').forEach(function(el){
-      el.style.display='none'; el.style.opacity='0'; el.style.pointerEvents='none';
+  function prune(){
+    var ws=document.getElementById('welcomeSection'); if(!ws) return;
+    Array.prototype.slice.call(ws.children).forEach(function(el){
+      if(!(el.matches && (el.matches('.top-video') || el.matches('#p3-steps')))){
+        try{ el.remove(); }catch(e){}
+      }
     });
   }
-  window.addEventListener('hashchange', hideIfInApp);
-  if(document.readyState !== 'loading') hideIfInApp();
-  else document.addEventListener('DOMContentLoaded', hideIfInApp);
+  if(document.readyState!=='loading') prune(); else document.addEventListener('DOMContentLoaded', prune);
+  setTimeout(prune, 250); setTimeout(prune, 1200); setTimeout(prune, 3000);
 })();
 </script></body>
 </html>
