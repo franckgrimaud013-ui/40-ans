@@ -233,7 +233,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     .top-video{padding-top:6px}
   }
 </style>
-<meta content="no-cache, no-store, must-revalidate" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="15" name="version"/><style id="p3-anti-bg-css">
+<meta content="no-cache, no-store, must-revalidate" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="16" name="version"/><style id="p3-anti-bg-css">
     /* Neutralise tout overlay/vidéo de fond global */
     body, html { background:#000 !important; }
     body::before, body::after, html::before, html::after { content:none !important; display:none !important; }
@@ -241,10 +241,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     .background, .background *,
     .video-bg, .video-bg *,
     .hero, .hero * { background:none !important; }
-    </style><style id="p3-isolation-css">
-    /* Afficher uniquement la page 3 dans #app */
-    #app > *:not(#welcomeSection) { display:none !important; }
-    </style></head>
+    </style><style id="p3-isolation-css">#app > *:not(#welcomeSection) { display:none !important; }</style></head>
 <body>
 <div class="secret-fixed" id="secretFixed" title="Passer l\'intro"></div>
 <section aria-hidden="true" class="bg-gate" style="position:fixed;inset:0;z-index:0;">
@@ -283,7 +280,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <div class="top-video" style="max-width:1100px;margin:0 auto;padding-top:10px;">
 <div class="video-frame" style="position:relative;width:100%;aspect-ratio:16/9;background:#000;">
 <video autoplay="" class="p3-topvid" loop="" muted="" playsinline="" preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;background:#000;">
-<source src="videos/role-bg.mp4?v=15" type="video/mp4"/>
+<source src="videos/role-bg.mp4?v=16" type="video/mp4"/>
 </video>
 </div>
 </div>
@@ -1191,7 +1188,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 </style>
 <div aria-hidden="true" hidden="" id="roleVideoLayer">
 <video id="roleVideo" loop="" muted="" playsinline="" preload="auto" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" webkit-playsinline="">
-<source src="videos/role-bg.mp4?v=15" type="video/mp4"/>
+<source src="videos/role-bg.mp4?v=16" type="video/mp4"/>
 </video>
 </div>
 <script>
@@ -1564,75 +1561,37 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       document.addEventListener('visibilitychange', function(){ if(!document.hidden) run(); });
     })();
     </script><script id="p3-isolation-js">
-    (function(){
+(function(){
+  // Safe isolation: only hide siblings inside #app, do not touch the rest
+  function safeIso(){
+    var app = document.getElementById('app');
+    var p3  = document.getElementById('welcomeSection');
+    if(!app || !p3 || !app.contains(p3)) return; // if structure differs, do nothing
+    Array.prototype.slice.call(app.children).forEach(function(node){
+      if(node !== p3 && node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE'){
+        node.style.display = 'none';
+      }
+    });
+    // Remove duplicate "Découvre ton rôle" panels outside the stepper
+    var keeper = p3.querySelector('#p3-steps');
+    if(keeper){
       function norm(s){return (s||'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();}
       function isDiscover(el){ return /decouvre ton role/.test(norm(el.textContent||'')); }
-
-      function isolatePage3(){
-        var app = document.getElementById('app') || document.body;
-        var p3  = document.getElementById('welcomeSection');
-        if(!p3) return;
-
-        Array.prototype.slice.call(app.children).forEach(function(node){
-          if(node !== p3 && node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE'){
-            node.style.display = 'none';
+      Array.prototype.slice.call(document.querySelectorAll('a,button')).forEach(function(btn){
+        if(isDiscover(btn)){
+          var n = btn;
+          for(var i=0;i<8 && n;i++){
+            if(/^(DIV|SECTION)$/i.test(n.tagName)) break;
+            n = n.parentElement;
           }
-        });
-
-        var keeper = p3.querySelector('#p3-steps');
-        if(keeper){
-          Array.prototype.slice.call(document.querySelectorAll('a,button')).forEach(function(btn){
-            if(isDiscover(btn)){
-              var n = btn;
-              for(var i=0;i<10 && n;i++){
-                if(/^(DIV|SECTION)$/i.test(n.tagName)) break;
-                n = n.parentElement;
-              }
-              if(n && !keeper.contains(n)){ try{ n.remove(); }catch(e){} }
-            }
-          });
+          if(n && !keeper.contains(n) && app.contains(n)){ try{ n.remove(); }catch(e){} }
         }
-      }
-
-      function run(){ isolatePage3(); }
-      if(document.readyState !== 'loading') run();
-      else document.addEventListener('DOMContentLoaded', run);
-      setTimeout(run, 300); setTimeout(run, 1200); setTimeout(run, 3000);
-      document.addEventListener('visibilitychange', function(){ if(!document.hidden) run(); });
-    })();
-    </script><script id="p3-ultra-isolation-js">
-    (function(){
-      function norm(s){return (s||'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();}
-      function hideNonP3(){
-        var keep = document.getElementById('welcomeSection');
-        if(!keep) return;
-        // 1) Hide all body children not welcomeSection (except head/scripts/styles)
-        Array.prototype.slice.call(document.body.children).forEach(function(el){
-          if(el===keep || keep.contains(el) || /^(SCRIPT|STYLE)$/.test(el.tagName)) return;
-          el.style.display = 'none';
-        });
-        // 2) Remove any FIXED element not inside welcomeSection
-        Array.prototype.slice.call(document.querySelectorAll('*')).forEach(function(el){
-          try{
-            if(keep.contains(el)) return;
-            var cs = getComputedStyle(el);
-            if(cs.position==='fixed'){ el.remove(); }
-          }catch(e){}
-        });
-        // 3) Remove any block that contains the intro phrase "vous avez été convié"
-        var phrase = 'vous avez ete convie';
-        Array.prototype.slice.call(document.querySelectorAll('div,section,article,aside,main')).forEach(function(el){
-          if(keep.contains(el)) return;
-          var t = norm(el.textContent||'');
-          if(t.indexOf(phrase)!==-1){ try{ el.remove(); }catch(e){} }
-        });
-      }
-      function run(){ hideNonP3(); }
-      if(document.readyState!=='loading') run();
-      else document.addEventListener('DOMContentLoaded', run);
-      setTimeout(run, 200); setTimeout(run, 800); setTimeout(run, 2500);
-      window.addEventListener('pageshow', run);
-      document.addEventListener('visibilitychange', function(){ if(!document.hidden) run(); });
-    })();
-    </script></body>
+      });
+    }
+  }
+  if(document.readyState !== 'loading') safeIso();
+  else document.addEventListener('DOMContentLoaded', safeIso);
+  setTimeout(safeIso, 300); setTimeout(safeIso, 1200);
+})();
+</script></body>
 </html>
