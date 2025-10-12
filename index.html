@@ -198,7 +198,66 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <style id="bg-video-visibility-fix">
   #bgv1, #bgv2 { position:fixed; inset:0; width:100%; height:100%; display:block; object-fit:cover; z-index:0; background:#000; }
 </style>
-<meta content="26" name="version"/></head>
+<style id="p3-stepper-css">
+  #p3-steps .step{display:none;opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease}
+  #p3-steps .step.active{display:block;opacity:1;transform:none}
+  #p3-steps .panel{background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  #p3-steps h3{margin:0 0 8px;color:#ffd98a;font-size:clamp(20px,4vw,26px)}
+  #p3-steps ul{margin:6px 0 0 18px}
+  #p3-steps li{line-height:1.5}
+  #p3-steps .roleBox{text-align:center;padding:20px 14px}
+  #p3-steps .roleTitle{font-family:Cinzel,serif;font-size:clamp(22px,4.4vw,28px);margin:0 0 10px;color:#ffd98a}
+  #p3-steps .note{color:#cfd5dc;text-align:center}
+</style>
+<style id="p3-split-css">
+  .layout-split{display:flex; flex-direction:column; min-height:100vh;}
+  #p3-steps .step{display:none; opacity:0; transform:translateY(8px); transition:opacity .4s ease, transform .4s ease;}
+  #p3-steps .step.active{display:block; opacity:1; transform:none;}
+  @media (max-width:520px){
+    .layout-split .top-video{flex-basis:28vh; min-height:180px;}
+  }
+</style>
+<style id="p3-nobg-css">
+  /* Sécurité : si une vidéo de fond globale est encore injectée, on la masque */
+  .bg video, #bgVideo, video.bg, .background video, .video-bg video { display:none !important; }
+</style>
+<style id="p3-simple-css">
+  .layout-simple{background:#000;}
+  #p3-steps .step{display:none;opacity:0;transform:translateY(8px);transition:opacity .35s ease, transform .35s ease;}
+  #p3-steps .step.active{display:block;opacity:1;transform:none;}
+  .p3-title{margin:10px 0 8px;color:#ffd98a;font-size:clamp(20px,4.6vw,28px);font-family:Cinzel,serif}
+  .p3-list{margin:8px 0 0 18px;color:#eaeef6}
+  .p3-note{color:#cfd5dc;margin:6px 0 0}
+  .p3-actions{display:flex;justify-content:center;margin:14px 0 0}
+  @media (max-width:520px){
+    .top-video{padding-top:6px}
+  }
+</style>
+<meta content="no-cache, no-store, must-revalidate" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="21" name="version"/><style id="p3-anti-bg-css">
+    /* Neutralise tout overlay/vidéo de fond global */
+    body, html { background:#000 !important; }
+    body::before, body::after, html::before, html::after { content:none !important; display:none !important; }
+    .bg, .bg *,
+    .background, .background *,
+    .video-bg, .video-bg *,
+    .hero, .hero * { background:none !important; }
+    </style><style id="p3-isolation-css">#app > *:not(#welcomeSection) { display:none !important; }</style><style id="p3-hard-css">
+/* PAGE 3 — isolation stricte sans texte, 100% CSS */
+#app > * { display: none !important; }              /* masque tous les écrans */
+#app > #welcomeSection { display: block !important; }  /* garde uniquement la page 3 */
+
+/* cache tout élément fixé à l'écran en dehors de #welcomeSection */
+body :not(#welcomeSection) { }
+body > *:not(#welcomeSection)[style*="position:fixed"] { display:none !important; }
+body :not(#welcomeSection) [style*="position:fixed"] { display:none !important; }
+</style><style id="p3-wall-css">
+#p3-wall{
+  position:fixed; inset:0; background:#000;
+  z-index:2147483646;
+  overflow:auto; -webkit-overflow-scrolling:touch;
+}
+#p3-wall .p3-host{ max-width:1200px; margin:0 auto; }
+</style></head>
 <body>
 <div class="secret-fixed" id="secretFixed" title="Passer l\'intro"></div>
 <section aria-hidden="true" class="bg-gate" style="position:fixed;inset:0;z-index:0;">
@@ -233,41 +292,44 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- APP -->
 <div class="app" id="app">
 <!-- Planning & Règles -->
-<section class="welcome-section" id="welcomeSection">
-<h2 style="text-align:center;color:#ffd98a;margin:0 0 6px">Le déroulé du week-end</h2>
-<div class="welcome-grid">
-<div class="wc-card">
-<h3>🗓️ Le planning</h3>
-<ul>
-<li><b>Vendredi soir</b> : conseil et vote d’élimination.</li>
-<li><b>Nuit ven → sam</b> : les Traîtres choisissent discrètement une victime via leur lien.</li>
-<li><b>Samedi matin</b> : annonce au groupe du résultat de la nuit.</li>
-<li><b>Samedi midi</b> : nouveau conseil et vote.</li>
-<li><b>Samedi soir</b> : conseil et vote.</li>
-<li><b>Nuit sam → dim</b> : les Traîtres éliminent à nouveau via leur lien.</li>
-<li><b>Dimanche matin</b> : annonce au groupe de la victime de la nuit.</li>
-</ul>
+<section class="welcome-section layout-simple" id="welcomeSection" style="background:#000; padding:0 16px 24px;">
+<div class="top-video" style="max-width:1100px;margin:0 auto;padding-top:10px;">
+<div class="video-frame" style="position:relative;width:100%;aspect-ratio:16/9;background:#000;">
+<video autoplay="" class="p3-topvid" loop="" muted="" playsinline="" preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;background:#000;">
+<source src="videos/role-bg.mp4?v=21" type="video/mp4"/>
+</video>
 </div>
-<div class="wc-card">
-<h3>🎭 Esprit &amp; règles</h3>
-<ul>
-<li>Les Traîtres jouent <b>en secret</b> via un lien privé (personne ne sait qui ils sont).</li>
+</div>
+<div class="bottom-steps" style="max-width:980px;margin:14px auto 0;">
+<div id="p3-steps">
+<section class="step active" id="p3-s1">
+<h3 class="p3-title">Le planning</h3>
+<ul class="p3-list">
+<li>Vendredi soir : conseil et vote d’élimination.</li>
+<li>Nuit ven → sam : les Traîtres choisissent discrètement une victime via leur lien.</li>
+<li>Samedi matin : annonce au groupe du résultat de la nuit.</li>
+<li>Samedi midi : nouveau conseil et vote.</li>
+<li>Samedi soir : conseil et vote.</li>
+<li>Nuit sam → dim : les Traîtres éliminent à nouveau via leur lien.</li>
+<li>Dimanche matin : annonce au groupe de la victime de la nuit.</li>
+</ul>
+<div class="p3-actions"><button class="btn" id="p3-n1" type="button">Suivant</button></div>
+</section>
+<section class="step" id="p3-s2">
+<h3 class="p3-title">Esprit et règles</h3>
+<ul class="p3-list">
+<li>Les Traîtres jouent en secret via un lien privé.</li>
 <li>Les Loyaux observent, discutent et votent avec stratégie.</li>
-<li>Pas de prise de tête : les écrans clés s’affichent au bon moment pour le groupe.</li>
-<li>On garde la <b>bonne entente</b> : fun &amp; fair-play.</li>
+<li>Pas de prise de tête : les écrans clés s’affichent au bon moment.</li>
+<li>On garde la bonne entente : fun et fair-play.</li>
 </ul>
-</div>
-</div>
-<!-- Role panels appear here after click -->
-<div class="role-wrap" id="roleInline" style="display:none">
-<div class="role-box-blue" id="roleBlue" style="display:none">
-<h3>Ton rôle : LOYAL 🛡️</h3>
-</div>
-<div class="role-box-red" id="roleRed" style="display:none">
-<h3>Ton rôle : TRAÎTRE 🕵️‍♂️</h3>
-<div style="text-align:center;margin-top:8px">
-<a class="cta-traitor" href="#" id="voteCta" rel="noopener" target="_blank">Voter la nuit pour éliminer un Loyal</a>
-</div>
+<div class="p3-actions"><button class="btn" id="p3-n2" type="button">Suivant</button></div>
+</section>
+<section class="step" id="p3-s3">
+<h3 class="p3-title" id="p3-playerLine">Es-tu prêt ? Quand tu es seul, découvre ta carte.</h3>
+<p class="p3-note">Petit secret : c’est bien Franck qui a eu l’idée de ce jeu 😉… rassurez-vous, il ne connaît pas vos rôles.</p>
+<div class="p3-actions"><a class="btn" href="#" id="p3-revealLink">Découvre ton rôle</a></div>
+</section>
 </div>
 </div>
 </section>
@@ -1142,7 +1204,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 </style>
 <div aria-hidden="true" hidden="" id="roleVideoLayer">
 <video id="roleVideo" loop="" muted="" playsinline="" preload="auto" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" webkit-playsinline="">
-<source src="videos/role-bg.mp4" type="video/mp4"/>
+<source src="videos/role-bg.mp4?v=21" type="video/mp4"/>
 </video>
 </div>
 <script>
@@ -1385,32 +1447,295 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   }
 })();
 </script>
-<script id="v26-start-at-page1">
+<script id="p3-stepper-js">
 (function(){
-  function startAtFirst(){
-    try{
-      if(location.hash === '#welcomeSection' || location.hash === '#app'){
-        history.replaceState(null,'', location.pathname + location.search);
-      }
-    }catch(e){}
-    Array.prototype.slice.call(document.querySelectorAll('style')).forEach(function(s){
-      var t=(s.textContent||'').replace(/\s+/g,' ').toLowerCase();
-      if(/#app\s*>\s*\*:not\(#welcomesection\)\s*\{\s*display\s*:/.test(t) || t.indexOf('#p3-wall')!==-1){
-        try{ s.remove(); }catch(e){}
-      }
-    });
-    var app=document.getElementById('app');
-    if(app){
-      Array.prototype.slice.call(app.children).forEach(function(n){
-        if(n.tagName!=='SCRIPT' && n.tagName!=='STYLE'){
-          try{ n.style.removeProperty('display'); }catch(e){}
-        }
+  function qs(s,c){return (c||document).querySelector(s);}
+  function getToken(){ try{ var p=new URLSearchParams(location.search||''); return p.get('t'); }catch(e){ return null; } }
+  function decodeName(t){ try{ return JSON.parse(decodeURIComponent(atob(t))).name||null; }catch(e){ return null; } }
+
+  function init(){
+    var s1=qs('#p3-s1'),s2=qs('#p3-s2'),s3=qs('#p3-s3');
+    var steps=[s1,s2,s3];
+    function show(i){
+      try{ steps.forEach(function(el){ if(el) el.style.removeProperty('display'); }); }catch(e){}
+      steps.forEach(function(el,j){ if(el){ el.classList.toggle('active', j===i); } });
+      try{ steps[i].scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
+    }
+    var b1=qs('#p3-n1'), b2=qs('#p3-n2');
+    if(b1) b1.addEventListener('click', function(){ show(1); });
+    if(b2) b2.addEventListener('click', function(){ show(2); });
+
+    var t = getToken();
+    var name = t ? decodeName(t) : null;
+    var line = qs('#p3-playerLine');
+    if(name && line){ line.textContent = name + ', es-tu prêt ? Quand tu es seul, découvre ta carte.'; }
+
+    var link = qs('#p3-revealLink');
+    if(link){
+      link.addEventListener('click', function(ev){
+        ev.preventDefault();
+        try{
+          if (window.PAYLOAD && window.PAYLOAD.role && typeof window.revealRole === 'function'){
+            window.revealRole(window.PAYLOAD);
+            return;
+          }
+        }catch(e){}
+        var base;
+        try{ base = location.pathname.split('/').pop() || 'index.html'; }catch(e){ base = 'index.html'; }
+        var sep = base.includes('?') ? '&' : '?';
+        var url = t ? (base + sep + 't=' + encodeURIComponent(t) + '#app') : (base + '#app');
+        location.href = url;
       });
-      try{ window.scrollTo(0,0); }catch(e){}
     }
   }
-  if(document.readyState!=='loading') startAtFirst();
-  else document.addEventListener('DOMContentLoaded', startAtFirst);
+  if(document.readyState!=='loading') init();
+  else document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+<script id="p3-dedupe-js">
+(function(){
+  function norm(s){return (s||'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();}
+  function isDiscover(el){ return /decouvre ton role/.test(norm(el.textContent||'')); }
+  function findPanel(node){
+    var n=node, i=0;
+    while(n && i<10){
+      if(/^(SECTION|DIV)$/i.test(n.tagName) && (n.textContent||'').length>40) return n;
+      n=n.parentElement; i++;
+    }
+    return node.parentElement||node;
+  }
+  function removeExtra(){
+    var keeperContainer = document.querySelector('#p3-steps') || document.querySelector('#p3-rolePanel') || document.body;
+    var btns = Array.prototype.slice.call(document.querySelectorAll('a,button')).filter(isDiscover);
+    if(btns.length<=1) return;
+    // Panels set
+    var panels=[];
+    btns.forEach(function(b){
+      var p=findPanel(b);
+      if(p && panels.indexOf(p)===-1) panels.push(p);
+    });
+    // Keep the one inside the stepper
+    panels.forEach(function(p){
+      var keep = keeperContainer.contains(p);
+      if(!keep && document.body.contains(p)){ p.remove(); }
+    });
+  }
+  // Run after DOM load and again after a small delay in case of late-rendered blocks
+  if(document.readyState!=='loading'){ removeExtra(); setTimeout(removeExtra, 400); }
+  else document.addEventListener('DOMContentLoaded', function(){ removeExtra(); setTimeout(removeExtra, 400); });
+})();
+</script>
+<script id="p3-remove-bg-js">
+(function(){
+  function removeBg(){
+    var sels = ['#bgVideo','video.bg','.background video','.video-bg video'];
+    // remove direct video nodes
+    sels.forEach(function(sel){
+      document.querySelectorAll(sel).forEach(function(v){
+        if(v && v.parentElement){ v.parentElement.removeChild(v); }
+      });
+    });
+    // remove containers like .bg
+    document.querySelectorAll('.bg').forEach(function(node){ node.remove(); });
+  }
+  if(document.readyState !== 'loading'){ removeBg(); }
+  else document.addEventListener('DOMContentLoaded', removeBg);
+})();
+</script>
+<script id="p3-robust-cleanup">
+    (function(){
+      function norm(s){return (s||'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();}
+      function isDiscover(el){ return /decouvre ton role/.test(norm(el.textContent||'')); }
+      function removeForeignVideos(){
+        var container = document.querySelector('#welcomeSection .top-video');
+        document.querySelectorAll('video').forEach(function(v){
+          if(!container || !container.contains(v)){ try{ v.remove(); }catch(e){} }
+        });
+        // containers typiques
+        document.querySelectorAll('.bg, .background, .video-bg, #bgVideo').forEach(function(n){ try{ n.remove(); }catch(e){} });
+      }
+      function dedupePanels(){
+        var keeper = document.querySelector('#p3-steps');
+        if(!keeper) return;
+        var nodes = Array.prototype.slice.call(document.querySelectorAll('a,button')).filter(isDiscover);
+        if(nodes.length<=1) return;
+        nodes.forEach(function(btn){
+          var p = btn;
+          for(var i=0;i<10 && p;i++){
+            if(/^(SECTION|DIV)$/i.test(p.tagName)) break;
+            p = p.parentElement;
+          }
+          if(p && !keeper.contains(p)){ try{ p.remove(); }catch(e){} }
+        });
+      }
+      function run(){ removeForeignVideos(); dedupePanels(); }
+      if(document.readyState!=='loading') run();
+      else document.addEventListener('DOMContentLoaded', run);
+      // relances retardées (iOS/wkwebview)
+      setTimeout(run, 300); setTimeout(run, 1200); setTimeout(run, 3000);
+      window.addEventListener('pageshow', run);
+      document.addEventListener('visibilitychange', function(){ if(!document.hidden) run(); });
+    })();
+    </script><script id="p3-isolation-js">
+(function(){
+  // Safe isolation: only hide siblings inside #app, do not touch the rest
+  function safeIso(){
+    var app = document.getElementById('app');
+    var p3  = document.getElementById('welcomeSection');
+    if(!app || !p3 || !app.contains(p3)) return; // if structure differs, do nothing
+    Array.prototype.slice.call(app.children).forEach(function(node){
+      if(node !== p3 && node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE'){
+        node.style.display = 'none';
+      }
+    });
+    // Remove duplicate "Découvre ton rôle" panels outside the stepper
+    var keeper = p3.querySelector('#p3-steps');
+    if(keeper){
+      function norm(s){return (s||'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();}
+      function isDiscover(el){ return /decouvre ton role/.test(norm(el.textContent||'')); }
+      Array.prototype.slice.call(document.querySelectorAll('a,button')).forEach(function(btn){
+        if(isDiscover(btn)){
+          var n = btn;
+          for(var i=0;i<8 && n;i++){
+            if(/^(DIV|SECTION)$/i.test(n.tagName)) break;
+            n = n.parentElement;
+          }
+          if(n && !keeper.contains(n) && app.contains(n)){ try{ n.remove(); }catch(e){} }
+        }
+      });
+    }
+  }
+  if(document.readyState !== 'loading') safeIso();
+  else document.addEventListener('DOMContentLoaded', safeIso);
+  setTimeout(safeIso, 300); setTimeout(safeIso, 1200);
+})();
+</script><script id="p3-wall-js">
+(function(){
+  var p3 = document.getElementById('welcomeSection');
+  if(!p3) return;
+
+  // 1) Construire le "mur" et y déplacer la page 3
+  var wall = document.createElement('div');
+  wall.id = 'p3-wall';
+  var host = document.createElement('div');
+  host.className = 'p3-host';
+  host.appendChild(p3);
+  wall.appendChild(host);
+  document.body.appendChild(wall);
+
+  // 2) Masquer les autres sections de #app (au cas où)
+  var app = document.getElementById('app');
+  if(app){
+    Array.from(app.children).forEach(function(n){
+      if(n !== p3 && n.tagName !== 'SCRIPT' && n.tagName !== 'STYLE'){
+        n.style.display = 'none';
+      }
+    });
+  }
+
+  // 3) Masquer tout élément en position:fixed en dehors du mur (headers, intros…)
+  Array.from(document.querySelectorAll('body *')).forEach(function(el){
+    if(wall.contains(el)) return;
+    try{
+      var cs = getComputedStyle(el);
+      if(cs.position === 'fixed'){ el.style.display = 'none'; }
+    }catch(e){}
+  });
+})();
+</script><script id="p3-wall-teleport">
+(function(){
+  function wall(){ return document.getElementById('p3-wall'); }
+  function insideWall(node){ var w = wall(); return !!(w && node && w.contains(node)); }
+  function isEl(n){ return n && n.nodeType === 1; }
+  function area(el){ try{ var r=el.getBoundingClientRect(); return Math.max(0,r.width*r.height); }catch(e){ return 0; } }
+  function cs(el){ try{ return getComputedStyle(el); }catch(e){ return null; } }
+
+  function isDialogCandidate(el){
+    if(!isEl(el)) return false;
+    if(insideWall(el)) return false;
+    var tag = (el.tagName||'').toLowerCase();
+    var role = (el.getAttribute && el.getAttribute('role')) || '';
+    var cls = (el.className||'')+'';
+
+    // Heuristics: dialog/modal/overlay/backdrop or high z-index + fixed/absolute + decent area
+    if(tag === 'dialog') return true;
+    if(/modal|overlay|backdrop|popup|dialog|role/i.test(cls)) return true;
+    if((role||'').toLowerCase() === 'dialog') return true;
+
+    var s = cs(el);
+    if(!s) return false;
+    var pos = s.position;
+    var z = parseInt(s.zIndex||'0',10);
+    if((pos === 'fixed' || pos === 'absolute') && z >= 100 && area(el) > 8000){
+      return true;
+    }
+    return false;
+  }
+
+  function teleport(el){
+    var w = wall();
+    if(!w || !isEl(el)) return;
+    try{
+      w.appendChild(el);
+      // ensure overlay stays on top inside the wall
+      el.style.zIndex = '2147483647';
+      // if it was full-viewport fixed, keep it; otherwise center it
+      var s = cs(el);
+      if(s && (s.position === 'static' || s.position === 'relative')){
+        el.style.position = 'fixed';
+        el.style.top = '50%'; el.style.left = '50%'; el.style.transform = 'translate(-50%,-50%)';
+      }
+    }catch(e){}
+  }
+
+  function scanAndTeleport(){
+    // Scan likely nodes
+    var cands = Array.prototype.slice.call(document.querySelectorAll('dialog,[role="dialog"],.modal,.overlay,.backdrop,[class*="dialog"],[class*="modal"],[class*="overlay"],[class*="backdrop"]'));
+    cands.forEach(function(n){ if(!insideWall(n)) teleport(n); });
+    // Also scan big fixed/absolute blocks on body
+    Array.prototype.slice.call(document.body.children).forEach(function(n){
+      if(!insideWall(n) && isDialogCandidate(n)) teleport(n);
+    });
+  }
+
+  var activeObs = null;
+  function startObserver(timeoutMs){
+    if(activeObs) return;
+    scanAndTeleport();
+    var obs = new MutationObserver(function(muts){
+      muts.forEach(function(m){
+        Array.prototype.slice.call(m.addedNodes||[]).forEach(function(n){
+          if(isEl(n) && isDialogCandidate(n)) teleport(n);
+          // Also check descendants quickly
+          if(isEl(n)){
+            Array.prototype.slice.call(n.querySelectorAll ? n.querySelectorAll('*') : []).forEach(function(d){
+              if(isDialogCandidate(d)) teleport(d);
+            });
+          }
+        });
+      });
+    });
+    obs.observe(document.documentElement, {childList:true, subtree:true});
+    activeObs = obs;
+    setTimeout(function(){ try{ obs.disconnect(); }catch(e){} activeObs=null; }, timeoutMs||12000);
+  }
+
+  // Hook revealRole so the overlay appears INSIDE the wall
+  var originalReveal = window.revealRole;
+  window.revealRole = function(payload){
+    startObserver(15000);
+    if(typeof originalReveal === 'function'){
+      try{ originalReveal(payload); }catch(e){}
+    }
+  };
+
+  // Also start observer when clicking the "Découvre ton rôle" button
+  var link = document.getElementById('p3-revealLink');
+  if(link){
+    link.addEventListener('click', function(){
+      startObserver(15000);
+    });
+  }
 })();
 </script></body>
 </html>
