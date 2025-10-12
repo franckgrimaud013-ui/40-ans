@@ -209,6 +209,15 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   #p3-steps .roleTitle{font-family:Cinzel,serif;font-size:clamp(22px,4.4vw,28px);margin:0 0 10px;color:#ffd98a}
   #p3-steps .note{color:#cfd5dc;text-align:center}
 </style>
+
+<style id="p3-split-css">
+  .layout-split{display:flex; flex-direction:column; min-height:100vh;}
+  #p3-steps .step{display:none; opacity:0; transform:translateY(8px); transition:opacity .4s ease, transform .4s ease;}
+  #p3-steps .step.active{display:block; opacity:1; transform:none;}
+  @media (max-width:520px){
+    .layout-split .top-video{flex-basis:28vh; min-height:180px;}
+  }
+</style>
 </head>
 <body>
 <div class="secret-fixed" id="secretFixed" title="Passer l\'intro"></div>
@@ -229,7 +238,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- GATE -->
 <div id="gate">
 <div class="panel">
-<h1>Vous avez été conviés par f69…</h1>
+<h1>Vous avez été conviés par z12…</h1>
 <!-- Inline handler pour éviter tout problème de binding -->
 <button class="btn" onclick="startIntro()" type="button">Lancez-vous</button>
 </div>
@@ -244,47 +253,65 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- APP -->
 <div class="app" id="app">
 <!-- Planning & Règles -->
-<section class="welcome-section" id="welcomeSection">
-<h2 class="title" style="text-align:center;color:#ffd98a;margin:0 0 6px">Le déroulé du week-end</h2>
-<div id="p3-steps">
+
+<section class="welcome-section layout-split" id="welcomeSection" style="background:#000;">
+<!-- Zone vidéo en haut -->
+<div class="top-video" style="position:relative;flex:0 0 32vh;max-height:360px;min-height:200px;overflow:hidden;border-bottom:1px solid rgba(255,255,255,.08);">
+<video autoplay="" loop="" muted="" playsinline="" preload="auto" style="width:100%;height:100%;object-fit:cover;display:block;">
+<source src="videos/role-bg.mp4" type="video/mp4"/>
+</video>
+</div>
+<!-- Zone blocs en bas -->
+<div class="bottom-steps" style="flex:1 1 auto;display:flex;align-items:flex-end;justify-content:center;padding:0 20px 32px;">
+<div id="p3-steps" style="width:min(980px,100%);">
 <section class="step active" id="p3-s1">
-<div class="panel">
-<h3>🗓️ Le planning</h3>
-<ul>
-<li><b>Vendredi soir</b> : conseil et vote d’élimination.</li>
-<li><b>Nuit ven → sam</b> : les Traîtres choisissent discrètement une victime via leur lien.</li>
-<li><b>Samedi matin</b> : annonce au groupe du résultat de la nuit.</li>
-<li><b>Samedi midi</b> : nouveau conseil et vote.</li>
-<li><b>Samedi soir</b> : conseil et vote.</li>
-<li><b>Nuit sam → dim</b> : les Traîtres éliminent à nouveau via leur lien.</li>
-<li><b>Dimanche matin</b> : annonce au groupe de la victime de la nuit.</li>
+<div class="panel" style="background:rgba(0,0,0,.6); border-radius:16px; padding:16px;">
+<h3 style="margin:0 0 8px; color:#ffd98a;">🗓️ Le planning</h3>
+<ul style="margin:6px 0 0 18px; padding:0;">
+<li><span style="font-weight:700">Vendredi soir</span> : conseil et vote d’élimination.</li>
+<li><span style="font-weight:700">Nuit ven → sam</span> : les Traîtres choisissent discrètement une victime via leur lien.</li>
+<li><span style="font-weight:700">Samedi matin</span> : annonce au groupe du résultat de la nuit.</li>
+<li><span style="font-weight:700">Samedi midi</span> : nouveau conseil et vote.</li>
+<li><span style="font-weight:700">Samedi soir</span> : conseil et vote.</li>
+<li><span style="font-weight:700">Nuit sam → dim</span> : les Traîtres éliminent à nouveau via leur lien.</li>
+<li><span style="font-weight:700">Dimanche matin</span> : annonce au groupe de la victime de la nuit.</li>
 </ul>
-<div class="wc-actions"><button class="btn" id="p3-n1" type="button">Suivant</button></div>
+<div class="wc-actions" style="display:flex; justify-content:center; margin-top:14px;">
+<button class="btn" id="p3-n1" type="button">Suivant</button>
+</div>
 </div>
 </section>
-<section class="step" id="p3-s2">
-<div class="panel">
-<h3>🎭 Esprit et règles</h3>
-<ul>
+<section class="step" id="p3-s2" style="display:none; opacity:0; transform:translateY(8px); transition:opacity .4s, transform .4s;">
+<div class="panel" style="background:rgba(0,0,0,.6); border-radius:16px; padding:16px;">
+<h3 style="margin:0 0 8px; color:#ffd98a;">🎭 Esprit et règles</h3>
+<ul style="margin:6px 0 0 18px; padding:0;">
 <li>Les Traîtres jouent en secret via un lien privé.</li>
 <li>Les Loyaux observent, discutent et votent avec stratégie.</li>
 <li>Pas de prise de tête : les écrans clés s’affichent au bon moment.</li>
 <li>On garde la bonne entente : fun et fair-play.</li>
 </ul>
-<div class="wc-actions"><button class="btn" id="p3-n2" type="button">Suivant</button></div>
+<div class="wc-actions" style="display:flex; justify-content:center; margin-top:14px;">
+<button class="btn" id="p3-n2" type="button">Suivant</button>
+</div>
 </div>
 </section>
-<section class="step" id="p3-s3">
-<div class="panel roleBox" id="p3-rolePanel">
-<p class="roleTitle" id="p3-playerLine">Es-tu prêt ? Quand tu es seul, découvre ta carte.</p>
-<p class="note">Petit secret : c’est bien Franck qui a eu l’idée de ce jeu 😉… rassurez-vous, il ne connaît pas vos rôles.</p>
-<div class="wc-actions">
+<section class="step" id="p3-s3" style="display:none; opacity:0; transform:translateY(8px); transition:opacity .4s, transform .4s;">
+<div class="panel roleBox" style="background:rgba(0,0,0,.6); border-radius:16px; padding:20px 14px; text-align:center;">
+<p class="roleTitle" id="p3-playerLine" style="font-family:Cinzel,serif; font-size:clamp(22px,4.4vw,28px); margin:0 0 10px; color:#ffd98a;">
+            Es-tu prêt ? Quand tu es seul, découvre ta carte.
+          </p>
+<p class="note" style="color:#cfd5dc; margin:0 0 8px;">
+            Petit secret : c’est bien Franck qui a eu l’idée de ce jeu 😉… rassurez-vous, il ne connaît pas vos rôles.
+          </p>
+<div class="wc-actions" style="display:flex; justify-content:center; margin-top:10px;">
 <a class="btn" href="#" id="p3-revealLink">Découvre ton rôle</a>
 </div>
 </div>
 </section>
 </div>
+</div>
 </section>
+
 <div class="grid">
 <!-- Organisateur -->
 <div class="card" id="orgCard">
@@ -1444,7 +1471,6 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   else document.addEventListener('DOMContentLoaded', init);
 })();
 </script>
-
 <script id="p3-dedupe-js">
 (function(){
   function norm(s){return (s||'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();}
