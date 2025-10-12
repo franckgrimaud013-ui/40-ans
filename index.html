@@ -228,7 +228,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- GATE -->
 <div id="gate">
   <div class="panel">
-    <h1>Vous avez été conviés par b256</h1>
+    <h1>Vous avez été conviés par s896…</h1>
     
     <!-- Inline handler pour éviter tout problème de binding -->
     <button class="btn" type="button" onclick="startIntro()">Lancez-vous</button>
@@ -247,30 +247,23 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- APP -->
 <div class="app" id="app">
   <!-- Planning & Règles -->
-  <section id="welcomeSection" class="welcome-section">
-
-  <h2 id="p3Title" style="text-align:center;color:#ffd98a;margin:0 0 6px">Le déroulé du week-end</h2>
+  
+<section id="welcomeSection" class="welcome-section">
+  <h2 style="text-align:center;color:#ffd98a;margin:0 0 6px">Le déroulé du week-end</h2>
   <style>
-    /* Étapes p3 */
-    #p3Steps .step{opacity:0; transform:translateY(10px); transition:opacity .5s ease, transform .5s ease}
+    #p3Steps .step{opacity:0; transform:translateY(8px); transition:opacity .45s ease, transform .45s ease}
     #p3Steps .step.show{opacity:1; transform:none}
-    #p3Steps .panel{ background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.10); border-radius:16px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.35); }
-    #p3Steps h3{ margin:0 0 8px; color:#ffd98a; font-size:clamp(20px,4vw,26px) }
-    #p3Steps ul{ margin:6px 0 0 18px }
-    #p3Steps .actions{ display:flex; justify-content:center; margin-top:14px }
-    #p3Steps .btn{ padding:12px 18px; border-radius:14px; cursor:pointer; border:1px solid rgba(212,175,55,.9);
-      background:linear-gradient(180deg, rgba(212,175,55,.25), rgba(212,175,55,.12));
-      color:#fff; font-size:clamp(16px,2.6vw,20px); text-decoration:none; box-shadow:inset 0 0 0 2px rgba(212,175,55,.15), 0 0 22px rgba(212,175,55,.35);
-      transition:transform .15s ease, box-shadow .15s ease;
-    }
-    #p3Steps .bigBtn{ display:inline-block; margin-top:8px; padding:14px 20px; border-radius:16px; font-weight:800; color:#000;
-      background:#ffd87a; text-decoration:none; border:1px solid #ffd87a; box-shadow:0 8px 24px rgba(0,0,0,.35) }
-    #p3Steps .note{ color:#cfd5dc; text-align:center }
-    #p3Steps .roleTitle{ font-size:clamp(22px,4.4vw,28px); margin:0 0 10px; color:#ffd98a; text-align:center; font-weight:700 }
+    #p3Steps .panel{background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.10); border-radius:16px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.35);}
+    #p3Steps h3{margin:0 0 8px; color:#ffd98a; font-size:clamp(20px,4vw,26px)}
+    #p3Steps ul{margin:6px 0 0 18px}
+    #p3Steps .actions{display:flex; justify-content:center; margin-top:14px}
+    #p3Steps .btn{padding:12px 18px; border-radius:14px; cursor:pointer; border:1px solid rgba(212,175,55,.9);
+      background:linear-gradient(180deg, rgba(212,175,55,.25), rgba(212,175,55,.12)); color:#fff;
+      font-size:clamp(16px,2.6vw,20px); text-decoration:none; box-shadow:inset 0 0 0 2px rgba(212,175,55,.15), 0 0 22px rgba(212,175,55,.35);
+      transition:transform .15s ease, box-shadow .15s ease;}
+    #p3Steps .btn:hover{ transform:translateY(-2px); box-shadow:inset 0 0 0 2px rgba(212,175,55,.20), 0 14px 36px rgba(0,0,0,.5), 0 0 28px rgba(212,175,55,.45)}
   </style>
-
   <div id="p3Steps">
-    <!-- Étape 1 -->
     <section class="step show" id="p3s1">
       <div class="panel">
         <h3>🗓️ Le planning</h3>
@@ -286,8 +279,6 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
         <div class="actions"><button class="btn" id="p3n1" type="button">Suivant</button></div>
       </div>
     </section>
-
-    <!-- Étape 2 -->
     <section class="step" id="p3s2">
       <div class="panel">
         <h3>🎭 Esprit & règles</h3>
@@ -295,41 +286,39 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
           <li>Les Traîtres jouent <b>en secret</b> via un lien privé (personne ne sait qui ils sont).</li>
           <li>Les Loyaux observent, discutent et votent avec stratégie.</li>
           <li>Pas de prise de tête : les écrans clés s’affichent au bon moment.</li>
-          <li>On garde la bonne entente : fun & fair-play.</li>
+          <li>On garde la <b>bonne entente</b> : fun & fair-play.</li>
         </ul>
         <div class="actions"><button class="btn" id="p3n2" type="button">Suivant</button></div>
       </div>
     </section>
-
-    <!-- Étape 3 -->
     <section class="step" id="p3s3">
       <div class="panel" style="text-align:center">
-        <p class="roleTitle"><span id="p3PlayerName" style="display:none"></span><span id="p3PlayerLine">Es-tu prêt ? Quand tu es seul, découvre ta carte.</span></p>
-        <p class="note">Petit secret : c’est bien Franck qui a eu l’idée de ce jeu 😉… rassurez-vous, il ne connaît pas vos rôles.</p>
-        <a id="gotoReveal" class="bigBtn" href="#app">Découvre ton rôle</a>
+        <div style="color:#ffd98a;font-size:clamp(20px,4.6vw,28px);font-weight:700;margin-bottom:8px">Es-tu prêt ? Quand tu es seul, découvre ta carte.</div>
+        <div style="color:#cfd5dc;margin-bottom:10px">Petit secret : c’est bien Franck qui a eu l’idée de ce jeu 😉… rassurez-vous, il ne connaît pas vos rôles.</div>
+        <a id="p3Reveal" class="btn" href="#app">Découvre ton rôle</a>
       </div>
     </section>
   </div>
-
   <script>
     (function(){
-      const s1=document.getElementById('p3s1'), s2=document.getElementById('p3s2'), s3=document.getElementById('p3s3');
-      function show(el){ [s1,s2,s3].forEach(e=>e.classList.remove('show')); el.classList.add('show'); el.scrollIntoView({behavior:'smooth', block:'start'}); }
-      const n1=document.getElementById('p3n1'), n2=document.getElementById('p3n2');
-      if(n1) n1.addEventListener('click', ()=>show(s2));
-      if(n2) n2.addEventListener('click', ()=>show(s3));
-      // Personnalisation prénom depuis PAYLOAD si présent
-      try {
-        const name = (window.PAYLOAD && window.PAYLOAD.name) ? window.PAYLOAD.name : null;
-        if(name){
-          const line=document.getElementById('p3PlayerLine');
-          line.textContent = name + ', es-tu prêt ? Quand tu es seul, découvre ta carte.';
-        }
-      } catch(e){}
+      var s1=document.getElementById('p3s1'), s2=document.getElementById('p3s2'), s3=document.getElementById('p3s3');
+      function show(el){ [s1,s2,s3].forEach(function(e){if(e) e.classList.remove('show');}); if(el){el.classList.add('show'); el.scrollIntoView({behavior:'smooth',block:'start'});}}
+      var n1=document.getElementById('p3n1'), n2=document.getElementById('p3n2');
+      if(n1) n1.addEventListener('click', function(){ show(s2); });
+      if(n2) n2.addEventListener('click', function(){ show(s3); });
+      // Bouton final: affiche la vraie section Joueur (#app) et utilise sa logique existante (playerCard)
+      var go=document.getElementById('p3Reveal');
+      if(go && !go._b){ go._b=true; go.addEventListener('click', function(ev){
+        ev.preventDefault();
+        try{ location.hash = '#app'; }catch(e){}
+        if(typeof onEnterApp === 'function'){ try{ onEnterApp(); }catch(e){} }
+        // Scroll jusqu'au bloc joueur
+        try{ document.getElementById('playerCard').scrollIntoView({behavior:'smooth', block:'start'});}catch(e){}
+      }); }
     })();
   </script>
-
 </section>
+
 
   <div class="grid">
     <!-- Organisateur -->
