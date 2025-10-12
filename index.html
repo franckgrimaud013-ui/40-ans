@@ -233,10 +233,15 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 /* Page 3 doit couvrir l'écran et rester seule visible quand on y est */
 #welcomeSection{position:relative;min-height:100vh;background:#000;padding:0 16px 24px;z-index:10}
 </style><style id="kill-bigbg-css">
-/* Supprime toute vidéo plein écran de fond si elle est réinjectée */
-#roleVideoLayer, #bgVideo, .video-bg, .background, video.bg { 
+/* Supprime les vidéos plein écran parasites, mais GARDE celles de la page 2 et la petite de la page 3 */
+#roleVideoLayer, #bgVideo, .video-bg, .background, video.bg {
   display:none !important; visibility:hidden !important; opacity:0 !important; pointer-events:none !important;
 }
+/* Exceptions explicites */
+#page2 video, #page2 .video, #page2 .intro-video { 
+  display:block !important; visibility:visible !important; opacity:1 !important; pointer-events:auto !important; 
+}
+.top-video video, .p3-topvid { display:block !important; visibility:visible !important; opacity:1 !important; pointer-events:auto !important; }
 </style><style id="hide-block-css">
 /* utilitaire pour masquer complètement une section */
 .hidden-soft { display:none !important; visibility:hidden !important; opacity:0 !important; pointer-events:none !important; }
@@ -1591,17 +1596,30 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 </script><script id="kill-bigbg-js">
 (function(){
   function area(el){ try{ var r=el.getBoundingClientRect(); return r.width*r.height; }catch(e){ return 0; } }
+  function isTopVideo(v){
+    if(!v) return false;
+    if(v.classList && v.classList.contains('p3-topvid')) return true;
+    // inside .top-video container (page 3)
+    var p=v; for(var i=0;i<5 && p;i++){ if(p.classList && p.classList.contains('top-video')) return true; p=p.parentElement; }
+    return false;
+  }
+  function isPage2Video(v){
+    var p=v; for(var i=0;i<6 && p;i++){ if(p.id==='page2') return true; p=p.parentElement; }
+    return false;
+  }
   function kill(){
-    // Cibles connues
     document.querySelectorAll('#roleVideoLayer,#bgVideo,video.bg,.video-bg,.background').forEach(function(el){
+      if(el.tagName==='VIDEO'){
+        if(isTopVideo(el) || isPage2Video(el)) return;
+      }
       try{ el.remove(); }catch(e){}
     });
-    // Sécurité: toute <video> fixe/absolue géante en arrière-plan
+    // Sécurité: toute <video> fixe/absolue géante en arrière-plan, sauf celles de #page2 et la top-video p3
     Array.prototype.slice.call(document.querySelectorAll('video')).forEach(function(v){
-      if(!v) return;
+      if(!v || isTopVideo(v) || isPage2Video(v)) return;
       try{
         var s=getComputedStyle(v);
-        if((s.position==='fixed'||s.position==='absolute') && area(v) > 100000 && s.zIndex < 1000){
+        if((s.position==='fixed'||s.position==='absolute') && area(v) > 120000 && parseInt(s.zIndex||'0',10) < 1000){
           v.remove();
         }
       }catch(e){}
@@ -1634,6 +1652,21 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     });
   }
 })(); 
+</script><script id="ensure-page2-visible">
+(function(){
+  function ensure(){
+    var p2 = document.getElementById('page2');
+    if(p2){
+      p2.style.removeProperty('display');
+      p2.hidden = false;
+      // Show any button "Entrer dans le jeu"
+      var btn = document.getElementById('enterGame') || Array.prototype.slice.call(p2.querySelectorAll('button,a')).find(function(b){
+        return /entrer dans le jeu/i.test((b.textContent||''));
+      });
+      if(btn){ btn.style.display = 'inline-flex'; btn.hidden = false; }
+    }
+  }
+  if(document.readyState!=='loading') ensure(); else document.addEventListener('DOMContentLoaded', ensure);
+})();
 </script></body>
 </html>
-
