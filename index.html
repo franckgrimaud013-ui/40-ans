@@ -279,7 +279,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <div id="gate">
 <div class="panel">
 <!-- Inline handler pour éviter tout problème de binding -->
-<button class="btn" onclick="startIntro()" type="button">Lancez-vous</button>
+<button id="startBtn" class="btn" onclick="startIntro()" type="button" style="display:none">Lancez-vous</button>
 </div>
 </div>
 <!-- INTRO -->
@@ -1564,5 +1564,25 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   }
   if(document.readyState!=='loading') clean(); else document.addEventListener('DOMContentLoaded', clean);
   setTimeout(clean, 200); setTimeout(clean, 1000); setTimeout(clean, 3000);
-})();</script></body>
+})();</script>
+<script id="delay-start-button-26s">
+// Affiche le bouton "Lancez-vous" après 26 secondes
+(function(){
+  function showStartBtn(){
+    var btn = document.getElementById('startBtn') || document.querySelector('#gate .panel .btn');
+    if(!btn) return;
+    // S'assure que l'ID existe pour de futurs patchs
+    if(!btn.id) btn.id = 'startBtn';
+    btn.style.display = 'inline-block';
+  }
+  // Masque au cas où un style externe le rendrait visible plus tôt
+  document.addEventListener('DOMContentLoaded', function(){
+    var btn = document.getElementById('startBtn') || document.querySelector('#gate .panel .btn');
+    if(btn) btn.style.display = 'none';
+    setTimeout(showStartBtn, 26000);
+  });
+})();
+</script>
+
+</body>
 </html>
