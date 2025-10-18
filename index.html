@@ -247,6 +247,21 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 .p3-imgwrap{ position:relative; width:100%; max-width:980px; margin:0 auto; }
 .p3-img{ display:block; width:100%; height:auto; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.35); }
 </style>
+<style id="p3-fade-css">
+/* [P3 Transitions] Crossfade steps (1s) + soft button entrance */
+#p3-steps .p3-bottom{ position:relative; }
+#p3-steps .step{
+  position:absolute; inset:0;
+  opacity:0; pointer-events:none;
+  transition:opacity 1s ease;
+  overflow:auto; padding:16px;
+}
+#p3-steps .step.active{ opacity:1; pointer-events:auto; }
+
+/* Button entrance */
+@keyframes p3-fadeup { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+#p3-steps .p3-actions .btn{ animation: p3-fadeup .6s ease both; }
+</style>
 </head>
 <body><!--
 ==================== GUIDE RAPIDE (COMMENT MODIFIER) ====================
@@ -1612,15 +1627,22 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 </script>
 
 
+
 <script id="p3-split-js">
 (function(){
   function showStep(idToShow){
     try{
-      document.querySelectorAll('#p3-steps .step').forEach(function(el){
-        el.classList.remove('active');
-      });
-      var el = document.getElementById(idToShow);
-      if(el){ el.classList.add('active'); el.scrollIntoView({behavior:'smooth', block:'start'}); }
+      var wrap = document.getElementById('p3-steps');
+      var current = wrap ? wrap.querySelector('.step.active') : null;
+      var next = document.getElementById(idToShow);
+      if(!next || next === current) return;
+      // Add active to next to begin fade-in
+      next.classList.add('active');
+      // Remove active from current on next tick to allow overlap
+      setTimeout(function(){
+        if(current){ current.classList.remove('active'); }
+        next.scrollIntoView({behavior:'smooth', block:'start'});
+      }, 20);
     }catch(e){}
   }
   function bind(btnId, targetId){
@@ -1636,6 +1658,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
   });
 })();
 </script>
+
 
 </body>
 </html>
