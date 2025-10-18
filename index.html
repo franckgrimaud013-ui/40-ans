@@ -163,6 +163,51 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   #gate{ padding-top:72vh !important; }
 }
 </style>
+
+/* === Mobile reflow for a clean single-screen layout === */
+@media (max-width: 640px){
+  #p3-steps .p3-photo-title{
+    font-size: 22px;
+    margin: 4px 0 10px;
+    text-underline-offset:6px;
+  }
+  /* Container spacing to breathe but keep everything on one screen */
+  #p3-steps .plan-list{ padding: 0 12px; }
+  #p3-steps .plan-item{
+    display:block;
+    margin:8px 0;
+    line-height:1.35;
+    font-size: 18px;
+  }
+  #p3-steps .plan-item .left{
+    display:block;
+    margin: 0 0 2px;
+    font-size: 18px;
+  }
+  #p3-steps .plan-item .dots{ display:none; }
+  #p3-steps .plan-item .right{
+    display:block;
+    font-size: 18px;
+  }
+
+  /* Rules: center text but smaller, tighter */
+  #p3-steps .rules-wrap p{
+    font-size: 18px;
+    line-height: 1.4;
+    margin: 8px auto;
+    width: 92%;
+  }
+  #p3-steps .rules-wrap p.final{
+    font-size: 17px;
+    margin-top: 10px;
+  }
+
+  /* Reduce bottom spacing so the button has room */
+  #p3-steps .p3-actions{
+    margin-top: 8px;
+  }
+}
+
 <!-- PATCH: lisibilité p3 (titre blanc + panneaux sombres) -->
 <style id="patch-p3-style">
   /* Titre blanc + halo (sera appliqué via JS en ajoutant id="p3Title") */
@@ -268,7 +313,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 #p3-steps .plan-list{ list-style:none; padding:0; margin:0; }
 #p3-steps .plan-item{ 
   display:flex; align-items:baseline; 
-  gap:.5rem; margin:10px 0; 
+  gap:.5rem; margin:6px 0; 
   font-size:clamp(18px,3.2vw,26px);
   line-height:1.6;
 }
@@ -303,6 +348,107 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 }
 </style>
 
+
+<style id="p3-photo-like-responsive">
+/* ===== Mobile tidy (planning & règles) ===== */
+@media (max-width: 768px){
+  #p3-steps .p3-photo-title{
+    font-size: 24px;
+    margin: 4px 0 10px;
+  }
+  /* Make the section use the whole viewport minus button; keep content tidy */
+  #p3-s1, #p3-s2{
+    display:flex; flex-direction:column;
+    min-height: calc(100vh - 140px);
+    padding: 0 14px;
+  }
+  #p3-s1 .plan-list{
+    display:grid;
+    grid-template-columns: 1fr;
+    row-gap: 10px;
+    margin: 4px 0 10px;
+  }
+  #p3-s1 .plan-item{
+    display:grid;
+    grid-template-columns: 42% 58%;
+    column-gap: 10px;
+    margin: 0;
+    line-height: 1.35;
+  }
+  #p3-s1 .plan-item .left{
+    font-size: 18px;
+    font-style: italic;
+  }
+  #p3-s1 .plan-item .right{
+    font-size: 18px;
+  }
+  #p3-s1 .plan-item .dots{ display:none; }
+
+  /* Règles: slightly smaller & tighter */
+  #p3-s2 .rules-wrap p{
+    width: 100%;
+    font-size: 19px;
+    line-height: 1.4;
+    margin: 10px 0;
+  }
+  #p3-s2 .rules-wrap p.final{
+    font-size: 18px;
+  }
+
+  /* Button spacing */
+  #p3-steps .p3-actions{ margin: 10px 0 12px; }
+}
+/* Small phones */
+@media (max-width: 380px){
+  #p3-s1 .plan-item .left,
+  #p3-s1 .plan-item .right{ font-size: 16px; }
+  #p3-steps .p3-photo-title{ font-size: 22px; }
+}
+</style>
+
+<style id="p3-desktop-layout">
+/* === Desktop layout for clean two-column planning with dotted leader === */
+@media (min-width: 641px){
+  #p3-steps .p3-photo-title{
+    font-size: clamp(30px, 3.8vw, 44px);
+    margin: 10px 0 18px;
+  }
+  #p3-steps .plan-list{
+    width: min(1100px, 92%);
+    margin: 0 auto;
+  }
+  #p3-steps .plan-item{
+    display: grid;
+    grid-template-columns: minmax(220px, 34%) minmax(20px, 1fr) minmax(360px, 56%);
+    align-items: baseline;
+    column-gap: 12px;
+    margin: 12px 0;
+    font-size: clamp(18px, 1.6vw, 24px);
+    line-height: 1.5;
+  }
+  #p3-steps .plan-item .left{ white-space: nowrap; }
+  #p3-steps .plan-item .dots{
+    border: none;
+    height: 2px;
+    background: repeating-linear-gradient(
+      to right,
+      rgba(212,175,55,.95) 0 6px,
+      transparent 6px 12px
+    );
+    transform: translateY(-2px);
+  }
+  #p3-steps .plan-item .right{ word-break: keep-all; }
+  #p3-steps .rules-wrap p{
+    width: min(1000px, 90%);
+    margin: 12px auto;
+    font-size: clamp(20px, 2.4vw, 34px);
+    line-height: 1.5;
+  }
+  #p3-steps .rules-wrap p.final{
+    font-size: clamp(20px, 2.2vw, 30px);
+  }
+}
+</style>
 </head>
 <body><!--
 ==================== GUIDE RAPIDE (COMMENT MODIFIER) ====================
