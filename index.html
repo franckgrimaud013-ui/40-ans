@@ -313,31 +313,41 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 </div>
 </div>
 <div class="bottom-steps" style="max-width:980px;margin:14px auto 0;">
-<!-- --- [P3] Etapes (planning -> règles -> 'Découvre ton rôle') --- --><!-- [ASTUCE P3] Étapes : éditez les textes dans #p3-s1 (planning), #p3-s2 (règles), #p3-s3 (intro du bouton final). --><div id="p3-steps">
-<!-- ~~~ [P3] ETAPE 1 : Le planning ~~~ --><!-- [ASTUCE P3/S1] Modifiez les <li> pour changer le planning. --><section class="step active" id="p3-s1">
-<h3 class="p3-title">Le planning</h3>
-<ul class="p3-list">
-<li>Vendredi soir : conseil et vote d’élimination.</li>
-<li>Nuit ven → sam : les Traîtres choisissent discrètement une victime via leur lien.</li>
-<li>Samedi matin : annonce au groupe du résultat de la nuit.</li>
-<li>Samedi midi : nouveau conseil et vote.</li>
-<li>Samedi soir : conseil et vote.</li>
-<li>Nuit sam → dim : les Traîtres éliminent à nouveau via leur lien.</li>
-<li>Dimanche matin : annonce au groupe de la victime de la nuit.</li>
-</ul>
-<div class="p3-actions"><button class="btn" id="p3-n1" type="button">Suivant</button></div>
+<!-- --- [P3] Etapes (planning -> règles -> 'Découvre ton rôle') --- --><!-- [ASTUCE P3] Étapes : éditez les textes dans #p3-s1 (planning), #p3-s2 (règles), #p3-s3 (intro du bouton final). --><div id="p3-steps" class="p3-split">
+<div class="p3-top">
+  <video id="p3-top-video" src="videos/role-bg.mp4?v=24" autoplay muted loop playsinline></video>
+</div>
+<div class="p3-bottom">
+
+  <section class="step active" id="p3-img1">
+    <div class="p3-imgwrap">
+      <img class="p3-img" src="images/image-1.png" alt="Étape 1"/>
+    </div>
+    <div class="p3-actions">
+      <button class="btn" id="p3-next-1" type="button">Suivant</button>
+    </div>
+  </section>
+
+  <section class="step" id="p3-img2">
+    <div class="p3-imgwrap">
+      <img class="p3-img" src="images/image-2.png" alt="Étape 2"/>
+    </div>
+    <div class="p3-actions">
+      <button class="btn" id="p3-next-2" type="button">Suivant</button>
+    </div>
+  </section>
+
+  <section class="step" id="p3-s3">
+    <h3 class="p3-title" id="p3-playerLine">Es-tu prêt ? Quand tu es seul, découvre ta carte.</h3>
+    <div class="p3-actions">
+      <a class="btn" href="#" id="p3-revealLink">🎭 Découvre ton rôle</a>
+    </div>
+  </section>
+
+</div>
+</div>
 </section>
-<!-- ~~~ [P3] ETAPE 2 : Esprit & règles ~~~ --><!-- [ASTUCE P3/S2] Modifiez ou ajoutez des règles ici. --><section class="step" id="p3-s2">
-<h3 class="p3-title">Esprit et règles</h3>
-<ul class="p3-list">
-<li>Les Traîtres jouent en secret via un lien privé.</li>
-<li>Les Loyaux observent, discutent et votent avec stratégie.</li>
-<li>Pas de prise de tête : les écrans clés s’affichent au bon moment.</li>
-<li>On garde la bonne entente : fun et fair-play.</li>
-</ul>
-<div class="p3-actions"><button class="btn" id="p3-n2" type="button">Suivant</button></div>
-</section>
-<!-- ~~~ [P3] ETAPE 3 : 🎭 Découvre ton rôle ~~~ --><!-- [ASTUCE P3/S3] Texte avant le bouton final. --><section class="step" id="p3-s3">
+<!-- ~~~ [P3] ETAPE 2 : Esprit & règles ~~~ --><!-- [ASTUCE P3/S2] Modifiez ou ajoutez des règles ici. --><!-- ~~~ [P3] ETAPE 3 : 🎭 Découvre ton rôle ~~~ --><!-- [ASTUCE P3/S3] Texte avant le bouton final. --><section class="step" id="p3-s3">
 <h3 class="p3-title" id="p3-playerLine">Es-tu prêt ? Quand tu es seul, découvre ta carte.</h3>
 <p class="p3-note">Petit secret : c’est bien Franck qui a eu l’idée de ce jeu 😉… rassurez-vous, il ne connaît pas vos rôles.</p>
 <div class="p3-actions"><!-- ~~~ [P3] Bouton final : 🎭 Découvre ton rôle (lien / fonction revealRole) ~~~ --><!-- [ASTUCE P3] Si vous avez une fonction revealRole, c'est ici qu'elle est appelée. --><a class="btn" href="#" id="p3-revealLink">🎭 Découvre ton rôle</a></div>
@@ -1598,3 +1608,4 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 
 </body>
 </html>
+
