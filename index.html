@@ -164,49 +164,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 }
 </style>
 
-/* === Mobile reflow for a clean single-screen layout === */
-@media (max-width: 640px){
-  #p3-steps .p3-photo-title{
-    font-size: 22px;
-    margin: 4px 0 10px;
-    text-underline-offset:6px;
-  }
-  /* Container spacing to breathe but keep everything on one screen */
-  #p3-steps .plan-list{ padding: 0 12px; }
-  #p3-steps .plan-item{
-    display:block;
-    margin:8px 0;
-    line-height:1.35;
-    font-size: 18px;
-  }
-  #p3-steps .plan-item .left{
-    display:block;
-    margin: 0 0 2px;
-    font-size: 18px;
-  }
-  #p3-steps .plan-item .dots{ display:none; }
-  #p3-steps .plan-item .right{
-    display:block;
-    font-size: 18px;
-  }
 
-  /* Rules: center text but smaller, tighter */
-  #p3-steps .rules-wrap p{
-    font-size: 18px;
-    line-height: 1.4;
-    margin: 8px auto;
-    width: 92%;
-  }
-  #p3-steps .rules-wrap p.final{
-    font-size: 17px;
-    margin-top: 10px;
-  }
-
-  /* Reduce bottom spacing so the button has room */
-  #p3-steps .p3-actions{
-    margin-top: 8px;
-  }
-}
 
 <!-- PATCH: lisibilité p3 (titre blanc + panneaux sombres) -->
 <style id="patch-p3-style">
@@ -449,6 +407,51 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   }
 }
 </style>
+
+<style id="p3-photo-like-styles-mobile">
+@media (max-width: 640px){
+  #p3-steps .p3-photo-title{
+    font-size: 22px;
+    margin: 4px 0 10px;
+    text-underline-offset:6px;
+  }
+  /* Stack each line: gold label above white text */
+  #p3-steps .plan-list{ padding: 0 12px; }
+  #p3-steps .plan-item{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    margin:8px 0;
+    line-height:1.35;
+    font-size: 18px;
+  }
+  #p3-steps .plan-item .left{
+    margin: 0 0 2px;
+    font-size: 18px;
+  }
+  #p3-steps .plan-item .dots{ display:none; }
+  #p3-steps .plan-item .right{
+    font-size: 18px;
+    margin: 0;
+  }
+  /* Rules: center text but smaller, tighter */
+  #p3-steps .rules-wrap p{
+    font-size: 18px;
+    line-height: 1.4;
+    margin: 8px auto;
+    width: 92%;
+  }
+  #p3-steps .rules-wrap p.final{
+    font-size: 17px;
+    margin-top: 10px;
+  }
+  /* Reduce bottom spacing so the button has room */
+  #p3-steps .p3-actions{
+    margin-top: 8px;
+  }
+}
+</style>
+
 </head>
 <body><!--
 ==================== GUIDE RAPIDE (COMMENT MODIFIER) ====================
@@ -650,7 +653,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
         var QA=[
           {q:"Quelle heure est-il ?", a:()=>{const h=String(Math.floor(Math.random()*24)).padStart(2,'0');const m=String(Math.floor(Math.random()*60)).padStart(2,'0');return h+"h"+m;}},
-          {q:"Quel jour sommes-nous ?", a:()=>["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"][Math.floor(Math.random()*7)]},
+          {q:"Quel jour sommes-nous ?", a:()=>["lundi","mardi","mercredi","jeudi","samedi","dimanche"][Math.floor(Math.random()*7)]},
           {q:"Quel est le mot de passe ?", a:()=>["ombre","azur","lune","piano","velours","nuit","brume","mystère"][Math.floor(Math.random()*8)]},
           {q:"Quel est ton chiffre porte-bonheur ?", a:()=>String(Math.floor(Math.random()*90)+10)},
           {q:"Quelle est la couleur du soir ?", a:()=>["indigo","cobalt","ardoise","saphir","nuit","prune","minuit"][Math.floor(Math.random()*7)]},
