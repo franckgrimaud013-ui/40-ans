@@ -237,8 +237,13 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   position:absolute; inset:0; width:100%; height:100%;
   object-fit:contain; display:block; background:#000;
 }
-</style><style id="p3-images-css">
-/* [P3 Images] Présentation des écrans image */
+</style><style id="p3-split-css">
+/* [P3 Split] video en haut + contenu en bas */
+#p3-steps.p3-split, #p3-steps { min-height: 100vh; display:flex; flex-direction:column; }
+#p3-steps .p3-top{ height:25vh; position:relative; overflow:hidden; }
+#p3-steps .p3-top video{ width:100%; height:100%; object-fit:cover; display:block; }
+#p3-steps .p3-bottom{ height:75vh; overflow:auto; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding:16px; }
+/* [P3 Images] */
 .p3-imgwrap{ position:relative; width:100%; max-width:980px; margin:0 auto; }
 .p3-img{ display:block; width:100%; height:auto; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.35); }
 </style>
@@ -306,8 +311,12 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 </div>
 </div>
 <div class="bottom-steps" style="max-width:980px;margin:14px auto 0;">
-<!-- --- [P3] Etapes (planning -> règles -> 'Découvre ton rôle') --- --><!-- [ASTUCE P3] Étapes : éditez les textes dans #p3-s1 (planning), #p3-s2 (règles), #p3-s3 (intro du bouton final). --><div id="p3-steps">
-  <!-- Étapes basées sur images -->
+<!-- --- [P3] Etapes (planning -> règles -> 'Découvre ton rôle') --- --><!-- [ASTUCE P3] Étapes : éditez les textes dans #p3-s1 (planning), #p3-s2 (règles), #p3-s3 (intro du bouton final). --><div id="p3-steps" class="p3-split">
+<div class="p3-top">
+  <video id="p3-top-video" src="videos/role-bg.mp4" autoplay muted loop playsinline></video>
+</div>
+<div class="p3-bottom">
+
   <section class="step active" id="p3-img1">
     <div class="p3-imgwrap">
       <img class="p3-img" src="images/image-1.png" alt="Étape 1"/>
@@ -322,9 +331,15 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
       <img class="p3-img" src="images/image-2.png" alt="Étape 2"/>
     </div>
     <div class="p3-actions">
-      <a class="btn" href="#" id="p3-revealLink">🎭 Découvre ton rôle</a>
+      <button class="btn" id="p3-next-2" type="button">Suivant</button>
     </div>
   </section>
+<section class="step" id="p3-s3">
+<h3 class="p3-title" id="p3-playerLine">Es-tu prêt ? Quand tu es seul, découvre ta carte.</h3>
+<p class="p3-note">Petit secret : c’est bien Franck qui a eu l’idée de ce jeu 😉… rassurez-vous, il ne connaît pas vos rôles.</p>
+<div class="p3-actions"><!-- ~~~ [P3] Bouton final : 🎭 Découvre ton rôle (lien / fonction revealRole) ~~~ --><!-- [ASTUCE P3] Si vous avez une fonction revealRole, c'est ici qu'elle est appelée. --><a class="btn" href="#" id="p3-revealLink">🎭 Découvre ton rôle</a></div>
+</section>
+</div>
 </div>
 </section>
 <!-- ~~~ [P3] ETAPE 2 : Esprit & règles ~~~ --><!-- [ASTUCE P3/S2] Modifiez ou ajoutez des règles ici. --><section class="step" id="p3-s2">
@@ -1597,7 +1612,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 </script>
 
 
-<script id="p3-images-js">
+<script id="p3-split-js">
 (function(){
   function showStep(idToShow){
     try{
@@ -1608,12 +1623,16 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       if(el){ el.classList.add('active'); el.scrollIntoView({behavior:'smooth', block:'start'}); }
     }catch(e){}
   }
-  document.addEventListener('DOMContentLoaded', function(){
-    var n1 = document.getElementById('p3-next-1');
-    if(n1 && !n1._b){
-      n1._b = true;
-      n1.addEventListener('click', function(){ showStep('p3-img2'); });
+  function bind(btnId, targetId){
+    var b = document.getElementById(btnId);
+    if(b && !b._b){
+      b._b = true;
+      b.addEventListener('click', function(){ showStep(targetId); });
     }
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    bind('p3-next-1', 'p3-img2');
+    bind('p3-next-2', 'p3-s3');
   });
 })();
 </script>
