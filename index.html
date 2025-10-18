@@ -276,6 +276,38 @@ body{ background:#000; }
 /* [Organizer Hidden] Masquer la zone organisateur par défaut */
 .grid{ display:none !important; }
 </style>
+<style id="p3-cleanup-css">
+/* [P3 Cleanup] supprimer le contour gris du block autour des étapes */
+.bottom-steps{ max-width:none !important; margin:0 !important; width:100vw !important; border:none !important; outline:none !important; box-shadow:none !important; background:transparent !important; }
+.bottom-steps *{ box-shadow:none !important; }
+#p3-steps{ border:none !important; outline:none !important; box-shadow:none !important; }
+#p3-steps .card, #p3-steps .container, #p3-steps .wrapper{ border:none !important; outline:none !important; box-shadow:none !important; background:transparent !important; }
+</style>
+<style id="p3-bgfix-css">
+/* [P3 Background] fond noir sous les étapes pour masquer tout résidu */
+#p3-steps, #p3-steps .p3-bottom{ background:#000; }
+</style>
+<style id="p3-fullscreen-img-css">
+/* [P3 Fullscreen Images] remove layout wrapper effects and make images truly full width/height */
+.bottom-steps{ 
+  display: contents !important; 
+  max-width:none !important; 
+  width:auto !important; 
+  margin:0 !important; 
+  padding:0 !important; 
+  border:none !important; 
+  outline:none !important; 
+  box-shadow:none !important; 
+  background:transparent !important; 
+}
+#p3-steps{ width:100vw; margin:0; padding:0; border:none !important; }
+#p3-steps .p3-top{ height:25vh; }
+#p3-steps .p3-bottom{ height:75vh; padding:0 !important; position:relative; overflow:hidden; }
+#p3-steps .step{ padding:0 !important; } /* remove previous padding 16px */
+.p3-imgwrap{ position:relative; width:100vw !important; max-width:none !important; height:100%; margin:0 !important; }
+.p3-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; display:block; border-radius:0 !important; box-shadow:none !important; }
+#p3-steps .p3-actions{ position:absolute; left:0; right:0; bottom:18px; display:flex; justify-content:center; gap:12px; z-index:2; }
+</style>
 </head>
 <body><!--
 ==================== GUIDE RAPIDE (COMMENT MODIFIER) ====================
@@ -338,9 +370,16 @@ body{ background:#000; }
 </video>
 </div>
 </div>
-<div class="bottom-steps" style="max-width:980px;margin:14px auto 0;"><div id="p3-steps" class="p3-split">
+<div class="bottom-steps" style="display:contents"><div id="p3-steps" class="p3-split">
 <div class="p3-top">
   <video id="p3-top-video" src="videos/role-bg.mp4?v=24" autoplay muted loop playsinline></video>
+
+  <section class="step" id="p3-s3">
+    <h3 class="p3-title" id="p3-playerLine">Es-tu prêt ? Quand tu es seul, découvre ta carte.</h3>
+    <div class="p3-actions">
+      <a class="btn" href="#" id="p3-revealLink">🎭 Découvre ton rôle</a>
+    </div>
+  </section>
 </div>
 <div class="p3-bottom">
 
