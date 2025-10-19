@@ -2,6 +2,12 @@
 
 <html lang="fr">
 <head>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Les 40 ans de Franck">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
 <meta name="theme-color" content="#000000">
 
 <meta content="yes" name="apple-mobile-web-app-capable"/>
@@ -453,7 +459,11 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 </style>
 
 </head>
-<body><!--
+\1
+<div id="pwa-install" style="position:fixed; right:16px; bottom:16px; z-index:9999;">
+  <button id="btnInstallPWA" class="btn">Installer l'application</button>
+</div>
+<!--
 ==================== GUIDE RAPIDE (COMMENT MODIFIER) ====================
 - PAGE 1 :
   • Texte : cherchez le bloc 'Vous avez été conviés…' dans #page1 et modifiez-le.
@@ -1769,6 +1779,49 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     if(btn) btn.style.display = 'none';
     setTimeout(showStartBtn, 26000);
   });
+})();
+</script>
+
+
+<script id="pwa-install-js">
+(function(){
+  var deferred;
+  var btn = document.getElementById("btnInstallPWA");
+  if(btn){ btn.style.display = "none"; }
+
+  window.addEventListener("beforeinstallprompt", function(e){
+    e.preventDefault();
+    deferred = e;
+    if(btn){ btn.style.display = "inline-block"; }
+  });
+
+  if(btn){
+    btn.addEventListener("click", function(){
+      if(!deferred){ 
+        alert("Si vous ne voyez pas la fenêtre d'installation, utilisez le menu 'Ajouter à l'écran d'accueil'.");
+        return; 
+      }
+      deferred.prompt();
+      deferred.userChoice.finally(function(){ deferred = null; btn.style.display = "none"; });
+    });
+  }
+
+  // iOS hint (no beforeinstallprompt on Safari iOS)
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  if(isIOS && isSafari && btn){
+    btn.style.display = "inline-block";
+    btn.onclick = function(){
+      alert("Sur iPhone: touchez  Partager  puis  Ajouter à l'écran d'accueil  pour installer l'app.");
+    };
+  }
+
+  // Register service worker
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("sw.js").catch(function(){});
+    });
+  }
 })();
 </script>
 
