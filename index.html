@@ -179,7 +179,6 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     box-shadow:0 10px 30px rgba(0,0,0,.30) !important;
   }
 </style>
-<link href="/manifest.webmanifest" rel="manifest"/>
 <meta content="#000000" name="theme-color"/>
 <link href="/icons/icon-192.png" rel="icon"/>
 <style>
@@ -458,6 +457,26 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     margin-top: 8px;
   }
 }
+</style>
+
+
+<style id="ios-guide-css">
+#iosGuide{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.85);backdrop-filter:blur(4px)}
+#iosGuide.show{display:flex}
+#iosGuide .box{width:min(92vw,680px);max-height:92vh;background:#0b0b0b;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6);display:grid;grid-template-rows:auto 1fr auto}
+#iosGuide header{padding:14px 16px;color:#ffd98a;font-family:Cinzel,serif;font-size:18px;text-align:center;border-bottom:1px solid rgba(255,255,255,.09)}
+#iosGuide .content{padding:14px 16px}
+#iosGuide ol{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+#iosGuide li{display:grid;grid-template-columns:48px 1fr;gap:12px;align-items:center;background:#121212;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:10px}
+#iosGuide .step-idx{width:48px;height:48px;display:grid;place-items:center;border-radius:10px;background:#1a1a1a;color:#ffd98a;font-weight:700;font-size:18px}
+#iosGuide .step-txt{color:#e6e6e6;line-height:1.45}
+#iosGuide .hint{color:#bfc6cf;font-size:13px;opacity:.85;margin-top:8px;text-align:center}
+#iosGuide footer{display:flex;gap:10px;justify-content:center;padding:12px;border-top:1px solid rgba(255,255,255,.09)}
+#iosGuide .btn{appearance:none;border:0;border-radius:10px;padding:10px 14px;cursor:pointer}
+#iosGuide .btn.primary{background:#ffd98a;color:#1a1a1a;font-weight:700}
+#iosGuide .btn.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.25)}
+#iosGuide svg{width:22px;height:22px;vertical-align:-4px;margin-right:6px;opacity:.95}
+@media (max-width:480px){#iosGuide .box{width:94vw}}
 </style>
 
 </head>
@@ -1120,13 +1139,6 @@ function revealRole(payload){
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(console.error);
-  });
-}
-</script>
-<script>
 (function(){
   var cta = document.getElementById('ctaOverlay');
   if(!cta) return;
@@ -1784,6 +1796,86 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     if(btn) btn.style.display = 'none';
     setTimeout(showStartBtn, 26000);
   });
+})();
+</script>
+
+
+<!-- Overlay d’explication (iPhone Safari uniquement) -->
+<div id="iosGuide" aria-hidden="true">
+  <div class="box" role="dialog" aria-modal="true" aria-label="Ajouter à l’écran d’accueil">
+    <header>Pour profiter du jeu en plein écran sur iPhone</header>
+    <div class="content">
+      <ol>
+        <li>
+          <div class="step-idx">1</div>
+          <div class="step-txt">
+            Touchez <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><rect x="4" y="11" width="16" height="10" rx="2"/></svg>
+            <strong>Partager</strong> en bas de l’écran.
+          </div>
+        </li>
+        <li>
+          <div class="step-idx">2</div>
+          <div class="step-txt">
+            Faites défiler et choisissez <strong>Ajouter à l’écran d’accueil</strong>.
+          </div>
+        </li>
+        <li>
+          <div class="step-idx">3</div>
+          <div class="step-txt">
+            Confirmez. Une icône “Les 40 ans de Franck” apparaît. Ouvrez-la pour le <strong>plein écran</strong>.
+          </div>
+        </li>
+      </ol>
+      <p class="hint">Astuce : cette explication ne s’affichera qu’une seule fois après “J’ai ajouté”.</p>
+    </div>
+    <footer>
+      <button class="btn ghost" id="iosGuideLater">Je verrai plus tard</button>
+      <button class="btn primary" id="iosGuideDone">J’ai ajouté</button>
+    </footer>
+  </div>
+</div>
+
+<script id="env-routing">
+(function(){
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+  var seenGuide = localStorage.getItem('iosGuideSeen') === '1';
+
+  var guide = document.getElementById('iosGuide');
+  var btnDone = document.getElementById('iosGuideDone');
+  var btnLater = document.getElementById('iosGuideLater');
+
+  function showGuide(){ if(guide){ guide.classList.add('show'); guide.setAttribute('aria-hidden','false'); } }
+  function hideGuide(){ if(guide){ guide.classList.remove('show'); guide.setAttribute('aria-hidden','true'); } }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    if(isIOS && !isStandalone && !seenGuide){ showGuide(); }
+  });
+
+  if(btnLater){ btnLater.addEventListener('click', function(){ hideGuide(); }); }
+  if(btnDone){
+    btnDone.addEventListener('click', function(){
+      localStorage.setItem('iosGuideSeen','1');
+      hideGuide();
+    });
+  }
+
+  function requestFS(){
+    var el = document.documentElement;
+    var rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if (rfs) { try { rfs.call(el); } catch(e){} }
+  }
+  function isStart(el){
+    if(!el) return false;
+    var t=(el.textContent||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'');
+    return t.includes('lancez-vous')||t.includes('lancez vous')||el.id==='p1-start'||el.id==='startBtn'||(el.classList&&el.classList.contains('btn-start'));
+  }
+  document.addEventListener('click', function(e){
+    var btn=e.target&&e.target.closest&&e.target.closest('button, a, .btn');
+    if(!btn||!isStart(btn)) return;
+    if(!isIOS){ requestFS(); }
+    else if(isIOS && !isStandalone && !seenGuide){ e.preventDefault(); showGuide(); }
+  }, true);
 })();
 </script>
 
