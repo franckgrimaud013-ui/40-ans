@@ -2,14 +2,8 @@
 
 <html lang="fr">
 <head>
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="Les 40 ans de Franck">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-
-<meta name="theme-color" content="#000000">
-
+<meta content="#000000" media="(prefers-color-scheme: light)" name="theme-color"/>
+<meta content="#000000" media="(prefers-color-scheme: dark)" name="theme-color"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta charset="utf-8"/>
@@ -185,11 +179,19 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     box-shadow:0 10px 30px rgba(0,0,0,.30) !important;
   }
 </style>
+<link href="/manifest.webmanifest" rel="manifest"/>
+<meta content="#000000" name="theme-color"/>
 <link href="/icons/icon-192.png" rel="icon"/>
 <style>
 /* CTA visibility controlled by end of intro animation */
 #ctaOverlay{opacity:0;pointer-events:none;transform:translateY(6px);transition:.4s ease;}
 </style>
+<style id="strict-audio-css">
+  #enterGameOverlay{display:none}
+  #enterGameOverlay.show{display:flex}
+  #bgSoundToggle, #audioUnlock { display:none !important; }
+  .bg-gate, .bg-intro { filter:none !important;  background:none; }
+  .bg-intro::after, .intro-started </style>
 <style id="bg-intro-fix">.bg-intro{background:none!important;}</style>
 <style id="bg-video-visibility-fix">
   #bgv1, #bgv2 { position:fixed; inset:0; width:100%; height:100%; display:block; object-fit:cover; z-index:0; background:#000; }
@@ -458,28 +460,8 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 }
 </style>
 
-
-<style id="ios-immersive-css">
-/* iOS fallback "immersive" mode (no true fullscreen for pages on Safari iOS) */
-body.immersive {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100dvh; /* dynamic viewport height for iOS */
-  overflow: hidden;
-  background: #000;
-}
-body.immersive #gate, 
-body.immersive header, 
-body.immersive footer { display: none !important; }
-body.immersive #app, 
-body.immersive #main, 
-body.immersive .page-root { width:100vw; height:100%; }
-</style>
-
 </head>
-\1
-<!--
+<body><!--
 ==================== GUIDE RAPIDE (COMMENT MODIFIER) ====================
 - PAGE 1 :
   • Texte : cherchez le bloc 'Vous avez été conviés…' dans #page1 et modifiez-le.
@@ -1136,6 +1118,13 @@ function revealRole(payload){
   secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
   secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
 })();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(console.error);
+  });
+}
 </script>
 <script>
 (function(){
@@ -1795,34 +1784,6 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     if(btn) btn.style.display = 'none';
     setTimeout(showStartBtn, 26000);
   });
-})();
-</script>
-
-<script id="fs-on-lancez-vous">
-(function(){
-  function isiOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
-  function requestFS(){
-    var el = document.documentElement;
-    var rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
-    if (rfs) { try { rfs.call(el); } catch(e){} }
-  }
-  function isStart(el){
-    if(!el) return false;
-    var t = (el.textContent || '').toLowerCase();
-    return t.includes('lancez-vous') || t.includes('lancez vous') || el.id === 'p1-start' || el.id === 'startBtn' || (el.classList && el.classList.contains('btn-start'));
-  }
-  document.addEventListener('click', function(e){
-    var btn = e.target && e.target.closest && e.target.closest('button, a, .btn');
-    if(!isStart(btn)) return;
-    // Try real fullscreen first
-    requestFS();
-    // iOS fallback (no Fullscreen API for pages)
-    if(isiOS()){
-      document.body.classList.add('immersive');
-      // prevent scroll bounce
-      window.scrollTo(0,0);
-    }
-  }, true);
 })();
 </script>
 
