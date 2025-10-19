@@ -1,7 +1,7 @@
 {
   "name": "Les 40 ans de Franck",
   "short_name": "40 ans Franck",
-  "start_url": "index-6.html",
+  "start_url": "index.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#000000",
