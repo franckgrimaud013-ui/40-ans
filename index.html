@@ -590,7 +590,7 @@ Arnaud" rows="6" style="width:100%;margin-top:8px"></textarea>
 </div>
 </div>
 <audio id="introMusic" playsinline="" preload="auto">
-<source src="musique.mp3" type="audio/mpeg"/>
+<source src="audio/fond-boucle-v2.mp3" type="audio/mpeg"/>
 </audio>
 <div id="audioUnlock">🔊 Le son est bloqué. <button id="unlockBtn">Activer le son</button></div>
 <!-- ==================== SCRIPTS (navigation, timings vidéo, rôle, etc.) ==================== --><script>
@@ -599,33 +599,81 @@ var PAYLOAD=null;
 
 /* Démarrage intro */
 function startIntro(){
+
+    // PLEIN ÉCRAN Android (préservé)
+    function ensureFullscreen(){
+      try{
+        var ua = navigator.userAgent || '';
+        var isAndroid = /Android/i.test(ua);
+        var isIOS = /iPhone|iPad|iPod/i.test(ua);
+        if (!isAndroid) return; // on ne force que sur Android
+        var el = document.getElementById('app') || document.documentElement;
+        if (el.requestFullscreen) return el.requestFullscreen();
+        if (el.webkitRequestFullScreen) return el.webkitRequestFullScreen();
+        if (el.msRequestFullscreen) return el.msRequestFullscreen();
+      }catch(e){ /* non bloquant */ }
+    }
+    
   try{
     document.documentElement.classList.add('intro-started');
     var gate=document.getElementById('gate'); if(gate) gate.style.display='none';
 
-    // musique
-    var audio=document.getElementById('introMusic'); 
-    if(audio){
-      audio.loop = true; audio.volume = 0.35; audio.currentTime = 0;
-      const tryPlay = () => {
-        const p = audio.play();
-        if(p && typeof p.then === 'function'){
-          p.then(()=>{ var au=document.getElementById('audioUnlock'); if(au) au.style.display='none'; })
-           .catch(()=>{ var au=document.getElementById('audioUnlock'); if(au) au.style.display='block'; });
-        }
-      };
-      if(audio.readyState >= 2){ tryPlay(); }
-      else{ audio.addEventListener('canplaythrough', tryPlay, {once:true}); tryPlay(); }
-      var unlockBtn = document.getElementById('unlockBtn');
-      if (unlockBtn && !unlockBtn._bound){
-        unlockBtn._bound = true;
-        unlockBtn.addEventListener('click', function(){
-          audio.play().then(function(){ var au=document.getElementById('audioUnlock'); if(au) au.style.display='none'; }).catch(function(){});
-        });
+    var v1=document.getElementById('bgv1');
+    var v2=document.getElementById('bgv2');
+    var audio=document.getElementById('introMusic');
+    var auEl=document.getElementById('audioUnlock');
+
+    // iOS requires a user gesture; we're in the button handler, so it's OK.
+    // Prepare sources
+    if (audio){
+      try { audio.loop = true; audio.volume = 0.35; audio.currentTime = 0; } catch(e){}
+    }
+    if (v1){ try { v1.muted = true; v1.currentTime = 0; } catch(e){} }
+    if (v2){ try { v2.muted = true; v2.currentTime = 0; } catch(e){} }
+
+    // Play video(s) first so we can lock to their clock
+    const plays = [];
+    if (v1) plays.push(v1.play().catch(()=>{}));
+    if (v2) plays.push(v2.play().catch(()=>{}));
+    Promise.all(plays).then(function(){
+      // Then play the audio and hide unlock helper if it succeeds
+      if (!audio) return;
+      const p = audio.play();
+      if (p && typeof p.then === 'function'){
+        p.then(()=>{ if(auEl) auEl.style.display='none'; })
+         .catch(()=>{ if(auEl) auEl.style.display='block'; });
+      }
+    });
+
+    // Resync loop: align audio on v1 if drift > 80ms
+    function getMasterTime(){
+      if (!v1) return null;
+      try { return v1.currentTime; } catch(e){ return null; }
+    }
+    function resync(){
+      if (!audio || audio.paused) return;
+      const vt = getMasterTime();
+      if (vt == null || !isFinite(vt)) return;
+      let at = 0;
+      try { at = audio.currentTime; } catch(e){ return; }
+      const drift = vt - at;
+      if (Math.abs(drift) > 0.08){
+        try { audio.currentTime = vt; } catch(e){}
       }
     }
+    window.__syncTimer && clearInterval(window.__syncTimer);
+    window.__syncTimer = setInterval(resync, 500);
 
-    // lancer le texte après 2s
+    // Pause audio in background to avoid desync, resume on return
+    document.addEventListener('visibilitychange', function(){
+      if(document.hidden){
+        try { audio && audio.pause(); } catch(e){}
+      } else {
+        try { audio && audio.play().catch(()=>{ if(auEl) auEl.style.display='block'; }); } catch(e){}
+      }
+    });
+
+    // Lancer le texte après 2s (inchangé)
     setTimeout(function(){
       document.documentElement.classList.add('intro-text-start');
     }, 2000);
@@ -1916,121 +1964,6 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     if(!btn||!isStart(btn)) return;
     if(!isIOS){ requestFS(); }
   }, true);
-})();
-</script>
-
-
-<script id="sync-intro-a-v">
-(function(){
-  function qs(sel){ return document.querySelector(sel); }
-  function qsa(sel){ return Array.from(document.querySelectorAll(sel)); }
-  function isStartEl(el){
-    if(!el) return false;
-    const t = (el.textContent||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'');
-    return el.id==='startBtn' || t.includes('lancez-vous') || t.includes('lancez vous');
-  }
-  function waitReady(el){
-    return new Promise(function(resolve){
-      if(!el) return resolve();
-      try{
-        if (el.readyState >= 3) return resolve();
-        const onReady = function(){ el.removeEventListener('canplaythrough', onReady); resolve(); };
-        el.addEventListener('canplaythrough', onReady, { once:true });
-        setTimeout(resolve, 1500);
-      }catch(e){ resolve(); }
-    });
-  }
-  function stopOthers(keepSet){
-    qsa('video, audio').forEach(function(m){
-      if(keepSet && keepSet.has(m)) return;
-      try{ m.pause(); }catch(e){}
-      try{ m.currentTime = 0; }catch(e){}
-    });
-  }
-  let audioCtx;
-  async function unlockAudio(){
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if(!Ctx) return;
-    if(!audioCtx) audioCtx = new Ctx();
-    try{ await audioCtx.resume(); }catch(e){}
-  }
-  function attachDriftCorrection(video, audio){
-    let rafId = null;
-    function tick(){
-      const vt = video.currentTime||0, at = audio.currentTime||0;
-      const drift = at - vt;
-      if (Math.abs(drift) > 0.12){
-        try{ audio.currentTime = vt; }catch(e){}
-      } else {
-        const k = 0.75;
-        let target = 1 - k*drift;
-        target = Math.max(0.98, Math.min(1.02, target));
-        if (!isNaN(target)) audio.playbackRate = target;
-      }
-      rafId = requestAnimationFrame(tick);
-    }
-    function cleanup(){
-      if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
-      try{ audio.playbackRate = 1; }catch(e){}
-      video.removeEventListener('ended', cleanup);
-      video.removeEventListener('pause', cleanup);
-    }
-    video.addEventListener('ended', cleanup);
-    video.addEventListener('pause', cleanup);
-    tick();
-  }
-
-  function bindSync(){
-    const candidates = qsa('#startBtn, button, a');
-    const starter = candidates.find(isStartEl);
-    if(!starter) return;
-
-    const video = qs('#bgv1') || (function(){
-      const layer = qs('#bgVideoLayer');
-      if(!layer) return null;
-      return layer.querySelector('video');
-    })();
-    const audio = qs('#introMusic');
-
-    if(!video || !audio) return;
-
-    try{ video.muted = true; }catch(e){}
-    try{
-      if(video.hasAttribute('autoplay')) video.removeAttribute('autoplay');
-      video.pause(); video.currentTime = 0;
-    }catch(e){}
-
-    if(starter.__syncBound) return;
-    starter.__syncBound = true;
-
-    starter.addEventListener('click', async function(ev){
-      stopOthers(new Set([video, audio]));
-      await unlockAudio();
-
-      try{ video.pause(); video.currentTime = 0; }catch(e){}
-      try{ audio.pause(); audio.currentTime = 0; }catch(e){}
-      try{ audio.muted = false; }catch(e){}
-
-      await Promise.all([ waitReady(video), waitReady(audio) ]);
-
-      let vp = video.play();
-      let ap = audio.play();
-      try{ await vp; }catch(e){}
-      try{ await ap; }catch(e){}
-
-      try{
-        const drift0 = (audio.currentTime||0) - (video.currentTime||0);
-        if (Math.abs(drift0) > 0.08){ audio.currentTime = video.currentTime; }
-        attachDriftCorrection(video, audio);
-      }catch(e){}
-    }, { passive:true });
-  }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', bindSync);
-  } else {
-    bindSync();
-  }
 })();
 </script>
 
