@@ -1853,8 +1853,9 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       <p class="hint">Astuce : cette explication ne s’affichera qu’une seule fois après “J’ai ajouté”.</p>
     </div>
     <footer>
-      <button class="btn primary" id="iosGuideClose">Fermez la page</button>
-    </footer>
+      <button class="btn ghost" id="iosGuideClose">Fermer</button>
+      <button class="btn primary" id="iosGuideDone">J’ai ajouté</button>
+</footer>
   </div>
 </div>
 
@@ -1948,28 +1949,38 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 (function(){
   var ua = navigator.userAgent || "";
   var isIOS = /iPhone|iPad|iPod/i.test(ua);
-  if (!isIOS) return;
+  if (!isIOS) return; // Android: no change
 
   var guide = document.getElementById('iosGuide');
   if (!guide) return;
+  var btn = document.getElementById('closePageBtn');
+  function show(){ guide.classList.add('show'); }
+  function hide(){ guide.classList.remove('show'); }
 
-  function showGuide(){ guide.classList.add('show'); }
-  function hideGuide(){ guide.classList.remove('show'); }
-
-  var closeBtn = document.getElementById('iosGuideClose');
-  if (closeBtn && !closeBtn.__b){
-    closeBtn.__b = true;
-    var c = function(e){ try{e.preventDefault();e.stopPropagation();}catch(_){} hideGuide(); };
-    closeBtn.addEventListener('click', c);
-    closeBtn.addEventListener('touchend', c, {passive:true});
+  var c = document.getElementById('iosGuideClose');
+  if (c && !c.__b){
+    c.__b = true;
+    var f = function(e){ try{e.preventDefault();e.stopPropagation();}catch(_){} hide(); };
+    c.addEventListener('click', f);
+    c.addEventListener('touchend', f, {passive:true});
   }
-
-  var help = document.getElementById('closePageBtn');
-  if (help && !help.__b){
-    help.__b = true;
-    var h = function(e){ try{e.preventDefault();e.stopPropagation();}catch(_){} showGuide(); };
-    help.addEventListener('click', h);
-    help.addEventListener('touchend', h, {passive:true});
+  var d = document.getElementById('iosGuideDone');
+  if (d && !d.__b){
+    d.__b = true;
+    var g = function(e){
+      try{e.preventDefault();e.stopPropagation();}catch(_){} 
+      hide();
+      try{ window.close(); }catch(_){}
+      try{ history.back(); }catch(_){}
+    };
+    d.addEventListener('click', g);
+    d.addEventListener('touchend', g, {passive:true});
+  }
+  if (btn && !btn.__b){
+    btn.__b = true;
+    var h = function(e){ try{e.preventDefault();e.stopPropagation();}catch(_){ } show(); };
+    btn.addEventListener('click', h);
+    btn.addEventListener('touchend', h, {passive:true});
   }
 })();
 </script>
