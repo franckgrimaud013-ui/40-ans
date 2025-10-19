@@ -1850,7 +1850,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       <p class="hint">Astuce : cette explication ne s’affichera qu’une seule fois après “J’ai ajouté”.</p>
     </div>
     <footer>
-      <button class="btn primary" id="iosGuideClose">Fermez la page</button>
+      <button class="btn primary" id="closePageBtn">Besoin d’un coup de main ? 👋</button>
     </footer>
   </div>
 </div>
@@ -1940,5 +1940,22 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 })();
 </script>
 
+
+<script id="ios-help-redirect">
+(function(){
+  var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent||'');
+  var btn = document.getElementById('closePageBtn');
+  if (!btn) return;
+  function go(e){
+    e.preventDefault(); e.stopPropagation();
+    if (isIOS) { window.location.href = 'ios-guide.html'; }
+  }
+  if(!btn.__boundHelp){
+    btn.__boundHelp = true;
+    btn.addEventListener('click', go, {passive:false});
+    btn.addEventListener('touchend', go, {passive:true});
+  }
+})();
+</script>
 </body>
 </html>
