@@ -458,11 +458,27 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 }
 </style>
 
+
+<style id="ios-immersive-css">
+/* iOS fallback "immersive" mode (no true fullscreen for pages on Safari iOS) */
+body.immersive {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh; /* dynamic viewport height for iOS */
+  overflow: hidden;
+  background: #000;
+}
+body.immersive #gate, 
+body.immersive header, 
+body.immersive footer { display: none !important; }
+body.immersive #app, 
+body.immersive #main, 
+body.immersive .page-root { width:100vw; height:100%; }
+</style>
+
 </head>
 \1
-<div id="pwa-install" style="position:fixed; right:16px; bottom:16px; z-index:9999;">
-  <button id="btnInstallPWA" class="btn">Installer l'application</button>
-</div>
 <!--
 ==================== GUIDE RAPIDE (COMMENT MODIFIER) ====================
 - PAGE 1 :
@@ -1782,46 +1798,31 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 })();
 </script>
 
-
-<script id="pwa-install-js">
+<script id="fs-on-lancez-vous">
 (function(){
-  var deferred;
-  var btn = document.getElementById("btnInstallPWA");
-  if(btn){ btn.style.display = "none"; }
-
-  window.addEventListener("beforeinstallprompt", function(e){
-    e.preventDefault();
-    deferred = e;
-    if(btn){ btn.style.display = "inline-block"; }
-  });
-
-  if(btn){
-    btn.addEventListener("click", function(){
-      if(!deferred){ 
-        alert("Si vous ne voyez pas la fenêtre d'installation, utilisez le menu 'Ajouter à l'écran d'accueil'.");
-        return; 
-      }
-      deferred.prompt();
-      deferred.userChoice.finally(function(){ deferred = null; btn.style.display = "none"; });
-    });
+  function isiOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+  function requestFS(){
+    var el = document.documentElement;
+    var rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if (rfs) { try { rfs.call(el); } catch(e){} }
   }
-
-  // iOS hint (no beforeinstallprompt on Safari iOS)
-  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-  if(isIOS && isSafari && btn){
-    btn.style.display = "inline-block";
-    btn.onclick = function(){
-      alert("Sur iPhone: touchez  Partager  puis  Ajouter à l'écran d'accueil  pour installer l'app.");
-    };
+  function isStart(el){
+    if(!el) return false;
+    var t = (el.textContent || '').toLowerCase();
+    return t.includes('lancez-vous') || t.includes('lancez vous') || el.id === 'p1-start' || el.id === 'startBtn' || (el.classList && el.classList.contains('btn-start'));
   }
-
-  // Register service worker
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function(){
-      navigator.serviceWorker.register("sw.js").catch(function(){});
-    });
-  }
+  document.addEventListener('click', function(e){
+    var btn = e.target && e.target.closest && e.target.closest('button, a, .btn');
+    if(!isStart(btn)) return;
+    // Try real fullscreen first
+    requestFS();
+    // iOS fallback (no Fullscreen API for pages)
+    if(isiOS()){
+      document.body.classList.add('immersive');
+      // prevent scroll bounce
+      window.scrollTo(0,0);
+    }
+  }, true);
 })();
 </script>
 
