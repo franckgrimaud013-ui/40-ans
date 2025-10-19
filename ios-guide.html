@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tutoriel iPhone – Ajouter à l’écran d’accueil</title>
+<meta name="color-scheme" content="dark light">
+<style>
+  :root{ --bg:#0b0b0f; --card:#121218; --gold:#d4af37; --mut:#b9c3cf; }
+  html,body{margin:0;height:100%;background:var(--bg);color:#fff;font-family:ui-serif, Georgia, 'Times New Roman', serif;}
+  .wrap{max-width:900px;margin:0 auto;padding:16px;}
+  header{position:sticky;top:0;background:linear-gradient(180deg,rgba(0,0,0,.85),rgba(0,0,0,.65));backdrop-filter:blur(6px);
+    border-bottom:1px solid rgba(255,255,255,.08);padding:12px 16px;z-index:10}
+  .title{margin:0;color:#fff;text-align:center;font-size:clamp(18px,3.2vw,26px)}
+  .humour{margin:10px auto 6px;text-align:center;font-style:italic;color:#fff;opacity:.95}
+  .card{background:var(--card);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px;margin:14px 0;box-shadow:0 12px 32px rgba(0,0,0,.35)}
+  h2{margin:8px 0 10px;color:var(--gold);text-align:center;font-size:clamp(18px,3.2vw,24px)}
+  .frame{position:relative;aspect-ratio:9/16;background:#000;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12);}
+  .frame img{width:100%;height:100%;object-fit:contain;background:#000;display:block;opacity:1;transition:opacity .4s ease}
+  .frame img.fade-out{opacity:0;}
+  .dots{display:flex;gap:8px;justify-content:center;margin:12px 0}
+  .dot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:transparent}
+  .dot.active{background:#ffd87a;border-color:#ffd87a}
+  .nav{display:flex;gap:10px;justify-content:space-between;margin:14px 0 6px}
+  .btn{appearance:none;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;padding:12px 14px;border-radius:12px;cursor:pointer;flex:1}
+  .btn.primary{background:#ffd87a;color:#000;font-weight:900;border-color:#ffd87a}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  footer{color:var(--mut);text-align:center;font-size:13px;margin:6px 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="title">Tutoriel iPhone – Écran d’accueil</div>
+</header>
+
+<div class="wrap">
+  <p class="humour">Franck m’avait prévenu que tu n’y arriverais pas 😏</p>
+  <div class="card">
+    <h2>3 étapes rapides</h2>
+
+    <div class="frame">
+      <img id="stepImg" src="images/ios1-partager.png" alt="Étape 1 : touchez Partager dans Safari">
+    </div>
+    <div class="dots" aria-hidden="true">
+      <div class="dot active" id="d1"></div>
+      <div class="dot" id="d2"></div>
+      <div class="dot" id="d3"></div>
+    </div>
+
+    <div class="nav">
+      <button class="btn" id="prevBtn">◀︎ Précédent</button>
+      <button class="btn primary" id="nextBtn">Suivant ▶︎</button>
+    </div>
+    <div class="nav" id="closeRow" style="display:none">
+      <button class="btn" id="closeBtn">Fermer</button>
+    </div>
+
+    <footer>Astuce : une fois l’icône ajoutée, ouvre le site depuis l’écran d’accueil pour le plein écran.</footer>
+  </div>
+</div>
+
+<script>
+(function(){
+  const imgs = [
+    {{src:'images/ios1-partager.png', alt:'Étape 1 : touchez Partager dans Safari'}},
+    {{src:'images/ios2-ajouter.png', alt:'Étape 2 : choisissez Sur l’écran d’accueil'}},
+    {{src:'images/ios3-confirmer.png', alt:'Étape 3 : validez et ouvrez l’icône'}}
+  ];
+  imgs.forEach(i => {{ const im = new Image(); im.src = i.src; }});
+
+  let idx = 0;
+  const stepImg = document.getElementById('stepImg');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const closeRow = document.getElementById('closeRow');
+  const dots = [document.getElementById('d1'), document.getElementById('d2'), document.getElementById('d3')];
+
+  function update(replaceNow){{
+    const i = imgs[idx];
+    if (!replaceNow) {{
+      stepImg.classList.add('fade-out');
+      setTimeout(()=>{{ stepImg.src = i.src; stepImg.alt = i.alt; }}, 200);
+      setTimeout(()=>{{ stepImg.classList.remove('fade-out'); }}, 210);
+    }} else {{
+      stepImg.src = i.src; stepImg.alt = i.alt;
+    }}
+    dots.forEach((d,k)=> d.classList.toggle('active', k===idx));
+    prevBtn.disabled = (idx===0);
+    nextBtn.style.display = (idx===imgs.length-1) ? 'none':'inline-block';
+    closeRow.style.display = (idx===imgs.length-1) ? 'flex':'none';
+  }}
+  prevBtn.addEventListener('click', ()=>{{ if(idx>0){{ idx--; update(false); }} }});
+  nextBtn.addEventListener('click', ()=>{{ if(idx<imgs.length-1){{ idx++; update(false); }} }});
+  document.getElementById('closeBtn').addEventListener('click', ()=>{{ window.location.href = 'ios-a2hs.html'; }});
+  update(true);
+}})();
+</script>
+</body>
+</html>
