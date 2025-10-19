@@ -1803,7 +1803,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 <!-- Overlay d’explication (iPhone Safari uniquement) -->
 <div id="iosGuide" aria-hidden="true">
   <div class="box" role="dialog" aria-modal="true" aria-label="Ajouter à l’écran d’accueil">
-    <header>Pour profiter du jeu en plein écran sur iPhone</header>
+    <header>Pour profiter du jeu en plein écran sur iPhone (ajoute d’abord à l’écran d’accueil)</header>
     <div class="content">
       <ol>
         <li>
@@ -1829,37 +1829,72 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       <p class="hint">Astuce : cette explication ne s’affichera qu’une seule fois après “J’ai ajouté”.</p>
     </div>
     <footer>
-      <button class="btn ghost" id="iosGuideLater">Je verrai plus tard</button>
-      <button class="btn primary" id="iosGuideDone">J’ai ajouté</button>
+      <button class="btn primary" id="iosGuideClose">Fermez la page</button>
     </footer>
   </div>
 </div>
+
+
+
 
 <script id="env-routing">
 (function(){
   var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
   var isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
-  var seenGuide = localStorage.getItem('iosGuideSeen') === '1';
-
   var guide = document.getElementById('iosGuide');
-  var btnDone = document.getElementById('iosGuideDone');
-  var btnLater = document.getElementById('iosGuideLater');
+  var btnClose = null;
 
-  function showGuide(){ if(guide){ guide.classList.add('show'); guide.setAttribute('aria-hidden','false'); } }
-  function hideGuide(){ if(guide){ guide.classList.remove('show'); guide.setAttribute('aria-hidden','true'); } }
-
-  document.addEventListener('DOMContentLoaded', function(){
-    if(isIOS && !isStandalone && !seenGuide){ showGuide(); }
-  });
-
-  if(btnLater){ btnLater.addEventListener('click', function(){ hideGuide(); }); }
-  if(btnDone){
-    btnDone.addEventListener('click', function(){
-      localStorage.setItem('iosGuideSeen','1');
-      hideGuide();
-    });
+  function showGuide(){
+    if(guide){
+      guide.classList.add('show');
+      guide.setAttribute('aria-hidden','false');
+    }
+  }
+  function hideGuide(){
+    if(guide){
+      guide.classList.remove('show');
+      guide.setAttribute('aria-hidden','true');
+    }
   }
 
+  // Show overlay only on iPhone Safari (NOT standalone)
+  document.addEventListener('DOMContentLoaded', function(){
+    if(isIOS && !isStandalone){
+      showGuide();
+      // prevent page behind from reacting to taps while overlay is visible
+      guide.addEventListener('click', function(e){ e.stopPropagation(); }, true);
+      document.addEventListener('click', function(e){
+        if(guide.classList.contains('show')){
+          e.stopImmediatePropagation();
+          e.preventDefault();
+          return false;
+        }
+      }, true);
+      // Bind close button
+      btnClose = document.getElementById('iosGuideClose');
+      if(btnClose){
+        btnClose.addEventListener('click', function(e){
+          e.preventDefault();
+          e.stopPropagation();
+          // Do NOT mark as seen: we want the overlay next time if they reviennent via Safari
+          // Try to close the tab or leave Safari gracefully
+          try{
+            if (history.length > 1) {
+              history.back();
+            } else {
+              // fallback: replace with about:blank to avoid starting your site's flow
+              window.location.replace('about:blank');
+              setTimeout(function(){ window.close(); }, 100);
+            }
+          }catch(err){
+            window.location.replace('about:blank');
+          }
+        }, { passive:false });
+      }
+    }
+  });
+
+  // For Android/desktop: allow fullscreen on "Lancez-vous"
   function requestFS(){
     var el = document.documentElement;
     var rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
@@ -1871,10 +1906,15 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     return t.includes('lancez-vous')||t.includes('lancez vous')||el.id==='p1-start'||el.id==='startBtn'||(el.classList&&el.classList.contains('btn-start'));
   }
   document.addEventListener('click', function(e){
+    // If guide is visible (on iPhone Safari), block any underlying click
+    if(guide && guide.classList.contains('show')){
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      return false;
+    }
     var btn=e.target&&e.target.closest&&e.target.closest('button, a, .btn');
     if(!btn||!isStart(btn)) return;
     if(!isIOS){ requestFS(); }
-    else if(isIOS && !isStandalone && !seenGuide){ e.preventDefault(); showGuide(); }
   }, true);
 })();
 </script>
