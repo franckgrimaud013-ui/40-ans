@@ -1823,7 +1823,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 
 <!-- Overlay d’explication (iPhone Safari uniquement) -->
 <div id="iosGuide" aria-hidden="true">
-  <div class="box" role="dialog" aria-modal="true" aria-label="Ajouter à l’écran d’accueil">
+  <div class="box" role="dialog" aria-modal="true" aria-label="Ajouter à l’écran d’accueil"><p style="text-align:center; font-style:italic; margin-bottom:10px;">Franck m’avait prévenu que tu n’y arriverais pas 😏</p>
     <header>Pour profiter du jeu en plein écran sur iPhone (ajoute d’abord à l’écran d’accueil)</header>
     <div class="content">
       <ol>
@@ -1940,5 +1940,45 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 })();
 </script>
 
+
+<script id="a2hs-ios-guide-hook-id">
+(function(){
+  var ua = navigator.userAgent || "";
+  var isIOS = /iPhone|iPad|iPod/i.test(ua);
+  if (!isIOS) return; // Android et autres: ne rien faire
+
+  var guide = document.getElementById('iosGuide');
+  if (!guide) return;
+  var guideClose = document.getElementById('iosGuideClose');
+  var guideDone  = document.getElementById('iosGuideDone');
+  function showIOSGuide(){ guide.classList.add('show'); }
+  function hideIOSGuide(){ guide.classList.remove('show'); }
+
+  if (guideClose && !guideClose.__boundClose){
+    guideClose.__boundClose = true;
+    guideClose.addEventListener('click', hideIOSGuide);
+    guideClose.addEventListener('touchend', hideIOSGuide, {passive:true});
+  }
+  if (guideDone && !guideDone.__boundDone){
+    guideDone.__boundDone = true;
+    guideDone.addEventListener('click', function(){
+      hideIOSGuide();
+      try{ window.close(); }catch(e){}
+      try{ history.back(); }catch(e){}
+    });
+  }
+
+  var btn = document.getElementById('closePageBtn');
+  if (btn && !btn.__boundHelp){
+    btn.__boundHelp = true;
+    var tap = function(ev){
+      try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){}
+      showIOSGuide();
+    };
+    btn.addEventListener('click', tap);
+    btn.addEventListener('touchend', tap, {passive:true});
+  }
+})();
+</script>
 </body>
 </html>
