@@ -523,9 +523,6 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- Inline handler pour éviter tout problème de binding -->
 <button id="startBtn" class="btn" onclick="startIntro()" type="button" style="display:none">Lancez-vous</button>
 </div>
-<div class="panel" id="helpPanel" style="margin-top:10px;text-align:center">
-  <button class="btn" id="closePageBtn" type="button">Besoin d’un coup de main ? 👋</button>
-</div>
 </div>
 <!-- INTRO -->
 <div class="overlay">
@@ -1827,7 +1824,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 <!-- Overlay d’explication (iPhone Safari uniquement) -->
 <div id="iosGuide" aria-hidden="true">
   <div class="box" role="dialog" aria-modal="true" aria-label="Ajouter à l’écran d’accueil">
-    <p style="text-align:center; font-style:italic; margin:8px auto 6px;">Franck m’avait prévenu que tu n’y arriverais pas 😏</p><header>Pour profiter du jeu en plein écran sur iPhone (ajoute d’abord à l’écran d’accueil)</header>
+    <header>Pour profiter du jeu en plein écran sur iPhone (ajoute d’abord à l’écran d’accueil)</header>
     <div class="content">
       <ol>
         <li>
@@ -1853,9 +1850,8 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       <p class="hint">Astuce : cette explication ne s’affichera qu’une seule fois après “J’ai ajouté”.</p>
     </div>
     <footer>
-      <button class="btn ghost" id="iosGuideClose">Fermer</button>
-      <button class="btn primary" id="iosGuideDone">J’ai ajouté</button>
-</footer>
+      <button class="btn primary" id="iosGuideClose">Fermez la page</button>
+    </footer>
   </div>
 </div>
 
@@ -1944,45 +1940,5 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 })();
 </script>
 
-
-<script id="a2hs-ios-guide-hook-id">
-(function(){
-  var ua = navigator.userAgent || "";
-  var isIOS = /iPhone|iPad|iPod/i.test(ua);
-  if (!isIOS) return; // Android: no change
-
-  var guide = document.getElementById('iosGuide');
-  if (!guide) return;
-  var btn = document.getElementById('closePageBtn');
-  function show(){ guide.classList.add('show'); }
-  function hide(){ guide.classList.remove('show'); }
-
-  var c = document.getElementById('iosGuideClose');
-  if (c && !c.__b){
-    c.__b = true;
-    var f = function(e){ try{e.preventDefault();e.stopPropagation();}catch(_){} hide(); };
-    c.addEventListener('click', f);
-    c.addEventListener('touchend', f, {passive:true});
-  }
-  var d = document.getElementById('iosGuideDone');
-  if (d && !d.__b){
-    d.__b = true;
-    var g = function(e){
-      try{e.preventDefault();e.stopPropagation();}catch(_){} 
-      hide();
-      try{ window.close(); }catch(_){}
-      try{ history.back(); }catch(_){}
-    };
-    d.addEventListener('click', g);
-    d.addEventListener('touchend', g, {passive:true});
-  }
-  if (btn && !btn.__b){
-    btn.__b = true;
-    var h = function(e){ try{e.preventDefault();e.stopPropagation();}catch(_){ } show(); };
-    btn.addEventListener('click', h);
-    btn.addEventListener('touchend', h, {passive:true});
-  }
-})();
-</script>
 </body>
 </html>
