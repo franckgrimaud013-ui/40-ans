@@ -62,38 +62,43 @@
 <script>
 (function(){
   const imgs = [
-    {{src:'images/ios1-partager.png', alt:'Étape 1 : touchez Partager dans Safari'}},
-    {{src:'images/ios2-ajouter.png', alt:'Étape 2 : choisissez Sur l’écran d’accueil'}},
-    {{src:'images/ios3-confirmer.png', alt:'Étape 3 : validez et ouvrez l’icône'}}
+    {src:'images/ios1-partager.png', alt:'Étape 1 : touchez Partager dans Safari'},
+    {src:'images/ios2-ajouter.png',  alt:'Étape 2 : choisissez Sur l’écran d’accueil'},
+    {src:'images/ios3-confirmer.png',alt:'Étape 3 : validez et ouvrez l’icône'}
   ];
-  imgs.forEach(i => {{ const im = new Image(); im.src = i.src; }});
 
-  let idx = 0;
-  const stepImg = document.getElementById('stepImg');
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
-  const closeRow = document.getElementById('closeRow');
-  const dots = [document.getElementById('d1'), document.getElementById('d2'), document.getElementById('d3')];
+  imgs.forEach(function(i){ var im = new Image(); im.src = i.src; });
 
-  function update(replaceNow){{
-    const i = imgs[idx];
-    if (!replaceNow) {{
+  var idx = 0;
+  var stepImg = document.getElementById('stepImg');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var closeRow = document.getElementById('closeRow');
+  var dots = [document.getElementById('d1'), document.getElementById('d2'), document.getElementById('d3')];
+
+  function update(replaceNow){
+    var i = imgs[idx];
+    if (!replaceNow){
       stepImg.classList.add('fade-out');
-      setTimeout(()=>{{ stepImg.src = i.src; stepImg.alt = i.alt; }}, 200);
-      setTimeout(()=>{{ stepImg.classList.remove('fade-out'); }}, 210);
-    }} else {{
+      setTimeout(function(){ stepImg.src = i.src; stepImg.alt = i.alt; }, 200);
+      setTimeout(function(){ stepImg.classList.remove('fade-out'); }, 210);
+    } else {
       stepImg.src = i.src; stepImg.alt = i.alt;
-    }}
-    dots.forEach((d,k)=> d.classList.toggle('active', k===idx));
+    }
+    dots.forEach(function(d,k){ d.classList.toggle('active', k===idx); });
     prevBtn.disabled = (idx===0);
     nextBtn.style.display = (idx===imgs.length-1) ? 'none':'inline-block';
     closeRow.style.display = (idx===imgs.length-1) ? 'flex':'none';
-  }}
-  prevBtn.addEventListener('click', ()=>{{ if(idx>0){{ idx--; update(false); }} }});
-  nextBtn.addEventListener('click', ()=>{{ if(idx<imgs.length-1){{ idx++; update(false); }} }});
-  document.getElementById('closeBtn').addEventListener('click', ()=>{{ window.location.href = 'ios-a2hs.html'; }});
+  }
+
+  prevBtn.addEventListener('click', function(){ if(idx>0){ idx--; update(false); } });
+  nextBtn.addEventListener('click', function(){ if(idx<imgs.length-1){ idx++; update(false); } });
+  document.getElementById('closeBtn').addEventListener('click', function(){
+    window.location.href = 'ios-a2hs.html';
+  });
+
   update(true);
-}})();
+})();
 </script>
 </body>
 </html>
