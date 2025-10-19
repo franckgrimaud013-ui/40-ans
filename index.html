@@ -626,7 +626,7 @@ function startIntro(){
       }
     });
 
-    // Recalage périodique : on aligne l'audio sur v1 si |drift| > 80 ms
+    // Recalage périodique : on aligne l'audio sur v1 si |drift| > 40 ms
     function masterTime(){
       if (!v1) return null;
       try { return v1.currentTime; } catch(e){ return null; }
@@ -638,7 +638,7 @@ function startIntro(){
       var at = 0;
       try { at = audio.currentTime; } catch(e){ return; }
       var drift = vt - at;
-      if (Math.abs(drift) > 0.08){
+      if (Math.abs(drift) > 0.04){
         try { audio.currentTime = vt; } catch(e){}
       }
     }
