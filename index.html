@@ -2,8 +2,8 @@
 
 <html lang="fr">
 <head>
-<meta content="#000000" media="(prefers-color-scheme: light)" name="theme-color"/>
-<meta content="#000000" media="(prefers-color-scheme: dark)" name="theme-color"/>
+<meta name="theme-color" content="#000000">
+
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta charset="utf-8"/>
@@ -179,19 +179,11 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     box-shadow:0 10px 30px rgba(0,0,0,.30) !important;
   }
 </style>
-<link href="/manifest.webmanifest" rel="manifest"/>
-<meta content="#000000" name="theme-color"/>
 <link href="/icons/icon-192.png" rel="icon"/>
 <style>
 /* CTA visibility controlled by end of intro animation */
 #ctaOverlay{opacity:0;pointer-events:none;transform:translateY(6px);transition:.4s ease;}
 </style>
-<style id="strict-audio-css">
-  #enterGameOverlay{display:none}
-  #enterGameOverlay.show{display:flex}
-  #bgSoundToggle, #audioUnlock { display:none !important; }
-  .bg-gate, .bg-intro { filter:none !important;  background:none; }
-  .bg-intro::after, .intro-started </style>
 <style id="bg-intro-fix">.bg-intro{background:none!important;}</style>
 <style id="bg-video-visibility-fix">
   #bgv1, #bgv2 { position:fixed; inset:0; width:100%; height:100%; display:block; object-fit:cover; z-index:0; background:#000; }
@@ -1118,13 +1110,6 @@ function revealRole(payload){
   secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
   secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
 })();
-</script>
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(console.error);
-  });
-}
 </script>
 <script>
 (function(){
