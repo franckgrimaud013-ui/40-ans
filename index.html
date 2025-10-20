@@ -7,6 +7,9 @@
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta charset="utf-8"/>
+<link rel="apple-touch-icon" sizes="180x180" href="icon-512.png">
+<link rel="icon" sizes="512x512" href="icon-512.png">
+<meta name="apple-mobile-web-app-title" content="Les 40 ans de Franck">
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>40 ans Franck</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&amp;family=Playfair+Display:wght@400;700&amp;display=swap" rel="stylesheet"/>
@@ -585,7 +588,7 @@ Arnaud" rows="6" style="width:100%;margin-top:8px"></textarea>
 <div class="role-sub" id="roleSub"></div>
 <div id="roleExtra" style="margin-top:12px"></div>
 <div style="text-align:center;margin-top:16px">
-<a class="btn" href="ios-guide.html">Besoin d\'un coup de main ?</a>
+<button class="btn" id="closeRoleBtn" style="font-size:18px">Fermer</button>
 </div>
 </div>
 </div>
@@ -1937,54 +1940,6 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     if(!btn||!isStart(btn)) return;
     if(!isIOS){ requestFS(); }
   }, true);
-})();
-</script>
-
-
-<script id="ios-guide-redirect">
-(function(){
-  function swapCloseToHelp(){
-    try{
-      // prefer a button with exact text "Fermez la page"
-      var btns = Array.from(document.querySelectorAll('button, a.btn, .btn'));
-      var target = null;
-      for (var i=0;i<btns.length;i++){
-        var t = (btns[i].textContent||"").trim().toLowerCase();
-        if (t === "fermez la page" || t === "fermer la page" || t === "fermer" || t === "fermez"){
-          target = btns[i];
-          break;
-        }
-      }
-      if (!target){
-        // fallback by id
-        target = document.getElementById('closeRoleBtn');
-      }
-      if (!target) return;
-
-      // Create replacement anchor that looks like the original button
-      var a = document.createElement('a');
-      a.textContent = "Besoin d'un coup de main ?";
-      a.href = "ios-guide.html";
-      a.className = target.className || "btn";
-      a.setAttribute("role","button");
-
-      // If the original button had inline styles, keep them
-      if (target.getAttribute("style")) a.setAttribute("style", target.getAttribute("style"));
-
-      // Ensure clicks don't bubble to any modal close, we want to navigate
-      a.addEventListener("click", function(ev){
-        ev.stopPropagation();
-        try{ localStorage.setItem("a2hsSkip","1"); }catch(e){}
-      });
-
-      target.parentNode.replaceChild(a, target);
-    }catch(e){}
-  }
-  if (document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", swapCloseToHelp);
-  } else {
-    swapCloseToHelp();
-  }
 })();
 </script>
 
