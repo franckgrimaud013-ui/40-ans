@@ -8,15 +8,6 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-
-<link rel="apple-touch-icon" sizes="180x180" href="icon-512.png">
-<link rel="icon" sizes="512x512" href="icon-512.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Les 40 ans de Franck">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#000000">
-
 <title>40 ans Franck</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&amp;family=Playfair+Display:wght@400;700&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -684,8 +675,7 @@ function onEnterApp(){
     }
   }catch(e){ console.error(e); }
 }
-function onHashChange(){ if (location.hash==="#app"){ onEnterApp(); }
-      else if (PAYLOAD) { location.hash = "#app"; onEnterApp(); } }
+function onHashChange(){ if (location.hash==="#app"){ onEnterApp(); } }
 window.addEventListener('hashchange', onHashChange);
 
 /* Init + invitations */
@@ -693,7 +683,6 @@ document.addEventListener('DOMContentLoaded', function(){
   try{
     PAYLOAD=parseToken();
     if (location.hash==="#app"){ onEnterApp(); }
-      else if (PAYLOAD) { location.hash = "#app"; onEnterApp(); }
 
     var b=document.getElementById('genBtn');
     if(b){
@@ -1861,7 +1850,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       <p class="hint">Astuce : cette explication ne s’affichera qu’une seule fois après “J’ai ajouté”.</p>
     </div>
     <footer>
-      <button class="btn primary" id="closePageBtn">Besoin d’un coup de main ? 👋</button>
+      <button class="btn primary" id="iosGuideClose">Fermez la page</button>
     </footer>
   </div>
 </div>
@@ -1951,22 +1940,5 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 })();
 </script>
 
-
-<script id="ios-help-redirect">
-(function(){
-  var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent||'');
-  var btn = document.getElementById('closePageBtn');
-  if (!btn) return;
-  function go(e){
-    e.preventDefault(); e.stopPropagation();
-    if (isIOS) { window.location.href = 'ios-guide.html'; }
-  }
-  if(!btn.__boundHelp){
-    btn.__boundHelp = true;
-    btn.addEventListener('click', go, {passive:false});
-    btn.addEventListener('touchend', go, {passive:true});
-  }
-})();
-</script>
 </body>
 </html>
