@@ -792,8 +792,10 @@ function revealRole(payload){
       '👉 Tu peux soit <b>poser toi-même la question</b> pour tester quelqu’un,<br>' +
       '👉 soit <b>répondre avec le code</b> si on te la pose.';
     extra.innerHTML='<ul style="margin:6px 0 8px 18px">\
-<li>Tu devras te mettre d'accord avec ton (tes) alié(s) traitre(s) pour le vote.</li>\
-<li>Garde se lien precieusement et discretemnt, il te servira pour ton vote d'élimination.</li>\
+<li><b>Conseils (après repas)</b> : débats + vote → 1 joueur éliminé.</li>\
+<li><b>Nuits (ven & sam)</b> : les traîtres éliminent un Loyal.</li>\
+<li><b>Jeu</b> : reste crédible, évite les certitudes trop rapides.</li>\
+<li><b>Discrétion</b> : ne révèle jamais ton rôle ni ton écran.</li>\
 </ul>\
 <div style="margin-top:6px;color:#f2b3b3"><b>⚠️ Ne révèle jamais ton code directement, utilise-le subtilement.</b></div>';
   } else {
@@ -1831,7 +1833,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 <!-- Overlay d’explication (iPhone Safari uniquement) -->
 <div id="iosGuide" aria-hidden="true">
   <div class="box" role="dialog" aria-modal="true" aria-label="Ajouter à l’écran d’accueil">
-    <header>Pour profiter de l'experience en plein écran sur iPhone (ajoute d’abord à l’écran d’accueil)</header>
+    <header>Pour profiter du jeu en plein écran sur iPhone (ajoute d’abord à l’écran d’accueil)</header>
     <div class="content">
       <ol>
         <li>
