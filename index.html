@@ -2,16 +2,12 @@
 
 <html lang="fr">
 <head>
+<meta content="#000000" media="(prefers-color-scheme: light)" name="theme-color"/>
+<meta content="#000000" media="(prefers-color-scheme: dark)" name="theme-color"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta charset="utf-8"/>
-<link rel="apple-touch-icon" sizes="180x180" href="icon-512.png">
-<link rel="icon" sizes="512x512" href="icon-512.png">
-<meta name="apple-mobile-web-app-title" content="Les 40 ans de Franck">
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-
-<link rel="apple-touch-icon" sizes="180x180" href="icon-512.png">
-<link rel="icon" sizes="512x512" href="icon-512.png">
-<meta name="apple-mobile-web-app-title" content="Les 40 ans de Franck">
-
 <title>40 ans Franck</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&amp;family=Playfair+Display:wght@400;700&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -183,6 +179,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     box-shadow:0 10px 30px rgba(0,0,0,.30) !important;
   }
 </style>
+<meta content="#000000" name="theme-color"/>
 <link href="/icons/icon-192.png" rel="icon"/>
 <style>
 /* CTA visibility controlled by end of intro animation */
@@ -588,7 +585,7 @@ Arnaud" rows="6" style="width:100%;margin-top:8px"></textarea>
 <div class="role-sub" id="roleSub"></div>
 <div id="roleExtra" style="margin-top:12px"></div>
 <div style="text-align:center;margin-top:16px">
-<button class="btn" id="closeRoleBtn" style="font-size:18px">Fermer</button>
+<a class="btn" href="ios-guide.html">Besoin d\'un coup de main ?</a>
 </div>
 </div>
 </div>
@@ -1853,7 +1850,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       <p class="hint">Astuce : cette explication ne s’affichera qu’une seule fois après “J’ai ajouté”.</p>
     </div>
     <footer>
-      <button class="btn primary" id="closePageBtn">Besoin d’un coup de main ? 👋</button>
+      <button class="btn primary" id="iosGuideClose">Fermez la page</button>
     </footer>
   </div>
 </div>
@@ -1940,95 +1937,6 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     if(!btn||!isStart(btn)) return;
     if(!isIOS){ requestFS(); }
   }, true);
-})();
-</script>
-
-
-<script id="ios-help-redirect">
-(function(){
-  var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent||'');
-  var btn = document.getElementById('closePageBtn');
-  if (!btn) return;
-  function go(e){
-    e.preventDefault(); e.stopPropagation();
-    if (isIOS) { window.location.href = 'ios-guide.html'; }
-  }
-  if(!btn.__boundHelp){
-    btn.__boundHelp = true;
-    btn.addEventListener('click', go, {passive:false});
-    btn.addEventListener('touchend', go, {passive:true});
-  }
-})();
-</script>
-
-<script id="ios-a2hs-hardguard">
-(function(){
-  function isIOS(){ try{ return /iphone|ipad|ipod/i.test(navigator.userAgent||""); }catch(e){ return false; } }
-  function isStandalone(){
-    try{
-      if (window.navigator && window.navigator.standalone === true) return true;
-      if (window.matchMedia) return window.matchMedia("(display-mode: standalone)").matches;
-    }catch(e){}
-    return false;
-  }
-  function forceAppView(){
-    try{
-      // cacher guide si présent
-      var g = document.getElementById("iosGuide");
-      if (g){ g.classList.remove("show"); g.style.display="none"; }
-      // masquer intro/gate/overlay si présents
-      ["gate","ctaOverlay"].forEach(function(id){ var el=document.getElementById(id); if(el){ el.style.display="none"; } });
-      document.querySelectorAll(".overlay,.bg-gate,.bg-intro,.intro,.splash").forEach(function(n){ n.style.display="none"; });
-      // marquer app-shown
-      document.documentElement.classList.add("app-shown");
-      // basculer vers #app et lancer onEnterApp si dispo
-      if (location.hash !== "#app"){ try{ location.hash = "#app"; }catch(e){} }
-      try{ if (typeof onEnterApp === "function") onEnterApp(); }catch(e){}
-      // si un bouton Entrer existe, le cacher
-      var a = document.querySelector('a[href="#app"]'); if(a){ a.style.display="none"; }
-    }catch(e){}
-  }
-  function maybeBypass(){
-    // Bypass si: iOS standalone OU on a déjà appuyé "ne plus afficher"
-    var skip = false;
-    try{ skip = localStorage.getItem("a2hsSkip")==="1"; }catch(e){}
-    if (isStandalone() || skip){
-      forceAppView();
-      return true;
-    }
-    return false;
-  }
-  document.addEventListener("DOMContentLoaded", function(){
-    if (!maybeBypass()){
-      // sinon, n'affiche le guide que si iOS non-standalone
-      var g = document.getElementById("iosGuide");
-      if (g){
-        if (isIOS() && !isStandalone()){
-          g.classList.add("show");
-          g.style.display="flex";
-        } else {
-          g.classList.remove("show");
-          g.style.display="none";
-        }
-        // boutons
-        var ok = g.querySelector("[data-action='done'], .btn.primary");
-        var close = g.querySelector("[data-action='close'], .btn.ghost");
-        function done(){
-          try{ localStorage.setItem("a2hsSkip","1"); }catch(e){}
-          forceAppView();
-        }
-        if (ok && !ok.__b){ ok.__b=true; ok.addEventListener("click", done); }
-        if (close && !close.__b){ close.__b=true; close.addEventListener("click", done); }
-      }
-    }
-  });
-  // même si l'état change (lancement par l'icône), forcer la vue app
-  try{
-    var mm = window.matchMedia("(display-mode: standalone)");
-    if (mm && typeof mm.addEventListener==="function"){
-      mm.addEventListener("change", function(ev){ if(ev.matches) forceAppView(); });
-    }
-  }catch(e){}
 })();
 </script>
 
