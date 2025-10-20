@@ -684,7 +684,8 @@ function onEnterApp(){
     }
   }catch(e){ console.error(e); }
 }
-function onHashChange(){ if (location.hash==="#app"){ onEnterApp(); } }
+function onHashChange(){ if (location.hash==="#app"){ onEnterApp(); }
+      else if (PAYLOAD) { location.hash = "#app"; onEnterApp(); } }
 window.addEventListener('hashchange', onHashChange);
 
 /* Init + invitations */
@@ -692,6 +693,7 @@ document.addEventListener('DOMContentLoaded', function(){
   try{
     PAYLOAD=parseToken();
     if (location.hash==="#app"){ onEnterApp(); }
+      else if (PAYLOAD) { location.hash = "#app"; onEnterApp(); }
 
     var b=document.getElementById('genBtn');
     if(b){
