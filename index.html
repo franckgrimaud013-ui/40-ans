@@ -1854,9 +1854,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     </div>
     <footer>
      <button class="btn primary" id="iosGuideClose"
-  onclick="location.href='https://franckgrimaud013-ui.github.io/40-ans/ios-guide.html'">
-  Besoin d’un coup de main ?
-</button>
+  onclick="location.href='https://franckgrimaud013-ui.github.io/40-ans/ios-guide.html'" onclick="location.href='https://franckgrimaud013-ui.github.io/40-ans/ios-guide.html'">Besoin d’un coup de main ?</button>
 
 
     </footer>
@@ -1948,5 +1946,16 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 })();
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const b = document.getElementById('iosGuideClose');
+  if (!b) return;
+  b.onclick = function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    location.href = 'https://franckgrimaud013-ui.github.io/40-ans/ios-guide.html';
+  };
+});
+</script>
 </body>
 </html>
