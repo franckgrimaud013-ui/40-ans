@@ -1827,7 +1827,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 <!-- Overlay d’explication (iPhone Safari uniquement) -->
 <div id="iosGuide" aria-hidden="true">
   <div class="box" role="dialog" aria-modal="true" aria-label="Ajouter à l’écran d’accueil">
-    <header>Pour profiter du jeu en plein écran sur iPhone (ajoute d’abord à l’écran d’accueil)</header>
+    <header>Pour profiter l'experience en plein écran sur iPhone (ajoute d’abord à l’écran d’accueil)</header>
     <div class="content">
       <ol>
         <li>
@@ -1853,8 +1853,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       <p class="hint">Astuce : cette explication ne s’affichera qu’une seule fois après “J’ai ajouté”.</p>
     </div>
     <footer>
-     <a class="btn primary" id="iosGuideClose"
-  onclick="location.href='https://franckgrimaud013-ui.github.io/40-ans/ios-guide.html'" href="https://franckgrimaud013-ui.github.io/40-ans/ios-guide.html" role="button">Besoin d’un coup de main ?</a>
+     
 
 
     </footer>
@@ -1975,6 +1974,32 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     forceNavigate(ev);
   }, true);
 })();
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const video = document.querySelector('video[src*="fond-boucle-v2.mp4"]');
+  const audio = document.querySelector('audio[src*="fond-boucle-v2.mp3"]');
+  if (!video || !audio) return;
+
+  function syncPlay() {
+    try {
+      video.currentTime = 0;
+      audio.currentTime = 0;
+      video.play();
+      setTimeout(() => {
+        audio.play().catch(() => {
+          document.body.addEventListener('click', () => audio.play(), { once: true });
+        });
+      }, 40); // décalage de 40ms pour synchro parfaite sur iPhone
+    } catch (e) {
+      console.warn('Erreur synchro audio/vidéo :', e);
+    }
+  }
+
+  video.addEventListener('canplay', syncPlay, { once: true });
+});
 </script>
 
 </body>
