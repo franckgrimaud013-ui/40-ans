@@ -1853,8 +1853,8 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
       <p class="hint">Astuce : cette explication ne s’affichera qu’une seule fois après “J’ai ajouté”.</p>
     </div>
     <footer>
-     <button class="btn primary" id="iosGuideClose"
-  onclick="location.href='https://franckgrimaud013-ui.github.io/40-ans/ios-guide.html'" onclick="location.href='https://franckgrimaud013-ui.github.io/40-ans/ios-guide.html'">Besoin d’un coup de main ?</button>
+     <a class="btn primary" id="iosGuideClose"
+  onclick="location.href='https://franckgrimaud013-ui.github.io/40-ans/ios-guide.html'" href="https://franckgrimaud013-ui.github.io/40-ans/ios-guide.html" role="button">Besoin d’un coup de main ?</a>
 
 
     </footer>
@@ -1946,16 +1946,36 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 })();
 </script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const b = document.getElementById('iosGuideClose');
-  if (!b) return;
-  b.onclick = function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    location.href = 'https://franckgrimaud013-ui.github.io/40-ans/ios-guide.html';
-  };
-});
+
+<script id="iosGuideForceNav">
+(function(){
+  var URL_HELP = "https://franckgrimaud013-ui.github.io/40-ans/ios-guide.html?v=2";
+  async function forceNavigate(e){
+    try{ if(e){ e.preventDefault(); e.stopPropagation(); } }catch(_){}
+    // Try to unregister any Service Worker and clear caches, then navigate
+    try{
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all((regs||[]).map(r => r.unregister().catch(()=>{})));
+      }
+      if (window.caches && typeof caches.keys === "function") {
+        const names = await caches.keys();
+        await Promise.all(names.map(n => caches.delete(n).catch(()=>{})));
+      }
+    }catch(_){}
+    try{ window.location.href = URL_HELP; }catch(_){}
+    setTimeout(function(){
+      try{ window.top.location.href = URL_HELP; }catch(_){}
+    }, 0);
+  }
+  // High-priority capture listener on the whole document
+  document.addEventListener("click", function(ev){
+    var el = ev.target && ev.target.closest && ev.target.closest("#iosGuideClose");
+    if (!el) return;
+    forceNavigate(ev);
+  }, true);
+})();
 </script>
+
 </body>
 </html>
