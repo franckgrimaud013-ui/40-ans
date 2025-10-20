@@ -1961,88 +1961,74 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 })();
 </script>
 
-<script id="ios-a2hs-guard">
+<script id="ios-a2hs-hardguard">
 (function(){
   function isIOS(){ try{ return /iphone|ipad|ipod/i.test(navigator.userAgent||""); }catch(e){ return false; } }
   function isStandalone(){
     try{
-      if (window.navigator && window.navigator.standalone === true) return true; // iOS classic
-      if (window.matchMedia) return window.matchMedia("(display-mode: standalone)").matches; // modern
+      if (window.navigator && window.navigator.standalone === true) return true;
+      if (window.matchMedia) return window.matchMedia("(display-mode: standalone)").matches;
     }catch(e){}
     return false;
   }
-  function hideGuideAndEnter(){
+  function forceAppView(){
     try{
-      var g=document.getElementById("iosGuide");
-      if(g){ g.classList.remove("show"); g.style.display="none"; }
-      // Aller directement à l'app si un lien d'invitation est ouvert
-      if (typeof PAYLOAD !== "undefined" && PAYLOAD){
-        if (location.hash !== "#app"){ try{ location.hash = "#app"; }catch(e){} }
-        try{ if (typeof onEnterApp === "function") onEnterApp(); }catch(e){}
-      }
+      // cacher guide si présent
+      var g = document.getElementById("iosGuide");
+      if (g){ g.classList.remove("show"); g.style.display="none"; }
+      // masquer intro/gate/overlay si présents
+      ["gate","ctaOverlay"].forEach(function(id){ var el=document.getElementById(id); if(el){ el.style.display="none"; } });
+      document.querySelectorAll(".overlay,.bg-gate,.bg-intro,.intro,.splash").forEach(function(n){ n.style.display="none"; });
+      // marquer app-shown
+      document.documentElement.classList.add("app-shown");
+      // basculer vers #app et lancer onEnterApp si dispo
+      if (location.hash !== "#app"){ try{ location.hash = "#app"; }catch(e){} }
+      try{ if (typeof onEnterApp === "function") onEnterApp(); }catch(e){}
+      // si un bouton Entrer existe, le cacher
+      var a = document.querySelector('a[href="#app"]'); if(a){ a.style.display="none"; }
     }catch(e){}
   }
-  function shouldShowGuide(){
-    // On n'affiche le guide QUE si on est sur iOS, pas en standalone, et que l'utilisateur ne l'a pas déjà masqué
-    if (!isIOS()) return false;
-    if (isStandalone()) return false;
-    if (localStorage.getItem("a2hsSkip") === "1") return false;
-    return true;
-  }
-  function maybeShowGuide(){
-    var g=document.getElementById("iosGuide");
-    if(!g) return; // pas de guide dans le DOM
-    if (shouldShowGuide()){
-      g.classList.add("show");
-      g.style.display="flex";
-    } else {
-      hideGuideAndEnter();
+  function maybeBypass(){
+    // Bypass si: iOS standalone OU on a déjà appuyé "ne plus afficher"
+    var skip = false;
+    try{ skip = localStorage.getItem("a2hsSkip")==="1"; }catch(e){}
+    if (isStandalone() || skip){
+      forceAppView();
+      return true;
     }
+    return false;
   }
-
-  // Hook bouton "J'ai ajouté" si présent pour ne plus ré-afficher le guide
-  function bindGuideButtons(){
-    var g=document.getElementById("iosGuide");
-    if(!g) return;
-    var ok = g.querySelector("[data-action='done'], .btn.primary");
-    if (ok && !ok.__bound){
-      ok.__bound = true;
-      ok.addEventListener("click", function(){
-        try{ localStorage.setItem("a2hsSkip","1"); }catch(e){}
-        hideGuideAndEnter();
-      });
-    }
-    var close = g.querySelector("[data-action='close'], .btn.ghost");
-    if (close && !close.__bound){
-      close.__bound = true;
-      close.addEventListener("click", function(){
-        try{ localStorage.setItem("a2hsSkip","1"); }catch(e){}
-        hideGuideAndEnter();
-      });
-    }
-  }
-
   document.addEventListener("DOMContentLoaded", function(){
-    maybeShowGuide();
-    bindGuideButtons();
-  });
-
-  // Si l'affichage change (lancement depuis l'icône), re-vérifier
-  try{
-    if (window.matchMedia){
-      var mm = window.matchMedia("(display-mode: standalone)");
-      if (typeof mm.addEventListener === "function"){
-        mm.addEventListener("change", maybeShowGuide);
-      } else if (typeof mm.addListener === "function"){
-        mm.addListener(maybeShowGuide);
+    if (!maybeBypass()){
+      // sinon, n'affiche le guide que si iOS non-standalone
+      var g = document.getElementById("iosGuide");
+      if (g){
+        if (isIOS() && !isStandalone()){
+          g.classList.add("show");
+          g.style.display="flex";
+        } else {
+          g.classList.remove("show");
+          g.style.display="none";
+        }
+        // boutons
+        var ok = g.querySelector("[data-action='done'], .btn.primary");
+        var close = g.querySelector("[data-action='close'], .btn.ghost");
+        function done(){
+          try{ localStorage.setItem("a2hsSkip","1"); }catch(e){}
+          forceAppView();
+        }
+        if (ok && !ok.__b){ ok.__b=true; ok.addEventListener("click", done); }
+        if (close && !close.__b){ close.__b=true; close.addEventListener("click", done); }
       }
     }
-  }catch(e){}
-
-  // Quand on revient au premier plan, re-vérifier
-  document.addEventListener("visibilitychange", function(){
-    if (!document.hidden) maybeShowGuide();
   });
+  // même si l'état change (lancement par l'icône), forcer la vue app
+  try{
+    var mm = window.matchMedia("(display-mode: standalone)");
+    if (mm && typeof mm.addEventListener==="function"){
+      mm.addEventListener("change", function(ev){ if(ev.matches) forceAppView(); });
+    }
+  }catch(e){}
 })();
 </script>
 
