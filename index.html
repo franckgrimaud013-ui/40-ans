@@ -660,6 +660,9 @@ function startIntro(){
     if (v1) plays.push(v1.play().catch(()=>{}));
     if (v2) plays.push(v2.play().catch(()=>{}));
     Promise.all(plays).then(function(){
+    // Initial sync: align audio to video v1 before starting audio
+    try { if (typeof v1 !== 'undefined' && audio) { audio.currentTime = v1.currentTime || 0; } } catch(e){}
+
       if (!audio) return;
       var p = audio.play();
       if (p && typeof p.then === 'function'){
@@ -683,10 +686,10 @@ function startIntro(){
 
   const d = vt - at;
 
-  if (Math.abs(d) > 0.05) {
+  if (Math.abs(d) > 0.04) {
     try { audio.currentTime = vt; } catch (e) {}
     try { audio.playbackRate = 1.0; } catch (e) {}
-  } else if (Math.abs(d) > 0.015) {
+  } else if (Math.abs(d) > 0.010) {
     const r = 1 + (d * 0.02);
     try { audio.playbackRate = Math.max(0.98, Math.min(1.02, r)); } catch (e) {}
   } else {
