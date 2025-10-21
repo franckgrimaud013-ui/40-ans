@@ -2204,8 +2204,9 @@ function startMainStage(){
 </script>
 
 
+
 <script>
-// Patch timing: sync fond-boucle-v2.mp4 with audio + start button hide + overlay at 28s
+// Patch timing: sync fond-boucle-v2.mp4 + fond-boucle-v2.mp3 (kickstart sync + 1:28 overlay)
 (function(){
   var START_DELAY_SEC = 88;
   var shownOverlay = false;
@@ -2215,7 +2216,7 @@ function startMainStage(){
     for (var i=0;i<nodes.length;i++){
       var el = nodes[i], src = el.getAttribute('src') || el.getAttribute('data-src') || '';
       if (src && src.indexOf(name) !== -1){
-        return el.tagName.toLowerCase()==='video' || el.tagName.toLowerCase()==='audio' ? el : el.parentElement;
+        return /video|audio/i.test(el.tagName) ? el : el.parentElement;
       }
     }
     return null;
@@ -2226,13 +2227,21 @@ function startMainStage(){
   function findIntroAudio(){
     return document.getElementById('introMusic') || findByName('fond-boucle-v2.mp3');
   }
-  function ensurePlay(media){
-    if (!media) return;
+
+  function ensurePlayVideo(v){
+    if (!v) return;
     try {
-      media.muted = true; // iOS-friendly; audio sera démuté si besoin (mais tu utilises muted pour ton ambiance)
-      media.setAttribute && media.setAttribute('playsinline','');
-      media.setAttribute && media.setAttribute('webkit-playsinline','');
-      var p = media.play && media.play();
+      v.muted = true;
+      v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
+      var p = v.play && v.play();
+      if (p && p.catch) p.catch(function(){});
+    } catch(e){}
+  }
+  function ensurePlayAudio(a){
+    if (!a) return;
+    try {
+      a.muted = false;
+      var p = a.play && a.play();
       if (p && p.catch) p.catch(function(){});
     } catch(e){}
   }
@@ -2244,7 +2253,7 @@ function startMainStage(){
   var overlay = document.getElementById('enterGameOverlay') || document.getElementById('ctaOverlay');
   var enterBtn = document.getElementById('enterGameBtn') || document.querySelector('#enterGameOverlay .btn, #ctaOverlay .btn');
 
-  // Remove old handlers to avoid duplicates
+  // Replace existing listeners to avoid duplicates
   if (startBtn){
     var clone = startBtn.cloneNode(true);
     startBtn.parentNode.replaceChild(clone, startBtn);
@@ -2257,38 +2266,44 @@ function startMainStage(){
     // Hide the "Lancez-vous" button immediately
     if (startBtn) { startBtn.style.display = 'none'; }
 
-    // Find media
+    // Locate media
     var video = findFondVideo();
     var audio = findIntroAudio();
 
-    // Reset times to 0 and sync
+    // Preload & reset
+    try { if (video && video.load) video.load(); } catch(_){}
+    try { if (audio && audio.load) audio.load(); } catch(_){}
+
     try { if (video){ video.currentTime = 0; } } catch(_){}
     try { if (audio){ audio.currentTime = 0; } } catch(_){}
 
-    // Start both
-    ensurePlay(video);
-    // Start audio only once
+    // Attempt simultaneous start
+    ensurePlayVideo(video);
     if (!window.__bgAudioStarted){
       window.__bgAudioStarted = true;
-      ensurePlay(audio);
+      // align audio time to video immediately before play to minimize initial gap
+      try { if (video && audio) audio.currentTime = video.currentTime || 0; } catch(_){}
+      ensurePlayAudio(audio);
     }
 
-    // Basic hard sync at start: align audio to video currentTime after 'playing'
-    function alignOnce(){
-      try {
-        if (video && audio) {
-          // Use video time as reference
-          var t = (typeof video.currentTime === 'number') ? video.currentTime : 0;
-          if (!isNaN(t) && isFinite(t)) {
-            try { audio.currentTime = t; } catch(_){}
+    // Kickstart sync for first ~1.2s: clamp audio to video each frame if drift>20ms
+    (function(){
+      var t0 = performance.now();
+      function tick(){
+        try {
+          if (video && audio){
+            var vt = +video.currentTime || 0, at = +audio.currentTime || 0, d = vt - at;
+            if (Math.abs(d) > 0.02) {  // > 20 ms, clamp
+              try { audio.currentTime = vt; } catch(_){}
+            }
           }
-        }
-      } catch(_){}
-      video && video.removeEventListener('playing', alignOnce);
-    }
-    if (video) video.addEventListener('playing', alignOnce);
+        } catch(_){}
+        if (performance.now() - t0 < 1200) { requestAnimationFrame(tick); }
+      }
+      requestAnimationFrame(tick);
+    })();
 
-    // Show overlay at 28s of the fond video
+    // Show overlay at 1:28 of the fond video
     shownOverlay = false;
     function checkOverlay(){
       if (shownOverlay) return;
@@ -2302,19 +2317,14 @@ function startMainStage(){
     }
     if (video){
       video.addEventListener('timeupdate', checkOverlay);
-      // Fallback if events lag
       setTimeout(checkOverlay, (START_DELAY_SEC + 0.5) * 1000);
     } else {
-      // No video reference: fallback timer
-      setTimeout(function(){
-        if (overlay) overlay.style.display = 'flex';
-      }, START_DELAY_SEC * 1000);
+      setTimeout(function(){ if (overlay) overlay.style.display = 'flex'; }, START_DELAY_SEC * 1000);
     }
   }
 
   if (startBtn){
     startBtn.addEventListener('click', onStart, {passive:false});
-    // Optional: also trigger on keyboard/enter if needed
   }
 
   // Enter button to go to planning
@@ -2322,9 +2332,8 @@ function startMainStage(){
     if (e && e.preventDefault) e.preventDefault();
     if (overlay) overlay.style.display = 'none';
     try { startMainStage(); } catch(e){}
-    // Ensure the small top video plays
     var small = document.querySelector('video.p3-topvid, .top-video');
-    if (small){ ensurePlay(small); }
+    if (small){ ensurePlayVideo(small); }
   }
   if (enterBtn){
     var cloneE = enterBtn.cloneNode(true);
@@ -2334,6 +2343,7 @@ function startMainStage(){
   }
 })();
 </script>
+
 
 
 <script>
