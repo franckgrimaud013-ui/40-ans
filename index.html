@@ -157,8 +157,32 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 /* Force full black UI chrome and safe dark scheme */
 html, body { background:#000 !important; color-scheme: dark; overscroll-behavior: none; }
 /* Keep intro panel pinned to top (from prior step) */
+#gate{ align-items:flex-start !important; padding-top:75vh !important; }
+#gate .panel.panel--dark{ margin-top:0 !important; }
+@media (max-width:480px){
+  #gate{ padding-top:72vh !important; }
+}
+</style>
 
-</style><meta content="#000000" name="theme-color"/>
+<!-- PATCH: lisibilité p3 (titre blanc + panneaux sombres) -->
+<style id="patch-p3-style">
+  /* Titre blanc + halo (sera appliqué via JS en ajoutant id="p3Title") */
+  #p3Title{
+    color:#fff !important;
+    font-size:clamp(20px,3.2vw,28px) !important;
+    font-weight:900 !important;
+    line-height:1.15 !important;
+    text-shadow:0 0 14px rgba(255,255,255,.35) !important;
+    margin:0 0 10px !important;
+  }
+  /* Panneaux règles/planning : fond noir semi-transparent */
+  .panel-dark{
+    background:rgba(0,0,0,.60) !important;
+    border:1px solid rgba(255,255,255,.12) !important;
+    box-shadow:0 10px 30px rgba(0,0,0,.30) !important;
+  }
+</style>
+<meta content="#000000" name="theme-color"/>
 <link href="/icons/icon-192.png" rel="icon"/>
 <style>
 /* CTA visibility controlled by end of intro animation */
@@ -438,6 +462,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 }
 </style>
 
+
 <style id="ios-guide-css">
 #iosGuide{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.85);backdrop-filter:blur(4px)}
 #iosGuide.show{display:flex}
@@ -457,6 +482,30 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 @media (max-width:480px){#iosGuide .box{width:94vw}}
 </style>
 
+
+<style id="cinema-quote-style">
+.play-started .bg-gate{display:none !important;}
+#bgVideoLayer{opacity:0;transition:opacity .25s ease;}
+.play-started #bgVideoLayer{opacity:1;}
+.cinema-fade{opacity:0;transform:translateY(20px);animation:fadeInCine 3s ease-out 1.5s forwards;font-size:14px;line-height:1.8;text-align:center;color:#cfd5dc;margin:100px 0 40px;}
+.cinema-fade .quote{display:block;margin-top:20px;font-style:italic;color:#d4af37;opacity:0;transform:scale(0.98);animation:glowQuote 4s ease-out 3s forwards;}
+@keyframes fadeInCine{0%{opacity:0;transform:translateY(20px) scale(0.98)}60%{opacity:1;transform:translateY(0) scale(1.02)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes glowQuote{0%{opacity:0;text-shadow:none}40%{opacity:1;text-shadow:0 0 10px rgba(212,175,55,.4)}100%{opacity:1;text-shadow:0 0 18px rgba(212,175,55,.35)}}
+</style>
+
+<style id="rolebg-always-on">
+.mask-video,
+video[src*="role-bg.mp4"],
+.role-bg {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+.secret-skip .mask-video,
+.flow-started .mask-video {
+  display: block !important;
+}
+</style>
 </head>
 <body><!--
 ==================== GUIDE RAPIDE (COMMENT MODIFIER) ====================
@@ -527,8 +576,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- ~~~ [P3] ETAPE 3 : 🎭 Découvre ton rôle ~~~ --><!-- [ASTUCE P3/S3] Texte avant le bouton final. --><section class="step" id="p3-s3">
 <h3 class="p3-title" id="p3-playerLine">Es-tu prêt ? Quand tu es seul, découvre ta carte.</h3>
 <div class="p3-actions"><!-- ~~~ [P3] Bouton final : 🎭 Découvre ton rôle (lien / fonction revealRole) ~~~ --><!-- [ASTUCE P3] Si vous avez une fonction revealRole, c'est ici qu'elle est appelée. --><a class="btn" href="#" id="p3-revealLink">🎭 Découvre ton rôle</a></div>
-<p class="p3-note">Petit secret : C’est Franck qui a imaginé, dessiné et écrit chaque ligne que vous venez de découvrir.
-Mais il ne peut pas et surtout ne veut pas connaître vos rôles, afin de vivre pleinement le jeu avec vous.</p>
+<p class="p3-note cinema-fade" id="finalText">Derrière ce scénario, il y a des semaines de travail, d’imagination et de passion.<br>Franck a écrit, monté, et façonné chaque image, chaque son, chaque ligne pour vous faire vivre un week-end unique.<br>À présent, à vous de jouer… et d’aller jusqu’au bout.<br><span class="quote">« C’est le temps que tu as perdu pour ton ami qui fait ton ami si important. » — Antoine de Saint-Exupéry</span></p>
 </section>
 </div>
 </div>
@@ -945,7 +993,199 @@ function revealRole(payload){
   var obs = new MutationObserver(function(){ replaceBtn(); });
   obs.observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:['class','style']});
 })();
-</script><!-- PATCH: strong skip — masque aussi tous les fonds/overlays d'intro --><!-- PATCH v2: strong skip ++ — masque explicitement la page #p1 et le bloc "Un week‑end..." --><script>
+</script>
+<!-- PATCH: auto-tag p3 title, darken panels, and fix secret skip -->
+<script id="patch-p3-script">
+(function(){
+  function textIncludes(node, needles){
+    const t = (node.textContent||"").toLowerCase();
+    return needles.some(n=>t.includes(n));
+  }
+  function tagP3Title(){
+    // Try to find a heading on page 3 that mentions Franck/créé/jeu
+    const candidates = document.querySelectorAll("h1,h2,h3,h4");
+    const needles = ["franck", "créé", "cree", "jeu", "week-end", "week end"];
+    for(const el of candidates){
+      if(textIncludes(el, needles)){
+        el.id = "p3Title";
+        break;
+      }
+    }
+  }
+  function darkenPanels(){
+    // Add panel-dark to likely rule/planning containers on page 3
+    const sel = [
+      ".panel", ".rules", ".planning", ".notice", ".card", ".bloc", ".section"
+    ];
+    const needles = ["règle","regle","planning","déroulé","deroule","week-end","week end"];
+    const nodes = document.querySelectorAll(sel.join(","));
+    nodes.forEach(el => {
+      if(textIncludes(el, needles)){
+        el.classList.add("panel-dark");
+      }
+    });
+  }
+  function fixSecretSkip(){
+    const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
+    if(!secret) return;
+    function goToP3(){
+      // Only toggle .page visibility to avoid breaking background layers
+      document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
+      const p3 = document.getElementById("p3") || document.querySelector("[data-page='3']") || document.querySelector(".page:nth-of-type(3)");
+      if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
+      document.documentElement.classList.add("app-shown");
+    }
+    secret.addEventListener("click", goToP3);
+    let tId;
+    secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3, 500); }, {passive:true});
+    secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId);   }, {passive:true});
+  }
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", ()=>{ tagP3Title(); darkenPanels(); fixSecretSkip(); });
+  }else{
+    tagP3Title(); darkenPanels(); fixSecretSkip();
+  }
+})();
+</script>
+<!-- PATCH: strong skip — masque aussi tous les fonds/overlays d'intro -->
+<script id="patch-strongskip">
+(function(){
+  const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
+  if(!secret) return;
+
+  function injectHideCSS(){
+    if (document.getElementById("skipHideCSS")) return;
+    const css = `
+      /* cache les couches visuelles d'intro potentiellement encore visibles */
+      .intro, .intro-layer, .bg, .bg-intro, .overlay, .overlay-intro,
+      .image-hero, .image-bg, .img-bg, .bg-img, .hero-bg,
+      .slide, .slides, .parallax, .page-bg, [data-intro] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+      /* coupe les animations/vidéos éventuelles */
+      video, audio { display: none !important; }
+      * { animation: none !important; transition: none !important; }
+    `;
+    const style = document.createElement("style");
+    style.id = "skipHideCSS";
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  function goToP3Strong(){
+    // 1) désactive toutes les pages actives
+    document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
+    // 2) masque agressivement les backgrounds/overlays d'intro
+    injectHideCSS();
+
+    // 3) masque tous les éléments fixed/absolute qui ne sont pas dans p3
+    const p3 = document.getElementById("p3");
+    const rectP3 = p3 ? p3.getBoundingClientRect() : null;
+    const all = Array.from(document.body.querySelectorAll("*"));
+    all.forEach(el=>{
+      const st = getComputedStyle(el);
+      if ((st.position === "fixed" || st.position === "absolute") && !p3?.contains(el)) {
+        el.style.display = "none";
+      }
+    });
+
+    // 4) affiche la page 3 proprement
+    if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
+    document.documentElement.classList.add("app-shown");
+    try { (document.getElementById('bgAudio')||{}).pause?.(); } catch(e){}
+  }
+
+  secret.addEventListener("click", goToP3Strong);
+  let tId;
+  secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
+  secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
+})();
+</script>
+<!-- PATCH v2: strong skip ++ — masque explicitement la page #p1 et le bloc "Un week‑end..." -->
+<script id="patch-strongskip-v2">
+(function(){
+  const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
+  if(!secret) return;
+
+  function injectHideCSS(){
+    if (document.getElementById("skipHideCSSv2")) return;
+    const css = `
+      /* Masquer dur #p1 et #p2 */
+      #p1, #p2 { display:none !important; visibility:hidden !important; opacity:0 !important; }
+      /* Masquer toutes couches intro possibles */
+      .intro, .intro-layer, .bg, .bg-intro, .overlay, .overlay-intro,
+      .image-hero, .image-bg, .img-bg, .bg-img, .hero-bg,
+      .slide, .slides, .parallax, .page-bg, [data-intro] {
+        display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important;
+      }
+      video, audio { display: none !important; }
+      * { animation: none !important; transition: none !important; }
+    `;
+    const style = document.createElement("style");
+    style.id = "skipHideCSSv2";
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  function hideWelcomeBlockByText(){
+    const needles = ["Un week", "pas comme les autres", "Lancez‑vous", "Lancez-vous"];
+    const all = Array.from(document.body.querySelectorAll("*"));
+    for(const el of all){
+      const t = (el.textContent||"").trim();
+      if(!t) continue;
+      const ok = needles.every(n => t.toLowerCase().includes(n.toLowerCase()));
+      if(ok){
+        // Masquer l'élément le plus grand contenant ce texte (panel de p1)
+        let n = el;
+        for(let i=0;i<4 && n && n.parentElement;i++){ // remonte un peu pour cacher le bloc
+          n = n.parentElement;
+          if(n.classList && (n.classList.contains('panel') || n.classList.contains('wrap') || n.classList.contains('page'))){
+            n.style.display = 'none';
+            break;
+          }
+        }
+        // Sécurité : masque aussi el
+        el.style.display = 'none';
+        break;
+      }
+    }
+  }
+
+  function goToP3Strong(){
+    // Retire les .active de toutes les pages puis force p1/p2 masqués
+    document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
+    ['#p1','#p2','#intro','#welcome','.welcome','.hero-section'].forEach(sel=>{
+      document.querySelectorAll(sel).forEach(el=>{ el.style.display='none'; el.style.visibility='hidden'; el.style.opacity='0'; });
+    });
+
+    injectHideCSS();
+    hideWelcomeBlockByText();
+
+    const p3 = document.getElementById("p3");
+    // Masque tous les fixed/absolute hors p3
+    const all = Array.from(document.body.querySelectorAll("*"));
+    all.forEach(el=>{
+      const st = getComputedStyle(el);
+      if ((st.position === "fixed" || st.position === "absolute") && !p3?.contains(el)) {
+        el.style.display = "none";
+      }
+    });
+
+    if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
+    document.documentElement.classList.add("app-shown");
+    try { (document.getElementById('bgAudio')||{}).pause?.(); } catch(e){}
+  }
+
+  secret.addEventListener("click", goToP3Strong);
+  let tId;
+  secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
+  secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
+})();
+</script>
+<script>
 (function(){
   var cta = document.getElementById('ctaOverlay');
   if(!cta) return;
@@ -1606,6 +1846,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 })();
 </script>
 
+
 <!-- Overlay d’explication (iPhone Safari uniquement) -->
 <div id="iosGuide" aria-hidden="true">
   <div class="box" role="dialog" aria-modal="true" aria-label="Ajouter à l’écran d’accueil">
@@ -1637,9 +1878,13 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     <footer>
      
 
+
     </footer>
   </div>
 </div>
+
+
+
 
 <script id="env-routing">
 (function(){
@@ -1723,6 +1968,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 })();
 </script>
 
+
 <script id="iosGuideForceNav">
 (function(){
   var URL_HELP = "https://franckgrimaud013-ui.github.io/40-ans/ios-guide.html?v=2";
@@ -1753,6 +1999,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 })();
 </script>
 
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const video = document.querySelector('video[src*="fond-boucle-v2.mp4"]');
@@ -1778,5 +2025,116 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+
+<script id="av-sync-fixes">
+(function(){
+  const gateVideo = document.querySelector('video[src*="intro-gate.mp4"]');
+  const loopVideo = document.querySelector('video[src*="fond-boucle-v2.mp4"]');
+  const loopAudio = document.querySelector('audio[src*="fond-boucle-v2.mp3"]');
+  const gateLayer = document.querySelector('.bg-gate');
+  const bgLayer   = document.getElementById('bgVideoLayer') || document.body;
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    try{
+      if (loopVideo){ loopVideo.muted = true; loopVideo.play().then(()=>{ loopVideo.pause(); loopVideo.currentTime = 0; }).catch(()=>{}); }
+    }catch(e){}
+  });
+
+  function startPlay(){
+    document.documentElement.classList.add('play-started');
+    if (gateVideo){ try{ gateVideo.pause(); }catch(e){} }
+    if (gateLayer){ gateLayer.style.display = 'none'; }
+    if (bgLayer){   bgLayer.style.opacity = '1'; }
+
+    if (loopVideo){
+      loopVideo.muted = true;
+      loopVideo.loop  = true;
+      try{ loopVideo.currentTime = 0; }catch(e){}
+    }
+    if (loopAudio){
+      loopAudio.loop   = true;
+      loopAudio.volume = 0.35;
+      try{ loopAudio.currentTime = 0; }catch(e){}
+    }
+
+    const plays = [];
+    if (loopVideo) plays.push(loopVideo.play().catch(()=>{}));
+    Promise.all(plays).then(()=>{
+      if (!loopAudio) return;
+      const p = loopAudio.play();
+      if (p && p.then) p.catch(()=>{});
+    });
+
+    function resync(){
+      if (!loopVideo || !loopAudio || loopAudio.paused) return;
+      let vt = 0, at = 0;
+      try{ vt = loopVideo.currentTime; }catch(e){ return; }
+      try{ at = loopAudio.currentTime; }catch(e){ return; }
+      const drift = vt - at;
+      if (Math.abs(drift) > 0.05){
+        try{ loopAudio.currentTime = vt; }catch(e){}
+        try{ loopAudio.playbackRate = 1.0; }catch(e){}
+      } else if (Math.abs(drift) > 0.015){
+        const rate = 1 + (drift * 0.02);
+        try{ loopAudio.playbackRate = Math.max(0.98, Math.min(1.02, rate)); }catch(e){}
+      } else {
+        try{ loopAudio.playbackRate = 1.0; }catch(e){}
+      }
+    }
+    clearInterval(window.__syncTimer);
+    window.__syncTimer = setInterval(resync, 500);
+  }
+
+  function bindStart(){
+    const candidates = [
+      document.getElementById('btn-start'),
+      document.getElementById('gate-enter'),
+      document.getElementById('enterBtn'),
+      document.querySelector('.btn-start'),
+      document.querySelector('.btn-enter')
+    ];
+    let btn = candidates.find(Boolean);
+    if (!btn){
+      const all = document.querySelectorAll('button, a');
+      all.forEach(el=>{
+        if (!btn && /lancez[-\s]*vous/i.test((el.textContent||'').trim())) btn = el;
+      });
+    }
+    if (btn){
+      btn.addEventListener('click', (e)=>{
+        e.preventDefault(); e.stopPropagation();
+        startPlay();
+        return false;
+      }, { capture:true });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', bindStart);
+  setTimeout(bindStart, 2000);
+  setTimeout(bindStart, 4000);
+})();
+</script>
+
+<script id="start-binder">
+document.addEventListener('DOMContentLoaded', () => {
+  let btn = document.getElementById('btn-start')
+        || document.getElementById('gate-enter')
+        || document.getElementById('enterBtn')
+        || document.querySelector('.btn-start')
+        || document.querySelector('.btn-enter');
+  if (!btn) {
+    document.querySelectorAll('button, a').forEach(el=>{
+      if (!btn && /lancez[-\s]*vous/i.test((el.textContent||'').trim())) btn = el;
+    });
+  }
+  if (btn) {
+    btn.addEventListener('click', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      if (typeof startPlay === 'function') startPlay();
+      return false;
+    }, { capture:true });
+  }
+});
+</script>
 </body>
 </html>
