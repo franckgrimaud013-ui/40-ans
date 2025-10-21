@@ -676,7 +676,27 @@ function startIntro(){
       if (!v1) return null;
       try { return v1.currentTime; } catch(e){ return null; }
     }
-    function resync(){if(!audio||audio.paused)return;var vt=masterTime();if(vt==null||!isFinite(vt))return;var at=0;try{at=audio.currentTime;}catch(e){return;}var d=vt-at;if(Math.abs(d)>0.05){try{audio.currentTime=vt;}catch(e){}try{audio.playbackRate=1.0;}catch(e){}}else if(Math.abs(d)>0.015){var r=1+(d*0.02);try{audio.playbackRate=Math.max(0.98,Math.min(1.02,r));}catch(e){}}else{try{audio.playbackRate=1.0;}catch(e){}}} catch(e){ return; }
+    function resync() {
+  if (!audio || audio.paused) return;
+  const vt = masterTime();
+  if (vt == null || !isFinite(vt)) return;
+
+  let at = 0;
+  try { at = audio.currentTime; } catch (e) { return; }
+
+  const d = vt - at;
+
+  if (Math.abs(d) > 0.05) {
+    try { audio.currentTime = vt; } catch (e) {}
+    try { audio.playbackRate = 1.0; } catch (e) {}
+  } else if (Math.abs(d) > 0.015) {
+    const r = 1 + (d * 0.02);
+    try { audio.playbackRate = Math.max(0.98, Math.min(1.02, r)); } catch (e) {}
+  } else {
+    try { audio.playbackRate = 1.0; } catch (e) {}
+  }
+}
+
       var drift = vt - at;
       if (Math.abs(drift) > 0.04){
         try { audio.currentTime = vt; } catch(e){}
