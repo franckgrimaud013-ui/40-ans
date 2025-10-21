@@ -484,6 +484,12 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 
 <style id="quote-lines-css">.quote-block{color:#e9edf4;margin:60px 0 30px;font-size:14px;line-height:1.75;text-align:center}.quote-block .line{display:block;opacity:0;transform:translateY(6px);animation:quoteLine .55s ease-out forwards}.quote-block .line:nth-child(1){animation-delay:.10s}.quote-block .line:nth-child(2){animation-delay:.45s}.quote-block .line:nth-child(3){animation-delay:.80s}.quote-block .line:nth-child(4){animation-delay:1.15s}.quote-block .cite{font-style:italic;color:#d4af37;text-shadow:0 0 10px rgba(212,175,55,.35)}@keyframes quoteLine{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:none}}</style>
 <style id="gate-bottom-css">#gate{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8vh;z-index:6}</style>
+
+<style>
+.video-frame, .top-video, .bg-video { position: fixed; inset: 0; z-index: 0; }
+.bottom-steps, #p3-steps, .step, .p3-actions { position: relative; z-index: 1; }
+</style>
+
 </head>
 <body><!--
 ==================== GUIDE RAPIDE (COMMENT MODIFIER) ====================
@@ -677,20 +683,12 @@ function startIntro(){
   }
 }
 
-      var drift = vt - at;
-      if (Math.abs(drift) > 0.04){
-        try { audio.currentTime = vt; } catch(e){}
-      
-      }
-    if (window.__syncTimer) {
+      if (window.__syncTimer) {
   clearInterval(window.__syncTimer);
   window.__syncTimer = null;
 }
 window.__syncTimer = setInterval(resync, 250);
-
-    window.__syncTimer = setInterval(resync, 500);
-
-    // Lancement du texte inchangé (2s)
+// Lancement du texte inchangé (2s)
     setTimeout(function(){
       document.documentElement.classList.add('intro-text-start');
     }, 2000);
@@ -773,8 +771,7 @@ function revealRole(payload){
 // Secret skip intro: go straight to #app
 (function(){
   var dot = document.getElementById('secretFixed');
-  function showApp(){
-    try{ location.hash='#app'; }catch(e){}
+  function showApp(){ startMainStage(); }catch(e){}
     document.documentElement.classList.add('app-shown');
     // Also try hiding typical intro layers
     try{
@@ -987,144 +984,8 @@ function revealRole(payload){
   }
 })();
 </script>
-<!-- PATCH: strong skip — masque aussi tous les fonds/overlays d'intro -->
-<script id="patch-strongskip">
-(function(){
-  const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
-  if(!secret) return;
 
-  function injectHideCSS(){
-    if (document.getElementById("skipHideCSS")) return;
-    const css = `
-      /* cache les couches visuelles d'intro potentiellement encore visibles */
-      .intro, .intro-layer, .bg, .bg-intro, .overlay, .overlay-intro,
-      .image-hero, .image-bg, .img-bg, .bg-img, .hero-bg,
-      .slide, .slides, .parallax, .page-bg, [data-intro] {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-      }
-      /* coupe les animations/vidéos éventuelles */
-      video, audio { display: none !important; }
-      * { animation: none !important; transition: none !important; }
-    `;
-    const style = document.createElement("style");
-    style.id = "skipHideCSS";
-    style.textContent = css;
-    document.head.appendChild(style);
-  }
 
-  function goToP3Strong(){
-    // 1) désactive toutes les pages actives
-    document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
-    // 2) masque agressivement les backgrounds/overlays d'intro
-    injectHideCSS();
-
-    // 3) masque tous les éléments fixed/absolute qui ne sont pas dans p3
-    const p3 = document.getElementById("p3");
-    const rectP3 = p3 ? p3.getBoundingClientRect() : null;
-    const all = Array.from(document.body.querySelectorAll("*"));
-    all.forEach(el=>{
-      const st = getComputedStyle(el);
-      if ((st.position === "fixed" || st.position === "absolute") && !p3?.contains(el)) {
-        el.style.display = "none";
-      }
-    });
-
-    // 4) affiche la page 3 proprement
-    if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
-    document.documentElement.classList.add("app-shown");
-    try { (document.getElementById('bgAudio')||{}).pause?.(); } catch(e){}
-  }
-
-  secret.addEventListener("click", goToP3Strong);
-  let tId;
-  secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
-  secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
-})();
-</script>
-<!-- PATCH v2: strong skip ++ — masque explicitement la page #p1 et le bloc "Un week‑end..." -->
-<script id="patch-strongskip-v2">
-(function(){
-  const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
-  if(!secret) return;
-
-  function injectHideCSS(){
-    if (document.getElementById("skipHideCSSv2")) return;
-    const css = `
-      /* Masquer dur #p1 et #p2 */
-      #p1, #p2 { display:none !important; visibility:hidden !important; opacity:0 !important; }
-      /* Masquer toutes couches intro possibles */
-      .intro, .intro-layer, .bg, .bg-intro, .overlay, .overlay-intro,
-      .image-hero, .image-bg, .img-bg, .bg-img, .hero-bg,
-      .slide, .slides, .parallax, .page-bg, [data-intro] {
-        display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important;
-      }
-      video, audio { display: none !important; }
-      * { animation: none !important; transition: none !important; }
-    `;
-    const style = document.createElement("style");
-    style.id = "skipHideCSSv2";
-    style.textContent = css;
-    document.head.appendChild(style);
-  }
-
-  function hideWelcomeBlockByText(){
-    const needles = ["Un week", "pas comme les autres", "Lancez‑vous", "Lancez-vous"];
-    const all = Array.from(document.body.querySelectorAll("*"));
-    for(const el of all){
-      const t = (el.textContent||"").trim();
-      if(!t) continue;
-      const ok = needles.every(n => t.toLowerCase().includes(n.toLowerCase()));
-      if(ok){
-        // Masquer l'élément le plus grand contenant ce texte (panel de p1)
-        let n = el;
-        for(let i=0;i<4 && n && n.parentElement;i++){ // remonte un peu pour cacher le bloc
-          n = n.parentElement;
-          if(n.classList && (n.classList.contains('panel') || n.classList.contains('wrap') || n.classList.contains('page'))){
-            n.style.display = 'none';
-            break;
-          }
-        }
-        // Sécurité : masque aussi el
-        el.style.display = 'none';
-        break;
-      }
-    }
-  }
-
-  function goToP3Strong(){
-    // Retire les .active de toutes les pages puis force p1/p2 masqués
-    document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
-    ['#p1','#p2','#intro','#welcome','.welcome','.hero-section'].forEach(sel=>{
-      document.querySelectorAll(sel).forEach(el=>{ el.style.display='none'; el.style.visibility='hidden'; el.style.opacity='0'; });
-    });
-
-    injectHideCSS();
-    hideWelcomeBlockByText();
-
-    const p3 = document.getElementById("p3");
-    // Masque tous les fixed/absolute hors p3
-    const all = Array.from(document.body.querySelectorAll("*"));
-    all.forEach(el=>{
-      const st = getComputedStyle(el);
-      if ((st.position === "fixed" || st.position === "absolute") && !p3?.contains(el)) {
-        el.style.display = "none";
-      }
-    });
-
-    if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
-    document.documentElement.classList.add("app-shown");
-    try { (document.getElementById('bgAudio')||{}).pause?.(); } catch(e){}
-  }
-
-  secret.addEventListener("click", goToP3Strong);
-  let tId;
-  secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
-  secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
-})();
-</script>
 <script>
 (function(){
   var cta = document.getElementById('ctaOverlay');
@@ -1965,5 +1826,29 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+
+<script>
+function startMainStage(){
+  try {
+    document.documentElement.classList.add('intro-started');
+    if (window.__bgVideoStart) window.__bgVideoStart();
+
+    if (window.__syncTimer) { clearInterval(window.__syncTimer); window.__syncTimer = null; }
+    if (typeof resync === 'function') window.__syncTimer = setInterval(resync, 250);
+
+    setTimeout(function(){
+      document.documentElement.classList.add('intro-text-start');
+    }, 300);
+
+    try { location.hash = '#app'; } catch(e){}
+    document.documentElement.classList.add('app-shown');
+
+    var topvid = document.querySelector('video.p3-topvid');
+    try { if (topvid && topvid.play) topvid.play().catch(function(){}); } catch(e){}
+  } catch(e){ console.error(e); }
+}
+</script>
+
 </body>
 </html>
+
