@@ -511,82 +511,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
     - Si vous avez une fonction JS 'window.revealRole(window.PAYLOAD)', c’est ici qu’elle est appelée.
 =========================================================================
 -->
-<div class="secret-fixed" id="secretFixed" title="Passer l\'intro"></div>
-<section aria-hidden="true" class="bg-gate" style="position:fixed;inset:0;z-index:0;">
-<video autoplay="" id="gateVideo" muted="" playsinline="" preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" webkit-playsinline="">
-<source src="videos/intro-gate.mp4" type="video/mp4"/>
-</video>
-</section>
-<div aria-hidden="true" class="bg-intro" id="bgVideoLayer" style="position:fixed;inset:0;z-index:0;opacity:0;transition:opacity 1200ms ease;">
-<video class="bgv" id="bgv1" muted="" playsinline="" preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;" webkit-playsinline="">
-<source src="videos/fond-boucle-v2.mp4" type="video/mp4"/>
-</video>
-<video class="bgv" id="bgv2" muted="" playsinline="" preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;" webkit-playsinline="">
-<source src="videos/fond-boucle-v2.mp4" type="video/mp4"/>
-</video>
-</div>
-<div aria-hidden="true" class="bg-role bg-fallback"></div>
-<!-- GATE -->
-<div id="gate">
-<div class="panel">
-<!-- Inline handler pour éviter tout problème de binding -->
-<button id="startBtn" class="btn" onclick="startIntro()" type="button" style="display:none">Lancez-vous</button>
-</div>
-</div>
-<!-- INTRO -->
-<div class="overlay">
-<div class="slide">
-</div>
-</div>
-<!-- CTA après intro -->
-<div id="ctaOverlay"><a class="btn" href="#app">ENTRER DANS LE JEU</a></div>
-<!-- APP -->
-<div class="app" id="app">
-<!-- Planning & Règles -->
-<!-- ==================== PAGE 3 : PLANNING + ROLE — petite vidéo 'role-bg.mp4' en haut + étapes + 'Découvre tes rôles' ==================== --><section class="welcome-section layout-simple" id="welcomeSection" style="background:#000; padding:0 16px 24px;">
-<!-- --- [P3] Petite vidéo en haut : role-bg.mp4 --- --><!-- [ASTUCE P3] Petite vidéo en haut (videos/role-bg.mp4). Gardez-la courte/continue. Pour l’agrandir/réduire, ajustez la hauteur/ratio du conteneur .video-frame. --><div class="top-video" style="max-width:1100px;margin:0 auto;padding-top:0px;">
-<div class="video-frame" style="position:relative;width:100%;aspect-ratio:16/9;background:#000;">
-<video autoplay="" class="p3-topvid" loop="" muted="" playsinline="" preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;background:#000;">
-<source src="videos/role-bg.mp4?v=24" type="video/mp4"/>
-</video>
-</div>
-</div>
-<div class="bottom-steps" style="max-width:980px;margin:14px auto 0;">
-<!-- --- [P3] Etapes (planning -> règles -> 'Découvre ton rôle') --- --><!-- [ASTUCE P3] Étapes : éditez les textes dans #p3-s1 (planning), #p3-s2 (règles), #p3-s3 (intro du bouton final). --><div id="p3-steps">
-<!-- ~~~ [P3] ETAPE 1 : Le planning ~~~ --><!-- [ASTUCE P3/S1] Modifiez les <li> pour changer le planning. --><section class="step active" id="p3-s1"><h3 class="p3-photo-title">Planning du jeu</h3><ul class="plan-list"><li class="plan-item"><span class="left">Vendredi soir :</span><span class="dots"></span><span class="right">Premier conseil et vote d’élimination.</span></li><li class="plan-item"><span class="left">Nuit vendredi → samedi :</span><span class="dots"></span><span class="right">Les Traîtres bannissent un loyal via leur lien.</span></li><li class="plan-item"><span class="left">Samedi matin :</span><span class="dots"></span><span class="right">Annonce au groupe du résultat de la nuit.</span></li><li class="plan-item"><span class="left">Samedi midi :</span><span class="dots"></span><span class="right">Second conseil et vote d’élimination.</span></li><li class="plan-item"><span class="left">Samedi soir :</span><span class="dots"></span><span class="right">Troisième conseil et vote d’élimination.</span></li><li class="plan-item"><span class="left">Nuit samedi → dimanche :</span><span class="dots"></span><span class="right">Les Traîtres éliminent à nouveau via leur lien.</span></li><li class="plan-item"><span class="left">Dimanche matin :</span><span class="dots"></span><span class="right">Annonce au groupe de la victime de la nuit.</span></li><li class="plan-item"><span class="left">Dimanche midi :</span><span class="dots"></span><span class="right">Dernier conseil et vote d’élimination.</span></li></ul><div class="p3-actions"><button class="btn" id="p3-n1" type="button">Suivant</button></div></section>
-<!-- ~~~ [P3] ETAPE 2 : Esprit & règles ~~~ --><!-- [ASTUCE P3/S2] Modifiez ou ajoutez des règles ici. --><section class="step" id="p3-s2"><h3 class="p3-photo-title">Esprit et règles</h3><div class="rules-wrap"><p>Les Traîtres jouent en secret via un lien privé.</p><p>Les Loyaux observent, discutent et votent avec stratégie.</p><p>Pas de prise de tête : les écrans clés s’affichent au bon moment.</p><p>On garde la bonne entente : fun et fair‑play.</p><p class="final">Les traîtres devront tous être démasqués le dimanche midi ;<br/>si ce n’est pas le cas, les loyaux auront perdu le jeu.</p></div><div class="p3-actions"><button class="btn" id="p3-n2" type="button">Suivant</button></div></section>
-<!-- ~~~ [P3] ETAPE 3 : 🎭 Découvre ton rôle ~~~ --><!-- [ASTUCE P3/S3] Texte avant le bouton final. --><section class="step" id="p3-s3">
-<h3 class="p3-title" id="p3-playerLine">Es-tu prêt ? Quand tu es seul, découvre ta carte.</h3>
-<div class="p3-actions"><!-- ~~~ [P3] Bouton final : 🎭 Découvre ton rôle (lien / fonction revealRole) ~~~ --><!-- [ASTUCE P3] Si vous avez une fonction revealRole, c'est ici qu'elle est appelée. --><a class="btn" href="#" id="p3-revealLink">🎭 Découvre ton rôle</a></div>
-<p class="p3-note quote-block" id="finalQuote">
-  <span class="line">Derrière ce scénario, il y a des semaines de travail, d’imagination et de passion.</span>
-  <span class="line">Franck a écrit, monté et façonné chaque image, chaque son, chaque ligne pour vous faire vivre un week‑end unique.</span>
-  <span class="line">À présent, à vous de jouer… et d’aller jusqu’au bout.</span>
-  <span class="line cite">« C’est le temps que tu as perdu pour ton ami qui fait ton ami si important. » — Antoine de Saint‑Exupéry</span>
-</p>
-</section>
-</div>
-</div>
-</section>
-<div class="grid">
-<!-- Organisateur -->
-<div class="card" id="orgCard">
-<h3>Créer une partie (organisateur)</h3>
-<div class="small">Noms : un par ligne ou séparés par virgule/;</div>
-<textarea id="names" placeholder="Franck
-Aurélie
-Nathan
-Bilou
-Arnaud" rows="6" style="width:100%;margin-top:8px"></textarea>
-<div class="row" style="margin-top:8px">
-<label><input checked="" name="mode" type="radio" value="pct"/> Traîtres (%)</label>
-<input id="pct" max="60" min="10" style="width:90px;margin-left:6px" type="number" value="25"/>
-<label style="margin-left:8px"><input name="mode" type="radio" value="nb"/> Traîtres (nb)</label>
-<input id="nb" min="1" style="width:90px;margin-left:6px" type="number" value="2"/>
-</div>
-<div style="margin-top:12px">
-<button class="btn" id="genBtn" type="button">Générer invitations</button>
-</div>
+
 <div id="invites" style="margin-top:12px"></div>
 </div>
 </div>
@@ -1604,5 +1529,29 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<script id="reveal-listener-fix">
+document.addEventListener('DOMContentLoaded', function(){
+  var a = document.getElementById('p3-revealLink');
+  if (a && !a.__fixed){
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      try{
+        if (typeof revealRole === 'function') {
+          var payload = window.PAYLOAD;
+          if (!payload){
+            var qp = new URLSearchParams(location.search);
+            if (qp.has('t')){
+              try{ payload = JSON.parse(decodeURIComponent(atob(qp.get('t')))); }catch(ex){}
+            }
+          }
+          revealRole(payload || {});
+        }
+      }catch(err){ console.error(err); }
+      return false;
+    }, {capture:true});
+    a.__fixed = true;
+  }
+});
+</script>
 </body>
 </html>
