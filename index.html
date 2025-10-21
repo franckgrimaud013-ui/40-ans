@@ -519,6 +519,11 @@ video { background:#000; }
 #antiFlashVeil.show{ opacity:1; }
 </style>
 
+
+<style>
+video#gateVideo, video[src*="intro-gate.mp4"] { will-change: opacity; backface-visibility: hidden; }
+</style>
+
 </head>
 <body><!--
 ==================== GUIDE RAPIDE (COMMENT MODIFIER) ====================
@@ -2202,7 +2207,7 @@ function startMainStage(){
 <script>
 // Patch timing: sync fond-boucle-v2.mp4 with audio + start button hide + overlay at 28s
 (function(){
-  var START_DELAY_SEC = 28;
+  var START_DELAY_SEC = 88;
   var shownOverlay = false;
 
   function findByName(name){
@@ -2327,6 +2332,48 @@ function startMainStage(){
     enterBtn = cloneE;
     enterBtn.addEventListener('click', onEnter, {passive:false});
   }
+})();
+</script>
+
+
+<script>
+// iOS anti-flash (pré-freeze) sur le bouton "Lancez-vous"
+(function(){
+  var isIOS = /iP(hone|od|ad)/.test(navigator.platform) || /iPhone|iPad|iPod/.test(navigator.userAgent);
+  if (!isIOS) return;
+
+  function findIntro(){
+    // cherche la vidéo d'intro par id ou par src
+    var v = document.getElementById('gateVideo');
+    if (v) return v;
+    var nodes = document.querySelectorAll('video, source');
+    for (var i=0;i<nodes.length;i++){
+      var el = nodes[i];
+      var s = el.getAttribute('src') || el.getAttribute('data-src') || '';
+      if (s && s.indexOf('intro-gate.mp4') !== -1){
+        return el.tagName.toLowerCase()==='video' ? el : el.parentElement;
+      }
+    }
+    return null;
+  }
+
+  var startBtn = document.getElementById('btnStart')
+             || document.querySelector('[data-action="start"]')
+             || Array.from(document.querySelectorAll('a,button')).find(function(el){ return /lancez[-\s]?vous/i.test((el.textContent||'').trim()); });
+  if (!startBtn) return;
+
+  startBtn.addEventListener('touchstart', function(){
+    var intro = findIntro();
+    if (!intro) return;
+    try {
+      var t = intro.currentTime || 0;
+      if (intro.pause) intro.pause();
+      try { intro.currentTime = Math.max(0, t - 0.002); } catch(_){}
+    } catch(_){}
+    // ne pas faire display:none tout de suite pour éviter repaint du frame 0
+    intro.style.opacity = '0';
+    intro.style.pointerEvents = 'none';
+  }, {passive:true});
 })();
 </script>
 
