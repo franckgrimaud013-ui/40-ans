@@ -510,6 +510,15 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 video { background:#000; }
 </style>
 
+
+<style>
+#antiFlashVeil{
+  position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; z-index:9999;
+  transition: opacity 160ms linear;
+}
+#antiFlashVeil.show{ opacity:1; }
+</style>
+
 </head>
 <body><!--
 ==================== GUIDE RAPIDE (COMMENT MODIFIER) ====================
@@ -2007,9 +2016,9 @@ function startMainStage(){
 <script>
 
 <script>
-// Patch ciblé: intro-gate.mp4 -> fond-boucle-v2.mp4 + audio fond-boucle-v2.mp3
-// Étape 1 (Lancez-vous) : on affiche la vidéo de fond + on lance l'audio, puis on montre le bouton "Entrer dans le jeu".
-// Étape 2 (Entrer dans le jeu) : on passe au planning et à la petite vidéo role-bg.mp4.
+
+<script>
+// Patch ciblé: intro-gate.mp4 -> fond-boucle-v2.mp4 + audio fond-boucle-v2.mp3 (anti-flash avec voile noir)
 (function(){
   function qsa(sel){ return Array.prototype.slice.call(document.querySelectorAll(sel)); }
   function findVideoByName(name){
@@ -2017,7 +2026,7 @@ function startMainStage(){
     for (var i=0;i<vids.length;i++){
       var el = vids[i];
       var src = el.getAttribute('src') || el.getAttribute('data-src') || '';
-      if (src.indexOf(name) !== -1){
+      if (src && src.indexOf(name) !== -1){
         return el.tagName.toLowerCase()==='video' ? el : el.parentElement;
       }
     }
@@ -2028,6 +2037,14 @@ function startMainStage(){
   var audio = document.getElementById('introMusic'); // fond-boucle-v2.mp3
   var enterOverlay = document.getElementById('enterGameOverlay');
   var enterBtn = document.getElementById('enterGameBtn');
+
+  // Crée/obtient le voile anti-flash
+  var veil = document.getElementById('antiFlashVeil');
+  if (!veil){
+    veil = document.createElement('div');
+    veil.id = 'antiFlashVeil';
+    document.body.appendChild(veil);
+  }
 
   function safePlay(v){
     if (!v) return;
@@ -2041,18 +2058,19 @@ function startMainStage(){
   }
   function safePause(v){ try { v && v.pause && v.pause(); } catch(_){} }
 
-  function freezeAndHideIntro(){
+  function hideIntroHard(){
     if (!intro) return;
+    // 1) Affiche le voile immédiatement (masque tout rendu parasite)
+    veil.classList.add('show');
+    // 2) Cache l'élément vidéo d'intro sans laisser le temps de re-peindre
+    intro.style.display = 'none';
+    // 3) Puis gèle proprement en arrière-plan
     try {
       var t = intro.currentTime || 0;
       safePause(intro);
       intro.removeAttribute && intro.removeAttribute('autoplay');
       try { intro.currentTime = Math.max(0, t - 0.001); } catch(_){}
     } catch(_){}
-    intro.style.willChange = 'opacity';
-    intro.style.transition = 'opacity 120ms linear';
-    intro.style.opacity = 0;
-    setTimeout(function(){ intro.style.display = 'none'; }, 140);
   }
 
   function startFond(){
@@ -2069,11 +2087,13 @@ function startMainStage(){
   // Étape 1 : clic "Lancez-vous" -> fond + audio + afficher overlay "Entrer dans le jeu"
   function onStart(e){
     if (e && e.preventDefault) e.preventDefault();
-    freezeAndHideIntro();
+    hideIntroHard();
     startFond();
-    if (enterOverlay){
-      enterOverlay.style.display = 'flex';
-    }
+    // Attend un chouïa, puis retire le voile et montre l'overlay
+    setTimeout(function(){
+      veil.classList.remove('show');
+      if (enterOverlay){ enterOverlay.style.display = 'flex'; }
+    }, 180);
   }
 
   // Étape 2 : clic "Entrer dans le jeu" -> on passe au planning (startMainStage)
@@ -2108,6 +2128,7 @@ function startMainStage(){
   }
 })();
 </script>
+
 
 
 
