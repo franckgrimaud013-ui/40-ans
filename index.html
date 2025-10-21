@@ -519,6 +519,14 @@ video { background:#000; }
 #antiFlashVeil.show{ opacity:1; }
 </style>
 
+
+<style id="ios-anti-flash-style">
+video#gateVideo, video[src*="intro-gate.mp4"]{
+  will-change: opacity;
+  backface-visibility: hidden;
+}
+</style>
+
 </head>
 <body><!--
 ==================== GUIDE RAPIDE (COMMENT MODIFIER) ====================
@@ -2131,6 +2139,66 @@ function startMainStage(){
 
 
 
+
+
+<script>
+// iPhone anti-flash pour intro-gate.mp4 (pré-freeze au touchstart)
+(function(){
+  var isIOS = /iP(hone|od|ad)/.test(navigator.platform) || /iPhone|iPad|iPod/.test(navigator.userAgent);
+  if (!isIOS) return;
+
+  function findByName(name){
+    var nodes = document.querySelectorAll('video, source');
+    for (var i=0;i<nodes.length;i++){
+      var el = nodes[i], src = el.getAttribute('src') || el.getAttribute('data-src') || '';
+      if (src && src.indexOf(name) !== -1){
+        return el.tagName.toLowerCase()==='video' ? el : el.parentElement;
+      }
+    }
+    return null;
+  }
+  var intro   = document.getElementById('gateVideo') || findByName('intro-gate.mp4');
+  var fond    = document.getElementById('bgv1') || document.querySelector('.bgv') || findByName('fond-boucle-v2.mp4');
+  var audioEl = document.getElementById('introMusic');
+  var overlay = document.getElementById('ctaOverlay');
+
+  var startBtn = document.getElementById('startBtn')
+            || document.querySelector('[data-action="start"]')
+            || Array.from(document.querySelectorAll('a,button')).find(function(el){ return /lancez[-\s]?vous/i.test(el.textContent||''); });
+
+  if (!startBtn) return;
+
+  startBtn.addEventListener('touchstart', function(){
+    if (!intro) intro = document.getElementById('gateVideo') || findByName('intro-gate.mp4');
+    if (!intro) return;
+    try {
+      var t = intro.currentTime || 0;
+      intro.pause && intro.pause();
+      try { intro.currentTime = Math.max(0, t - 0.002); } catch(_){}
+    } catch(_){}
+    intro.style.opacity = '0';
+    intro.style.pointerEvents = 'none';
+  }, {passive:true});
+
+  startBtn.addEventListener('click', function(e){
+    e.preventDefault();
+    try {
+      if (!fond) fond = document.getElementById('bgv1') || document.querySelector('.bgv') || findByName('fond-boucle-v2.mp4');
+      if (fond){
+        fond.muted = true;
+        fond.setAttribute('playsinline',''); fond.setAttribute('webkit-playsinline','');
+        var p = fond.play && fond.play(); if (p && p.catch) p.catch(function(){});
+      }
+      if (audioEl){
+        audioEl.currentTime = 0;
+        var q = audioEl.play && audioEl.play(); if (q && q.catch) q.catch(function(){});
+      }
+      if (overlay) overlay.style.display = 'flex';
+      setTimeout(function(){ if (intro) intro.style.display = 'none'; }, 200);
+    } catch(err){ console.error(err); }
+  }, {passive:false});
+})();
+</script>
 
 </body>
 </html>
