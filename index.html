@@ -157,8 +157,31 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 /* Force full black UI chrome and safe dark scheme */
 html, body { background:#000 !important; color-scheme: dark; overscroll-behavior: none; }
 /* Keep intro panel pinned to top (from prior step) */
+#gate{ align-items:flex-start !important; padding-top:75vh !important; }
+#gate .panel.panel--dark{ margin-top:0 !important; }
+@media (max-width:480px){
+  #gate{ padding-top:72vh !important; }
+}
+</style>
 
-</style><meta content="#000000" name="theme-color"/>
+<style id="patch-p3-style">
+  /* Titre blanc + halo (sera appliqué via JS en ajoutant id="p3Title") */
+  #p3Title{
+    color:#fff !important;
+    font-size:clamp(20px,3.2vw,28px) !important;
+    font-weight:900 !important;
+    line-height:1.15 !important;
+    text-shadow:0 0 14px rgba(255,255,255,.35) !important;
+    margin:0 0 10px !important;
+  }
+  /* Panneaux règles/planning : fond noir semi-transparent */
+  .panel-dark{
+    background:rgba(0,0,0,.60) !important;
+    border:1px solid rgba(255,255,255,.12) !important;
+    box-shadow:0 10px 30px rgba(0,0,0,.30) !important;
+  }
+</style>
+<meta content="#000000" name="theme-color"/>
 <link href="/icons/icon-192.png" rel="icon"/>
 <style>
 /* CTA visibility controlled by end of intro animation */
@@ -639,8 +662,7 @@ function onEnterApp(){
       var cta=document.getElementById('ctaOverlay'); if(cta) cta.style.display='none';
       var org=document.getElementById('orgCard'); if(org) org.style.display='none';
       var pIntro=document.getElementById('playerIntro'); 
-      if(pIntro && PAYLOAD.name){
-        pIntro.innerHTML = "<b>"+PAYLOAD.name+"</b>, es-tu prêt ? Quand tu es seul, découvre ta carte.<br>" +
+      if(pIntro && PAYLOAD.name){+PAYLOAD.name+"</b>, es-tu prêt ? Quand tu es seul, découvre ta carte.<br>" +
                            "<span style='color:#ccc;font-size:18px'>Petit secret : c’est bien Franck qui a eu l’idée de ce jeu 😉… mais rassurez-vous, il ne connaît pas vos rôles.</span>";
       }
       var playerName=document.getElementById('playerName'); if(playerName && PAYLOAD.name){ playerName.textContent = PAYLOAD.name; }
@@ -863,7 +885,6 @@ function revealRole(payload){
   });
 })();
 </script>
-<!-- PATCH v7: remplace #closeRoleBtn par un lien "Voter la nuit..." pour les Traîtres -->
 <script>
 (function(){
   // Helpers
@@ -945,7 +966,196 @@ function revealRole(payload){
   var obs = new MutationObserver(function(){ replaceBtn(); });
   obs.observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:['class','style']});
 })();
-</script><!-- PATCH: strong skip — masque aussi tous les fonds/overlays d'intro --><!-- PATCH v2: strong skip ++ — masque explicitement la page #p1 et le bloc "Un week‑end..." --><script>
+</script>
+<script id="patch-p3-script">
+(function(){
+  function textIncludes(node, needles){
+    const t = (node.textContent||"").toLowerCase();
+    return needles.some(n=>t.includes(n));
+  }
+  function tagP3Title(){
+    // Try to find a heading on page 3 that mentions Franck/créé/jeu
+    const candidates = document.querySelectorAll("h1,h2,h3,h4");
+    const needles = ["franck", "créé", "cree", "jeu", "week-end", "week end"];
+    for(const el of candidates){
+      if(textIncludes(el, needles)){
+        el.id = "p3Title";
+        break;
+      }
+    }
+  }
+  function darkenPanels(){
+    // Add panel-dark to likely rule/planning containers on page 3
+    const sel = [
+      ".panel", ".rules", ".planning", ".notice", ".card", ".bloc", ".section"
+    ];
+    const needles = ["règle","regle","planning","déroulé","deroule","week-end","week end"];
+    const nodes = document.querySelectorAll(sel.join(","));
+    nodes.forEach(el => {
+      if(textIncludes(el, needles)){
+        el.classList.add("panel-dark");
+      }
+    });
+  }
+  function fixSecretSkip(){
+    const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
+    if(!secret) return;
+    function goToP3(){
+      // Only toggle .page visibility to avoid breaking background layers
+      document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
+      const p3 = document.getElementById("p3") || document.querySelector("[data-page='3']") || document.querySelector(".page:nth-of-type(3)");
+      if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
+      document.documentElement.classList.add("app-shown");
+    }
+    secret.addEventListener("click", goToP3);
+    let tId;
+    secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3, 500); }, {passive:true});
+    secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId);   }, {passive:true});
+  }
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", ()=>{ tagP3Title(); darkenPanels(); fixSecretSkip(); });
+  }else{
+    tagP3Title(); darkenPanels(); fixSecretSkip();
+  }
+})();
+</script>
+<script id="patch-strongskip">
+(function(){
+  const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
+  if(!secret) return;
+
+  function injectHideCSS(){
+    if (document.getElementById("skipHideCSS")) return;
+    const css = `
+      /* cache les couches visuelles d'intro potentiellement encore visibles */
+      .intro, .intro-layer, .bg, .bg-intro, .overlay, .overlay-intro,
+      .image-hero, .image-bg, .img-bg, .bg-img, .hero-bg,
+      .slide, .slides, .parallax, .page-bg, [data-intro] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+      /* coupe les animations/vidéos éventuelles */
+      video, audio { display: none !important; }
+      * { animation: none !important; transition: none !important; }
+    `;
+    const style = document.createElement("style");
+    style.id = "skipHideCSS";
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  function goToP3Strong(){
+    // 1) désactive toutes les pages actives
+    document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
+    // 2) masque agressivement les backgrounds/overlays d'intro
+    injectHideCSS();
+
+    // 3) masque tous les éléments fixed/absolute qui ne sont pas dans p3
+    const p3 = document.getElementById("p3");
+    const rectP3 = p3 ? p3.getBoundingClientRect() : null;
+    const all = Array.from(document.body.querySelectorAll("*"));
+    all.forEach(el=>{
+      const st = getComputedStyle(el);
+      if ((st.position === "fixed" || st.position === "absolute") && !p3?.contains(el)) {
+        el.style.display = "none";
+      }
+    });
+
+    // 4) affiche la page 3 proprement
+    if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
+    document.documentElement.classList.add("app-shown");
+    try { (document.getElementById('bgAudio')||{}).pause?.(); } catch(e){}
+  }
+
+  secret.addEventListener("click", goToP3Strong);
+  let tId;
+  secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
+  secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
+})();
+</script>
+<script id="patch-strongskip-v2">
+(function(){
+  const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
+  if(!secret) return;
+
+  function injectHideCSS(){
+    if (document.getElementById("skipHideCSSv2")) return;
+    const css = `
+      /* Masquer dur #p1 et #p2 */
+      #p1, #p2 { display:none !important; visibility:hidden !important; opacity:0 !important; }
+      /* Masquer toutes couches intro possibles */
+      .intro, .intro-layer, .bg, .bg-intro, .overlay, .overlay-intro,
+      .image-hero, .image-bg, .img-bg, .bg-img, .hero-bg,
+      .slide, .slides, .parallax, .page-bg, [data-intro] {
+        display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important;
+      }
+      video, audio { display: none !important; }
+      * { animation: none !important; transition: none !important; }
+    `;
+    const style = document.createElement("style");
+    style.id = "skipHideCSSv2";
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  function hideWelcomeBlockByText(){
+    const needles = ["Un week", "pas comme les autres", "Lancez‑vous", "Lancez-vous"];
+    const all = Array.from(document.body.querySelectorAll("*"));
+    for(const el of all){
+      const t = (el.textContent||"").trim();
+      if(!t) continue;
+      const ok = needles.every(n => t.toLowerCase().includes(n.toLowerCase()));
+      if(ok){
+        // Masquer l'élément le plus grand contenant ce texte (panel de p1)
+        let n = el;
+        for(let i=0;i<4 && n && n.parentElement;i++){ // remonte un peu pour cacher le bloc
+          n = n.parentElement;
+          if(n.classList && (n.classList.contains('panel') || n.classList.contains('wrap') || n.classList.contains('page'))){
+            n.style.display = 'none';
+            break;
+          }
+        }
+        // Sécurité : masque aussi el
+        el.style.display = 'none';
+        break;
+      }
+    }
+  }
+
+  function goToP3Strong(){
+    // Retire les .active de toutes les pages puis force p1/p2 masqués
+    document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
+    ['#p1','#p2','#intro','#welcome','.welcome','.hero-section'].forEach(sel=>{
+      document.querySelectorAll(sel).forEach(el=>{ el.style.display='none'; el.style.visibility='hidden'; el.style.opacity='0'; });
+    });
+
+    injectHideCSS();
+    hideWelcomeBlockByText();
+
+    const p3 = document.getElementById("p3");
+    // Masque tous les fixed/absolute hors p3
+    const all = Array.from(document.body.querySelectorAll("*"));
+    all.forEach(el=>{
+      const st = getComputedStyle(el);
+      if ((st.position === "fixed" || st.position === "absolute") && !p3?.contains(el)) {
+        el.style.display = "none";
+      }
+    });
+
+    if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
+    document.documentElement.classList.add("app-shown");
+    try { (document.getElementById('bgAudio')||{}).pause?.(); } catch(e){}
+  }
+
+  secret.addEventListener("click", goToP3Strong);
+  let tId;
+  secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
+  secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
+})();
+</script>
+<script>
 (function(){
   var cta = document.getElementById('ctaOverlay');
   if(!cta) return;
