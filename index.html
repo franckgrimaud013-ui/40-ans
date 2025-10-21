@@ -486,8 +486,19 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <style id="gate-bottom-css">#gate{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8vh;z-index:6}</style>
 
 <style>
-.video-frame, .top-video, .bg-video { position: fixed; inset: 0; z-index: 0; }
+.video-frame, .bg-video { position: fixed; inset: 0; z-index: 0; }
 .bottom-steps, #p3-steps, .step, .p3-actions { position: relative; z-index: 1; }
+</style>
+
+
+<style>
+/* Top banner video sits in normal flow, not fixed */
+.p3-topvid, .top-video { position: relative; display: block; width: 100%; height: auto; z-index: 1; }
+/* Optional wrapper to maintain height if used */
+.p3-top { position: relative; width: 100%; aspect-ratio: 16 / 9; max-height: 40vh; overflow: hidden; }
+.p3-top video.p3-topvid { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Ensure the steps/text start below the top video */
+#p3-steps, .bottom-steps { margin-top: 12px; position: relative; z-index: 2; }
 </style>
 
 </head>
