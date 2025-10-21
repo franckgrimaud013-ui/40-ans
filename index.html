@@ -680,8 +680,8 @@ function startIntro(){
       var drift = vt - at;
       if (Math.abs(drift) > 0.04){
         try { audio.currentTime = vt; } catch(e){}
+      
       }
-    }
     if (window.__syncTimer) {
   clearInterval(window.__syncTimer);
   window.__syncTimer = null;
