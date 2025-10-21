@@ -54,21 +54,32 @@ Arnaud"></textarea>
   </div>
 
   <script>
+    // Questions aléatoires pour les traîtres
     function pickQA(){
       const QA = [
         {q:"Quelle heure est-il ?", a:()=>String(Math.floor(Math.random()*24)).padStart(2,"0")+"h"+String(Math.floor(Math.random()*60)).padStart(2,"0")},
-        {q:"Quel jour sommes-nous ?", a:()=>["lundi","mardi","mercredi","jeudi","samedi","dimanche"][Math.floor(Math.random()*7)]},
-        {q:"Quel est le mot de passe ?", a:()=>["ombre","azur","lune","piano","velours","nuit","brume","mystère"][Math.floor(Math.random()*8)]},
-        {q:"Quel animal te vient à l'esprit ?", a:()=>["renard","corbeau","chat","hibou","loup","lynx","chouette"][Math.floor(Math.random()*7)]},
-        {q:"Un numéro de 1 à 9 ?", a:()=>String(Math.floor(Math.random()*9)+1)},
-        {q:"Un métal ?", a:()=>["or","argent","cuivre","fer","plomb","étain"][Math.floor(Math.random()*6)]},
+        {q:"Quel jour sommes-nous ?", a:()=>["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"][Math.floor(Math.random()*7)]},
+        {q:"Quel est le mot de passe ?", a:()=>["ombre","azur","lune","piano","velours","nuit","brume","mystère","flamme","écarlate","ébène","orage"][Math.floor(Math.random()*12)]},
+        {q:"Un animal ?", a:()=>["renard","hibou","corbeau","loup","lynx","chouette","cerf","ours","panthère","aigle"][Math.floor(Math.random()*10)]},
+        {q:"Une couleur ?", a:()=>["or","argent","cuivre","bleu","rouge","noir","indigo","bordeaux","ambre","saphir"][Math.floor(Math.random()*10)]},
+        {q:"Un fruit ?", a:()=>["pomme","poire","raisin","figue","mûre","prune","orange","cerise","banane","kiwi"][Math.floor(Math.random()*10)]},
+        {q:"Un mot de 5 lettres ?", a:()=>["ombre","plume","clave","trace","rêver","table","pelle","pomme","noble","chien"][Math.floor(Math.random()*10)]},
+        {q:"Nord, Sud, Est ou Ouest ?", a:()=>["Nord","Sud","Est","Ouest"][Math.floor(Math.random()*4)]},
+        {q:"Pair ou impair ?", a:()=>["pair","impair"][Math.floor(Math.random()*2)]},
+        {q:"Pierre, feuille ou ciseaux ?", a:()=>["pierre","feuille","ciseaux"][Math.floor(Math.random()*3)]},
+        {q:"Un métal ?", a:()=>["or","argent","cuivre","fer","plomb","étain","titane","nickel"][Math.floor(Math.random()*8)]},
+        {q:"Une ville ?", a:()=>["Rome","Paris","Lyon","Nice","Londres","Berlin","Séville","Lisbonne","Prague","Budapest"][Math.floor(Math.random()*10)]},
+        {q:"Un instrument de musique ?", a:()=>["piano","harpe","flûte","guitare","tambour","violon","trompette","saxophone","clarinette","orgue"][Math.floor(Math.random()*10)]},
+        {q:"Clair ou obscur ?", a:()=>["clair","obscur"][Math.floor(Math.random()*2)]},
+        {q:"Silence ou musique ?", a:()=>["silence","musique"][Math.floor(Math.random()*2)]},
+        {q:"Jour ou nuit ?", a:()=>["jour","nuit"][Math.floor(Math.random()*2)]},
+        {q:"Un chiffre de 1 à 9 ?", a:()=>String(Math.floor(Math.random()*9)+1)},
+        {q:"Un nombre à deux chiffres ?", a:()=>String(Math.floor(Math.random()*90)+10)}
       ];
       return QA[Math.floor(Math.random()*QA.length)];
     }
 
-    function b64EncodeUnicode(str){
-      return btoa(encodeURIComponent(str));
-    }
+    function b64EncodeUnicode(str){ return btoa(encodeURIComponent(str)); }
 
     document.getElementById('genBtn').addEventListener('click', function(){
       const raw = (document.getElementById('names').value || '').trim();
@@ -87,13 +98,10 @@ Arnaud"></textarea>
         nT = Math.min(nb, names.length - 1);
       }
 
-      // shuffle
       const a = names.slice();
       for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
 
-      // choose traitors
       const traitors = new Set(a.slice(0, nT));
-
       const qa = pickQA();
       const secretQ = qa.q;
       const secretA = qa.a();
@@ -102,7 +110,7 @@ Arnaud"></textarea>
       invites.innerHTML = '<div class="small">Invitations :</div>';
 
       const origin = location.origin || (location.protocol + '//' + location.host);
-      const path = location.pathname.replace(/[^\/]*$/,''); // keep folder
+      const path = location.pathname.replace(/[^\/]*$/,'');
       const base = origin + path + 'index.html';
 
       names.forEach(name=>{
