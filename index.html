@@ -47,7 +47,7 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 .btn:hover{transform:translateY(-2px);box-shadow:0 0 0 2px rgba(212,175,55,.2) inset,0 14px 36px rgba(0,0,0,.5),0 0 28px rgba(212,175,55,.45)}
 
 /* GATE */
-#gate{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:6;padding:24px;pointer-events:auto}
+#gate{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8vh;}
 #gate .panel{text-align:center}
 #gate h1{font-family:Cinzel,serif;margin:0 0 8px 0;font-size:clamp(26px,5vw,40px)}
 #gate p{margin:6px 0 14px 0;font-size:clamp(16px,2.5vw,20px);color:var(--mut)}
@@ -111,7 +111,7 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 .mask-blue{filter:drop-shadow(0 0 8px rgba(23,183,255,.45));color:#17b7ff}
 #app:target ~ #ctaOverlay{display:none} 
 #app:target ~ .overlay{display:none}
-#app:target ~ #gate{display:none}
+#app:target ~ #gate{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8vh;}
 #audioUnlock{display:none;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9999;background:rgba(0,0,0,.7);color:#fff;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(3px);font-size:14px;white-space:nowrap}
 #audioUnlock button{margin-left:8px;padding:6px 10px;border-radius:10px;border:1px solid rgba(212,175,55,.9);background:linear-gradient(180deg,rgba(212,175,55,.25),rgba(212,175,55,.12));color:#fff;cursor:pointer}
 
@@ -148,10 +148,10 @@ html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--
 .intro-started #bgVideoLayer{ opacity:1 !important; } /* when intro ends, reveal looping layer */
 
 /* === Intro panel pinned to top (override) === */
-#gate{ align-items:flex-start !important; padding-top:75vh !important; }
+#gate{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8vh;}
 #gate .panel.panel--dark{ margin-top:0 !important; }
 @media (max-width:480px){
-  #gate{ padding-top:3vh !important; }
+  #gate{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8vh;}
 }
 
 /* Force full black UI chrome and safe dark scheme */
