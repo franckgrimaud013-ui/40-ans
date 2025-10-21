@@ -771,27 +771,20 @@ function revealRole(payload){
 // Secret skip intro: go straight to #app
 (function(){
   var dot = document.getElementById('secretFixed');
-  function showApp(e){ if(e&&e.preventDefault) e.preventDefault(); try{ startMainStage(); } catch(err){ console.error(err); } }
-    document.documentElement.classList.add('app-shown');
-    // Also try hiding typical intro layers
-    try{
-      ['.intro','#intro','.landing','.splash','.cover','.intro-container'].forEach(function(sel){
-        document.querySelectorAll(sel).forEach(function(n){ n.style.display='none'; });
-      });
-    }catch(e){}
+  function showApp(e){
+    if (e && e.preventDefault) e.preventDefault();
+    try { startMainStage(); } catch (err) { console.error(err); }
   }
-  if(dot){
-    var t; dot.addEventListener('click', showApp);
-    dot.addEventListener('touchstart', function(){ t=setTimeout(showApp,600); }, {passive:true});
+  if (dot){
+    var t;
+    dot.addEventListener('click', showApp, {passive:false});
+    dot.addEventListener('touchstart', function(){ t = setTimeout(showApp, 600); }, {passive:true});
     dot.addEventListener('touchend', function(){ clearTimeout(t); }, {passive:true});
   }
-  // On load, if already #app, mark visible
   document.addEventListener('DOMContentLoaded', function(){
-    if(location.hash==='#app'){ document.documentElement.classList.add('app-shown'); }
+    if (location.hash === '#app'){ document.documentElement.classList.add('app-shown'); }
   });
-})();
-
-// Role reveal (inline first; modal fallback if no inline container)
+})();// Role reveal (inline first; modal fallback if no inline container)
 (function(){
   function parseToken(){
     try{
