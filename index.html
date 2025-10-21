@@ -2198,5 +2198,137 @@ function startMainStage(){
 })();
 </script>
 
+
+<script>
+// Patch timing: sync fond-boucle-v2.mp4 with audio + start button hide + overlay at 28s
+(function(){
+  var START_DELAY_SEC = 28;
+  var shownOverlay = false;
+
+  function findByName(name){
+    var nodes = document.querySelectorAll('video, source, audio');
+    for (var i=0;i<nodes.length;i++){
+      var el = nodes[i], src = el.getAttribute('src') || el.getAttribute('data-src') || '';
+      if (src && src.indexOf(name) !== -1){
+        return el.tagName.toLowerCase()==='video' || el.tagName.toLowerCase()==='audio' ? el : el.parentElement;
+      }
+    }
+    return null;
+  }
+  function findFondVideo(){
+    return document.getElementById('bgv1') || document.querySelector('.bgv') || findByName('fond-boucle-v2.mp4');
+  }
+  function findIntroAudio(){
+    return document.getElementById('introMusic') || findByName('fond-boucle-v2.mp3');
+  }
+  function ensurePlay(media){
+    if (!media) return;
+    try {
+      media.muted = true; // iOS-friendly; audio sera démuté si besoin (mais tu utilises muted pour ton ambiance)
+      media.setAttribute && media.setAttribute('playsinline','');
+      media.setAttribute && media.setAttribute('webkit-playsinline','');
+      var p = media.play && media.play();
+      if (p && p.catch) p.catch(function(){});
+    } catch(e){}
+  }
+
+  var startBtn = document.getElementById('btnStart')
+            || document.querySelector('[data-action="start"]')
+            || Array.from(document.querySelectorAll('a,button')).find(function(el){ return /lancez[-\s]?vous/i.test((el.textContent||'').trim()); });
+
+  var overlay = document.getElementById('enterGameOverlay') || document.getElementById('ctaOverlay');
+  var enterBtn = document.getElementById('enterGameBtn') || document.querySelector('#enterGameOverlay .btn, #ctaOverlay .btn');
+
+  // Remove old handlers to avoid duplicates
+  if (startBtn){
+    var clone = startBtn.cloneNode(true);
+    startBtn.parentNode.replaceChild(clone, startBtn);
+    startBtn = clone;
+  }
+
+  function onStart(e){
+    if (e && e.preventDefault) e.preventDefault();
+
+    // Hide the "Lancez-vous" button immediately
+    if (startBtn) { startBtn.style.display = 'none'; }
+
+    // Find media
+    var video = findFondVideo();
+    var audio = findIntroAudio();
+
+    // Reset times to 0 and sync
+    try { if (video){ video.currentTime = 0; } } catch(_){}
+    try { if (audio){ audio.currentTime = 0; } } catch(_){}
+
+    // Start both
+    ensurePlay(video);
+    // Start audio only once
+    if (!window.__bgAudioStarted){
+      window.__bgAudioStarted = true;
+      ensurePlay(audio);
+    }
+
+    // Basic hard sync at start: align audio to video currentTime after 'playing'
+    function alignOnce(){
+      try {
+        if (video && audio) {
+          // Use video time as reference
+          var t = (typeof video.currentTime === 'number') ? video.currentTime : 0;
+          if (!isNaN(t) && isFinite(t)) {
+            try { audio.currentTime = t; } catch(_){}
+          }
+        }
+      } catch(_){}
+      video && video.removeEventListener('playing', alignOnce);
+    }
+    if (video) video.addEventListener('playing', alignOnce);
+
+    // Show overlay at 28s of the fond video
+    shownOverlay = false;
+    function checkOverlay(){
+      if (shownOverlay) return;
+      var ct = 0;
+      try { ct = video ? video.currentTime : 0; } catch(_){}
+      if (ct >= START_DELAY_SEC){
+        shownOverlay = true;
+        if (overlay){ overlay.style.display = 'flex'; }
+        if (video) video.removeEventListener('timeupdate', checkOverlay);
+      }
+    }
+    if (video){
+      video.addEventListener('timeupdate', checkOverlay);
+      // Fallback if events lag
+      setTimeout(checkOverlay, (START_DELAY_SEC + 0.5) * 1000);
+    } else {
+      // No video reference: fallback timer
+      setTimeout(function(){
+        if (overlay) overlay.style.display = 'flex';
+      }, START_DELAY_SEC * 1000);
+    }
+  }
+
+  if (startBtn){
+    startBtn.addEventListener('click', onStart, {passive:false});
+    // Optional: also trigger on keyboard/enter if needed
+  }
+
+  // Enter button to go to planning
+  function onEnter(e){
+    if (e && e.preventDefault) e.preventDefault();
+    if (overlay) overlay.style.display = 'none';
+    try { startMainStage(); } catch(e){}
+    // Ensure the small top video plays
+    var small = document.querySelector('video.p3-topvid, .top-video');
+    if (small){ ensurePlay(small); }
+  }
+  if (enterBtn){
+    var cloneE = enterBtn.cloneNode(true);
+    enterBtn.parentNode.replaceChild(cloneE, enterBtn);
+    enterBtn = cloneE;
+    enterBtn.addEventListener('click', onEnter, {passive:false});
+  }
+})();
+</script>
+
 </body>
 </html>
