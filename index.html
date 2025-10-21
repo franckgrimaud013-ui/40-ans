@@ -164,23 +164,6 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 }
 </style>
 
-<style id="patch-p3-style">
-  /* Titre blanc + halo (sera appliqué via JS en ajoutant id="p3Title") */
-  #p3Title{
-    color:#fff !important;
-    font-size:clamp(20px,3.2vw,28px) !important;
-    font-weight:900 !important;
-    line-height:1.15 !important;
-    text-shadow:0 0 14px rgba(255,255,255,.35) !important;
-    margin:0 0 10px !important;
-  }
-  /* Panneaux règles/planning : fond noir semi-transparent */
-  .panel-dark{
-    background:rgba(0,0,0,.60) !important;
-    border:1px solid rgba(255,255,255,.12) !important;
-    box-shadow:0 10px 30px rgba(0,0,0,.30) !important;
-  }
-</style>
 <meta content="#000000" name="theme-color"/>
 <link href="/icons/icon-192.png" rel="icon"/>
 <style>
@@ -461,6 +444,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 }
 </style>
 
+
 <style id="ios-guide-css">
 #iosGuide{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.85);backdrop-filter:blur(4px)}
 #iosGuide.show{display:flex}
@@ -480,6 +464,34 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 @media (max-width:480px){#iosGuide .box{width:94vw}}
 </style>
 
+<style id="cinema-quote-style">
+.cinema-fade{
+  opacity:0; transform:translateY(20px);
+  animation:fadeInCine 3s ease-out 1.5s forwards;
+  font-size:14px; line-height:1.8; text-align:center; color:#cfd5dc;
+  margin:100px 0 40px;
+}
+.cinema-fade .quote{
+  display:block; margin-top:20px; font-style:italic; color:#d4af37;
+  opacity:0; transform:scale(0.98);
+  animation:glowQuote 4s ease-out 3s forwards;
+}
+@keyframes fadeInCine{
+  0%{opacity:0;transform:translateY(20px) scale(0.98)}
+  60%{opacity:1;transform:translateY(0) scale(1.02)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes glowQuote{
+  0%{opacity:0;text-shadow:none}
+  40%{opacity:1;text-shadow:0 0 10px rgba(212,175,55,.4)}
+  100%{opacity:1;text-shadow:0 0 18px rgba(212,175,55,.35)}
+}
+/* Flash guards */
+.bg-gate{ transition:opacity 200ms ease; }
+.intro-started .bg-gate{ opacity:0 !important; display:none !important; }
+#bgVideoLayer{ opacity:0; transition:opacity 300ms ease; }
+.intro-started #bgVideoLayer{ opacity:1 !important; }
+</style>
 </head>
 <body><!--
 ==================== GUIDE RAPIDE (COMMENT MODIFIER) ====================
@@ -550,8 +562,14 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- ~~~ [P3] ETAPE 3 : 🎭 Découvre ton rôle ~~~ --><!-- [ASTUCE P3/S3] Texte avant le bouton final. --><section class="step" id="p3-s3">
 <h3 class="p3-title" id="p3-playerLine">Es-tu prêt ? Quand tu es seul, découvre ta carte.</h3>
 <div class="p3-actions"><!-- ~~~ [P3] Bouton final : 🎭 Découvre ton rôle (lien / fonction revealRole) ~~~ --><!-- [ASTUCE P3] Si vous avez une fonction revealRole, c'est ici qu'elle est appelée. --><a class="btn" href="#" id="p3-revealLink">🎭 Découvre ton rôle</a></div>
-<p class="p3-note">Petit secret : C’est Franck qui a imaginé, dessiné et écrit chaque ligne que vous venez de découvrir.
-Mais il ne peut pas et surtout ne veut pas connaître vos rôles, afin de vivre pleinement le jeu avec vous.</p>
+<p class="p3-note cinema-fade" id="finalText">
+  Derrière ce scénario, il y a des semaines de travail, d’imagination et de passion.<br>
+  Franck a écrit, monté, et façonné chaque image, chaque son, chaque ligne pour vous faire vivre un week-end unique.<br>
+  À présent, à vous de jouer… et d’aller jusqu’au bout.<br>
+  <span class="quote">
+    « C’est le temps que tu as perdu pour ton ami qui fait ton ami si important. » — Antoine de Saint-Exupéry
+  </span>
+</p>
 </section>
 </div>
 </div>
@@ -594,213 +612,66 @@ Arnaud" rows="6" style="width:100%;margin-top:8px"></textarea>
 <source src="audio/fond-boucle-v2.mp3" type="audio/mpeg"/>
 </audio>
 <div id="audioUnlock">🔊 Le son est bloqué. <button id="unlockBtn">Activer le son</button></div>
-<!-- ==================== SCRIPTS (navigation, timings vidéo, rôle, etc.) ==================== --><script>
-function parseToken(){try{var p=new URLSearchParams(location.search||'');if(p.has('t')){return JSON.parse(decodeURIComponent(atob(p.get('t'))));}}catch(e){} return null;}
-var PAYLOAD=null;
-
-/* Démarrage intro */
+<!-- ==================== SCRIPTS (navigation, timings vidéo, rôle, etc.) ==================== --><script id="start-intro-sync">
 function startIntro(){
   try{
     document.documentElement.classList.add('intro-started');
-    var gate=document.getElementById('gate'); if(gate) gate.style.display='none';
 
-    var v1=document.getElementById('bgv1');
-    var v2=document.getElementById('bgv2');
-    var audio=document.getElementById('introMusic');
-    var auEl=document.getElementById('audioUnlock');
+    const gate = document.getElementById('gate');
+    if(gate) gate.style.display='none';
 
-    // Préparer les horloges au temps 0
-    if (v1){ try{ v1.muted = true; v1.currentTime = 0; }catch(e){} }
-    if (v2){ try{ v2.muted = true; v2.currentTime = 0; }catch(e){} }
-    if (audio){ try{ audio.loop = true; audio.volume = 0.35; audio.currentTime = 0; }catch(e){} }
+    const v1 = document.getElementById('bgv1');
+    const v2 = document.getElementById('bgv2');
+    const audio = document.getElementById('introMusic');
+    const auEl = document.getElementById('audioUnlock');
+    const layer = document.getElementById('bgVideoLayer');
+    const gateBg = document.querySelector('.bg-gate');
 
-    // Lancer d'abord les vidéos (maître), puis l'audio
-    var plays = [];
+    if (gateBg){ gateBg.style.opacity = '0'; gateBg.style.display = 'none'; }
+    if (layer){ layer.style.opacity = '1'; }
+
+    if (v1){ v1.muted = true; v1.loop = true; try{ v1.currentTime = 0; }catch(e){} }
+    if (v2){ v2.muted = true; v2.loop = true; try{ v2.currentTime = 0; }catch(e){} }
+    if (audio){ audio.loop = true; audio.volume = 0.35; try{ audio.currentTime = 0; }catch(e){} }
+
+    const plays = [];
     if (v1) plays.push(v1.play().catch(()=>{}));
     if (v2) plays.push(v2.play().catch(()=>{}));
-    Promise.all(plays).then(function(){
+
+    Promise.all(plays).then(()=>{
       if (!audio) return;
-      var p = audio.play();
+      const p = audio.play();
       if (p && typeof p.then === 'function'){
-        p.then(function(){ if(auEl) auEl.style.display='none'; })
-         .catch(function(){ if(auEl) auEl.style.display='block'; });
+        p.then(()=>{ if(auEl) auEl.style.display='none'; })
+         .catch(()=>{ if(auEl) auEl.style.display='block'; });
       }
     });
 
-    // Recalage périodique : on aligne l'audio sur v1 si |drift| > 40 ms
     function masterTime(){
       if (!v1) return null;
       try { return v1.currentTime; } catch(e){ return null; }
     }
     function resync(){
-      if(!audio || audio.paused) return;
-      var vt = masterTime();
+      if (!audio || audio.paused) return;
+      const vt = masterTime();
       if (vt == null || !isFinite(vt)) return;
-      var at = 0;
-      try { at = audio.currentTime; } catch(e){ return; }
-      var drift = vt - at;
-      if (Math.abs(drift) > 0.04){
+      let at = 0; try { at = audio.currentTime; } catch(e){ return; }
+      const drift = vt - at;
+      if (Math.abs(drift) > 0.05){
         try { audio.currentTime = vt; } catch(e){}
+        try { audio.playbackRate = 1.0; } catch(e){}
+      } else if (Math.abs(drift) > 0.015){
+        const rate = 1 + (drift * 0.02);
+        try { audio.playbackRate = Math.max(0.98, Math.min(1.02, rate)); } catch(e){}
+      } else {
+        try { audio.playbackRate = 1.0; } catch(e){}
       }
     }
     window.__syncTimer && clearInterval(window.__syncTimer);
     window.__syncTimer = setInterval(resync, 500);
 
-    // Lancement du texte inchangé (2s)
-    setTimeout(function(){
-      document.documentElement.classList.add('intro-text-start');
-    }, 2000);
-
+    setTimeout(()=>{ document.documentElement.classList.add('intro-text-start'); }, 2000);
   }catch(e){ console.error(e); alert('Erreur de démarrage'); }
-}
-
-/* Mode joueur */
-function onEnterApp(){
-  try{
-    if (PAYLOAD){
-      document.documentElement.classList.add('player-focus');
-      var cta=document.getElementById('ctaOverlay'); if(cta) cta.style.display='none';
-      var org=document.getElementById('orgCard'); if(org) org.style.display='none';
-      var pIntro=document.getElementById('playerIntro'); 
-      if(pIntro && PAYLOAD.name){+PAYLOAD.name+"</b>, es-tu prêt ? Quand tu es seul, découvre ta carte.<br>" +
-                           "<span style='color:#ccc;font-size:18px'>Petit secret : c’est bien Franck qui a eu l’idée de ce jeu 😉… mais rassurez-vous, il ne connaît pas vos rôles.</span>";
-      }
-      var playerName=document.getElementById('playerName'); if(playerName && PAYLOAD.name){ playerName.textContent = PAYLOAD.name; }
-      var center=document.getElementById('playerCenter'); if(center) center.style.display='flex';
-      var btn=document.getElementById('revealBtn');
-      if(btn && !btn._bound){
-        btn._bound=true;
-        btn.addEventListener('click', function(){ revealRole(PAYLOAD); });
-      }
-    }
-  }catch(e){ console.error(e); }
-}
-function onHashChange(){ if (location.hash==="#app"){ onEnterApp(); } }
-window.addEventListener('hashchange', onHashChange);
-
-/* Init + invitations */
-document.addEventListener('DOMContentLoaded', function(){
-  try{
-    PAYLOAD=parseToken();
-    if (location.hash==="#app"){ onEnterApp(); }
-
-    var b=document.getElementById('genBtn');
-    if(b){
-      b.addEventListener('click', function(){
-        var raw=(document.getElementById('names').value||'').trim();
-        var names=raw.split(/[,;\n]+/).map(function(s){return s.trim();}).filter(function(x){return x;});
-        if(names.length<4){alert('Minimum 4 joueurs');return;}
-
-        var els=document.getElementsByName('mode'); var mode='pct'; 
-        for(var i=0;i<els.length;i++){if(els[i].checked){mode=els[i].value;break;}}
-        var nT=1;
-        if(mode==='pct'){var pct=Math.max(10,Math.min(60,parseInt(document.getElementById('pct').value||'25',10)));nT=Math.max(1,Math.round(names.length*pct/100));}
-        else{var nb=Math.max(1,parseInt(document.getElementById('nb').value||'2',10));nT=Math.min(nb,names.length-1);}
-
-        var a=names.slice(); for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)); var tmp=a[i]; a[i]=a[j]; a[j]=tmp;}
-        var traitors={}; for(var k=0;k<nT;k++){ traitors[a[k]]=true; }
-
-        var QA=[
-          {q:"Quelle heure est-il ?", a:()=>{const h=String(Math.floor(Math.random()*24)).padStart(2,'0');const m=String(Math.floor(Math.random()*60)).padStart(2,'0');return h+"h"+m;}},
-          {q:"Quel jour sommes-nous ?", a:()=>["lundi","mardi","mercredi","jeudi","samedi","dimanche"][Math.floor(Math.random()*7)]},
-          {q:"Quel est le mot de passe ?", a:()=>["ombre","azur","lune","piano","velours","nuit","brume","mystère"][Math.floor(Math.random()*8)]},
-          {q:"Quel est ton chiffre porte-bonheur ?", a:()=>String(Math.floor(Math.random()*90)+10)},
-          {q:"Quelle est la couleur du soir ?", a:()=>["indigo","cobalt","ardoise","saphir","nuit","prune","minuit"][Math.floor(Math.random()*7)]},
-          {q:"Quel animal te vient à l'esprit ?", a:()=>["renard","corbeau","chat","hibou","loup","lynx","chouette"][Math.floor(Math.random()*7)]},
-          {q:"Boisson du soir ?", a:()=>["thé","café","vin","eau","tisane","tonic"][Math.floor(Math.random()*6)]},
-          {q:"Ville secrète ?", a:()=>["Rome","Londres","Berlin","Porto","Lyon","Nice","Séville"][Math.floor(Math.random()*7)]},
-          {q:"Premier instrument qui te vient ?", a:()=>["piano","violon","harpe","flûte","guitare","tambour"][Math.floor(Math.random()*6)]},
-          {q:"Un mot en 5 lettres ?", a:()=>["ombre","velin","plume","noble","clave","trace"][Math.floor(Math.random()*6)]},
-          {q:"Nord, Sud, Est ou Ouest ?", a:()=>["Nord","Sud","Est","Ouest"][Math.floor(Math.random()*4)]},
-          {q:"Pair ou impair ?", a:()=>["pair","impair"][Math.floor(Math.random()*2)]},
-          {q:"Pierre, feuille ou ciseaux ?", a:()=>["pierre","feuille","ciseaux"][Math.floor(Math.random()*3)]},
-          {q:"Un mois de l'année ?", a:()=>["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"][Math.floor(Math.random()*12)]},
-          {q:"Un fruit ?", a:()=>["pomme","poire","raisin","figue","mûre","prune"][Math.floor(Math.random()*6)]},
-          {q:"Un numéro de 1 à 9 ?", a:()=>String(Math.floor(Math.random()*9)+1)},
-          {q:"Un métal ?", a:()=>["or","argent","cuivre","fer","plomb","étain"][Math.floor(Math.random()*6)]},
-          {q:"Jour ou nuit ?", a:()=>["jour","nuit"][Math.floor(Math.random()*2)]},
-          {q:"Silence ou musique ?", a:()=>["silence","musique"][Math.floor(Math.random()*2)]},
-          {q:"Clair ou obscur ?", a:()=>["clair","obscur"][Math.floor(Math.random()*2)]},
-          {q:"Un code simple ?", a:()=>String(100+Math.floor(Math.random()*900))}
-        ];
-        var pick=QA[Math.floor(Math.random()*QA.length)]; var secretQ=pick.q, secretA=pick.a();
-
-        var invites=document.getElementById('invites'); invites.innerHTML='';
-        var header=document.createElement('div'); header.className='small'; header.textContent='Invitations :'; invites.appendChild(header);
-
-        var origin=(location.origin || (location.protocol+'//'+location.host));
-        var path=location.pathname.replace(/[^\\/]*$/,''); 
-        var filename=location.pathname.split('/').pop() || 'index.html';
-
-        for(var n=0;n<names.length;n++){
-          var name=names[n];
-          var role=traitors[name]?'TRAITRE':'LOYAL';
-          var payload={v:1,name:name,role:role};
-          if(role==='TRAITRE'){payload.codeQ=secretQ;payload.codeA=secretA;}
-          var token=btoa(encodeURIComponent(JSON.stringify(payload)));
-
-          var url=origin+path+filename+'?t='+encodeURIComponent(token);
-
-          var row=document.createElement('div'); row.className='inv-row';
-          var left=document.createElement('div'); left.className='inv-left';
-          var pill=document.createElement('div'); pill.className='pill'; pill.textContent=name;
-          left.appendChild(pill);
-
-          var actions=document.createElement('div'); actions.className='inv-actions';
-          var openA=document.createElement('a'); openA.className='btn'; openA.href=url; openA.target='_blank'; openA.rel='noopener'; openA.textContent='Ouvrir';
-          var copyBtn=document.createElement('button'); copyBtn.className='btn'; copyBtn.type='button'; copyBtn.textContent='Copier';
-          (function(u){
-            copyBtn.addEventListener('click', function(){
-              try{ if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(u).then(function(){alert('Lien copié');}).catch(function(){throw 0;}); } else { throw 0; } }
-              catch(e){ var tmp=document.createElement('textarea'); tmp.value=u; document.body.appendChild(tmp); tmp.select(); try{document.execCommand('copy');}catch(e2){} document.body.removeChild(tmp); alert('Lien copié'); }
-            });
-          })(url);
-          actions.appendChild(openA); actions.appendChild(copyBtn);
-
-          row.appendChild(left); row.appendChild(actions);
-          invites.appendChild(row);
-
-          var rawLine=document.createElement('div'); rawLine.className='url-raw'; rawLine.textContent=url;
-          invites.appendChild(rawLine);
-        }
-      });
-    }
-  }catch(e){ console.error(e); }
-});
-
-/* Modale rôle */
-function revealRole(payload){
-  var modal=document.getElementById('roleModal'); var inner=document.getElementById('roleInner'); var title=document.getElementById('roleTitle'); var sub=document.getElementById('roleSub'); var extra=document.getElementById('roleExtra');
-  modal.style.display='flex';
-  if(payload.role==='TRAITRE'){
-    inner.style.background='linear-gradient(180deg,#4a0b0b,#220606)';
-    title.innerHTML='<span class="mask-red">🎭</span> TRAÎTRE'; title.style.color='#fff';
-    var q=payload.codeQ||"Quelle heure est-il ?"; var a=payload.codeA||"11h23";
-    sub.innerHTML='Ton objectif est d’éliminer les Loyaux sans te faire démasquer.<br><br>' +
-      'Pour reconnaître tes alliés traîtres, tu disposes d’une <b>consigne secrète</b> :<br>' +
-      '<b>Question :</b> « '+q+' »<br>' +
-      '<b>Réponse :</b> « '+a+' » (même si c’est faux).<br><br>' +
-      '👉 Tu peux soit <b>poser toi-même la question</b> pour tester quelqu’un,<br>' +
-      '👉 soit <b>répondre avec le code</b> si on te la pose.';
-    extra.innerHTML='<ul style="margin:6px 0 8px 18px">\
-<li><b>Conseils (après repas)</b> : débats + vote → 1 joueur éliminé.</li>\
-<li><b>Nuits (ven & sam)</b> : les traîtres éliminent un Loyal.</li>\
-<li><b>Jeu</b> : reste crédible, évite les certitudes trop rapides.</li>\
-<li><b>Discrétion</b> : ne révèle jamais ton rôle ni ton écran.</li>\
-</ul>\
-<div style="margin-top:6px;color:#f2b3b3"><b>⚠️ Ne révèle jamais ton code directement, utilise-le subtilement.</b></div>';
-  } else {
-    inner.style.background='linear-gradient(180deg,#0b1f4a,#061022)';
-    title.innerHTML='<span class="mask-blue">🎭</span> LOYAL'; title.style.color='#fff';
-    sub.innerHTML='Ton rôle : observer, discuter et <b>démasquer les traîtres</b>.';
-    extra.innerHTML='<ul style="margin:6px 0 0 18px">\
-<li><b>Conseils (après repas)</b> : débats + vote → 1 éliminé.</li>\
-<li><b>Nuits</b> : seuls les traîtres agissent (élimination d’un Loyal).</li>\
-<li><b>Indices</b> : incohérences, alliances soudaines, votes étranges…</li>\
-<li><b>Stratégie</b> : construis une histoire cohérente, ne te fie pas qu’aux apparences.</li>\
-</ul>';
-  }
-  document.getElementById('closeRoleBtn').onclick=function(){ modal.style.display='none'; };
 }
 </script>
 <script>
@@ -965,194 +836,6 @@ function revealRole(payload){
 
   var obs = new MutationObserver(function(){ replaceBtn(); });
   obs.observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:['class','style']});
-})();
-</script>
-<script id="patch-p3-script">
-(function(){
-  function textIncludes(node, needles){
-    const t = (node.textContent||"").toLowerCase();
-    return needles.some(n=>t.includes(n));
-  }
-  function tagP3Title(){
-    // Try to find a heading on page 3 that mentions Franck/créé/jeu
-    const candidates = document.querySelectorAll("h1,h2,h3,h4");
-    const needles = ["franck", "créé", "cree", "jeu", "week-end", "week end"];
-    for(const el of candidates){
-      if(textIncludes(el, needles)){
-        el.id = "p3Title";
-        break;
-      }
-    }
-  }
-  function darkenPanels(){
-    // Add panel-dark to likely rule/planning containers on page 3
-    const sel = [
-      ".panel", ".rules", ".planning", ".notice", ".card", ".bloc", ".section"
-    ];
-    const needles = ["règle","regle","planning","déroulé","deroule","week-end","week end"];
-    const nodes = document.querySelectorAll(sel.join(","));
-    nodes.forEach(el => {
-      if(textIncludes(el, needles)){
-        el.classList.add("panel-dark");
-      }
-    });
-  }
-  function fixSecretSkip(){
-    const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
-    if(!secret) return;
-    function goToP3(){
-      // Only toggle .page visibility to avoid breaking background layers
-      document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
-      const p3 = document.getElementById("p3") || document.querySelector("[data-page='3']") || document.querySelector(".page:nth-of-type(3)");
-      if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
-      document.documentElement.classList.add("app-shown");
-    }
-    secret.addEventListener("click", goToP3);
-    let tId;
-    secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3, 500); }, {passive:true});
-    secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId);   }, {passive:true});
-  }
-  if(document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", ()=>{ tagP3Title(); darkenPanels(); fixSecretSkip(); });
-  }else{
-    tagP3Title(); darkenPanels(); fixSecretSkip();
-  }
-})();
-</script>
-<script id="patch-strongskip">
-(function(){
-  const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
-  if(!secret) return;
-
-  function injectHideCSS(){
-    if (document.getElementById("skipHideCSS")) return;
-    const css = `
-      /* cache les couches visuelles d'intro potentiellement encore visibles */
-      .intro, .intro-layer, .bg, .bg-intro, .overlay, .overlay-intro,
-      .image-hero, .image-bg, .img-bg, .bg-img, .hero-bg,
-      .slide, .slides, .parallax, .page-bg, [data-intro] {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-      }
-      /* coupe les animations/vidéos éventuelles */
-      video, audio { display: none !important; }
-      * { animation: none !important; transition: none !important; }
-    `;
-    const style = document.createElement("style");
-    style.id = "skipHideCSS";
-    style.textContent = css;
-    document.head.appendChild(style);
-  }
-
-  function goToP3Strong(){
-    // 1) désactive toutes les pages actives
-    document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
-    // 2) masque agressivement les backgrounds/overlays d'intro
-    injectHideCSS();
-
-    // 3) masque tous les éléments fixed/absolute qui ne sont pas dans p3
-    const p3 = document.getElementById("p3");
-    const rectP3 = p3 ? p3.getBoundingClientRect() : null;
-    const all = Array.from(document.body.querySelectorAll("*"));
-    all.forEach(el=>{
-      const st = getComputedStyle(el);
-      if ((st.position === "fixed" || st.position === "absolute") && !p3?.contains(el)) {
-        el.style.display = "none";
-      }
-    });
-
-    // 4) affiche la page 3 proprement
-    if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
-    document.documentElement.classList.add("app-shown");
-    try { (document.getElementById('bgAudio')||{}).pause?.(); } catch(e){}
-  }
-
-  secret.addEventListener("click", goToP3Strong);
-  let tId;
-  secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
-  secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
-})();
-</script>
-<script id="patch-strongskip-v2">
-(function(){
-  const secret = document.getElementById("secretFixed") || document.getElementById("secretButton");
-  if(!secret) return;
-
-  function injectHideCSS(){
-    if (document.getElementById("skipHideCSSv2")) return;
-    const css = `
-      /* Masquer dur #p1 et #p2 */
-      #p1, #p2 { display:none !important; visibility:hidden !important; opacity:0 !important; }
-      /* Masquer toutes couches intro possibles */
-      .intro, .intro-layer, .bg, .bg-intro, .overlay, .overlay-intro,
-      .image-hero, .image-bg, .img-bg, .bg-img, .hero-bg,
-      .slide, .slides, .parallax, .page-bg, [data-intro] {
-        display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important;
-      }
-      video, audio { display: none !important; }
-      * { animation: none !important; transition: none !important; }
-    `;
-    const style = document.createElement("style");
-    style.id = "skipHideCSSv2";
-    style.textContent = css;
-    document.head.appendChild(style);
-  }
-
-  function hideWelcomeBlockByText(){
-    const needles = ["Un week", "pas comme les autres", "Lancez‑vous", "Lancez-vous"];
-    const all = Array.from(document.body.querySelectorAll("*"));
-    for(const el of all){
-      const t = (el.textContent||"").trim();
-      if(!t) continue;
-      const ok = needles.every(n => t.toLowerCase().includes(n.toLowerCase()));
-      if(ok){
-        // Masquer l'élément le plus grand contenant ce texte (panel de p1)
-        let n = el;
-        for(let i=0;i<4 && n && n.parentElement;i++){ // remonte un peu pour cacher le bloc
-          n = n.parentElement;
-          if(n.classList && (n.classList.contains('panel') || n.classList.contains('wrap') || n.classList.contains('page'))){
-            n.style.display = 'none';
-            break;
-          }
-        }
-        // Sécurité : masque aussi el
-        el.style.display = 'none';
-        break;
-      }
-    }
-  }
-
-  function goToP3Strong(){
-    // Retire les .active de toutes les pages puis force p1/p2 masqués
-    document.querySelectorAll(".page.active").forEach(el=>el.classList.remove("active"));
-    ['#p1','#p2','#intro','#welcome','.welcome','.hero-section'].forEach(sel=>{
-      document.querySelectorAll(sel).forEach(el=>{ el.style.display='none'; el.style.visibility='hidden'; el.style.opacity='0'; });
-    });
-
-    injectHideCSS();
-    hideWelcomeBlockByText();
-
-    const p3 = document.getElementById("p3");
-    // Masque tous les fixed/absolute hors p3
-    const all = Array.from(document.body.querySelectorAll("*"));
-    all.forEach(el=>{
-      const st = getComputedStyle(el);
-      if ((st.position === "fixed" || st.position === "absolute") && !p3?.contains(el)) {
-        el.style.display = "none";
-      }
-    });
-
-    if(p3){ p3.classList.add("active"); try{ p3.scrollTo({top:0, behavior:"instant"});}catch(e){} }
-    document.documentElement.classList.add("app-shown");
-    try { (document.getElementById('bgAudio')||{}).pause?.(); } catch(e){}
-  }
-
-  secret.addEventListener("click", goToP3Strong);
-  let tId;
-  secret.addEventListener("touchstart", ()=>{ tId=setTimeout(goToP3Strong, 500); }, {passive:true});
-  secret.addEventListener("touchend",   ()=>{ if(tId) clearTimeout(tId); },       {passive:true});
 })();
 </script>
 <script>
@@ -1816,6 +1499,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 })();
 </script>
 
+
 <!-- Overlay d’explication (iPhone Safari uniquement) -->
 <div id="iosGuide" aria-hidden="true">
   <div class="box" role="dialog" aria-modal="true" aria-label="Ajouter à l’écran d’accueil">
@@ -1847,9 +1531,13 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
     <footer>
      
 
+
     </footer>
   </div>
 </div>
+
+
+
 
 <script id="env-routing">
 (function(){
@@ -1933,6 +1621,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 })();
 </script>
 
+
 <script id="iosGuideForceNav">
 (function(){
   var URL_HELP = "https://franckgrimaud013-ui.github.io/40-ans/ios-guide.html?v=2";
@@ -1963,6 +1652,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 })();
 </script>
 
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const video = document.querySelector('video[src*="fond-boucle-v2.mp4"]');
@@ -1988,5 +1678,15 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<script id="video-prewarm">
+document.addEventListener('DOMContentLoaded', ()=>{
+  const v1 = document.getElementById('bgv1');
+  const v2 = document.getElementById('bgv2');
+  [v1, v2].forEach(v=>{
+    if(!v) return;
+    try{ v.muted = true; v.play().then(()=>{ v.pause(); v.currentTime = 0; }).catch(()=>{}); }catch(e){}
+  });
+});
+</script>
 </body>
 </html>
