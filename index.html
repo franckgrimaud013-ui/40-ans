@@ -771,7 +771,7 @@ function revealRole(payload){
 // Secret skip intro: go straight to #app
 (function(){
   var dot = document.getElementById('secretFixed');
-  function showApp(){ startMainStage(); }catch(e){}
+  function showApp(e){ if(e&&e.preventDefault) e.preventDefault(); try{ startMainStage(); } catch(err){ console.error(err); } }
     document.documentElement.classList.add('app-shown');
     // Also try hiding typical intro layers
     try{
@@ -1849,6 +1849,19 @@ function startMainStage(){
 }
 </script>
 
+
+<script>
+// Robust wiring for the secret skip button
+(function(){
+  var dot = document.querySelector('[data-action="skip-intro"], #secretDot, .secret-dot');
+  if (!dot) return;
+  try { dot.setAttribute('href', '#'); } catch(e){}
+  var t;
+  dot.addEventListener('click', function(e){ showApp(e); }, {passive:false});
+  dot.addEventListener('touchstart', function(){ t=setTimeout(function(){ showApp(); },600); }, {passive:true});
+  dot.addEventListener('touchend', function(){ clearTimeout(t); }, {passive:true});
+})();
+</script>
+
 </body>
 </html>
-
