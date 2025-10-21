@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Générateur d’invitations — 40 ans</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root{ --gold:#d4af37; --mut:#cfd5dc; }
+    html,body{margin:0;padding:0;background:#000;color:#fff;font-family:'Playfair Display',serif}
+    .wrap{max-width:1100px;margin:24px auto;padding:16px}
+    h1{font-family:Cinzel,serif;margin:0 0 10px;color:#ffd98a;font-size:clamp(22px,4.4vw,34px)}
+    .card{background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .small{font-size:14px;color:var(--mut)}
+    textarea{width:100%;min-height:130px;background:#0b0b0b;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:10px}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+    .btn{padding:10px 14px;border-radius:12px;border:1px solid rgba(212,175,55,.9);background:linear-gradient(180deg,rgba(212,175,55,.25),rgba(212,175,55,.12));color:#fff;cursor:pointer}
+    .btn:hover{transform:translateY(-1px)}
+    .inv-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between;border-top:1px solid rgba(255,255,255,.08);padding:10px 0;margin-top:4px}
+    .pill{background:rgba(255,255,255,.08);padding:6px 10px;border-radius:999px}
+    .url-raw{font-size:12px;color:#b9c3cf;word-break:break-all}
+    .footer{margin-top:18px;color:#bfc6cf;font-size:13px}
+    input[type="number"]{width:90px;background:#0b0b0b;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:6px}
+    label{display:inline-flex;align-items:center;gap:6px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Générer les invitations</h1>
+    <div class="card">
+      <div class="small">Noms des joueurs (un par ligne, ou séparés par virgule/;)</div>
+      <textarea id="names" placeholder="Franck
+Aurélie
+Bilou
+Arnaud"></textarea>
+
+      <div class="row">
+        <label><input type="radio" name="mode" value="pct" checked> Traîtres (%)</label>
+        <input id="pct" type="number" min="10" max="60" value="25">
+        <label><input type="radio" name="mode" value="nb"> Traîtres (nb)</label>
+        <input id="nb" type="number" min="1" value="2">
+      </div>
+
+      <div class="row">
+        <button id="genBtn" class="btn" type="button">Générer invitations</button>
+      </div>
+
+      <div id="invites" style="margin-top:12px"></div>
+
+      <div class="footer">
+        Les liens générés ouvrent index.html avec un paramètre t propre à chaque joueur.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function pickQA(){
+      const QA = [
+        {q:"Quelle heure est-il ?", a:()=>String(Math.floor(Math.random()*24)).padStart(2,"0")+"h"+String(Math.floor(Math.random()*60)).padStart(2,"0")},
+        {q:"Quel jour sommes-nous ?", a:()=>["lundi","mardi","mercredi","jeudi","samedi","dimanche"][Math.floor(Math.random()*7)]},
+        {q:"Quel est le mot de passe ?", a:()=>["ombre","azur","lune","piano","velours","nuit","brume","mystère"][Math.floor(Math.random()*8)]},
+        {q:"Quel animal te vient à l'esprit ?", a:()=>["renard","corbeau","chat","hibou","loup","lynx","chouette"][Math.floor(Math.random()*7)]},
+        {q:"Un numéro de 1 à 9 ?", a:()=>String(Math.floor(Math.random()*9)+1)},
+        {q:"Un métal ?", a:()=>["or","argent","cuivre","fer","plomb","étain"][Math.floor(Math.random()*6)]},
+      ];
+      return QA[Math.floor(Math.random()*QA.length)];
+    }
+
+    function b64EncodeUnicode(str){
+      return btoa(encodeURIComponent(str));
+    }
+
+    document.getElementById('genBtn').addEventListener('click', function(){
+      const raw = (document.getElementById('names').value || '').trim();
+      const names = raw.split(/[,;\n]+/).map(s=>s.trim()).filter(Boolean);
+      if (names.length < 4){ alert('Minimum 4 joueurs'); return; }
+
+      let mode = 'pct';
+      document.getElementsByName('mode').forEach(r=>{ if(r.checked) mode = r.value; });
+
+      let nT = 1;
+      if (mode === 'pct'){
+        const pct = Math.max(10, Math.min(60, parseInt(document.getElementById('pct').value||'25',10)));
+        nT = Math.max(1, Math.round(names.length * pct / 100));
+      } else {
+        const nb = Math.max(1, parseInt(document.getElementById('nb').value||'2',10));
+        nT = Math.min(nb, names.length - 1);
+      }
+
+      // shuffle
+      const a = names.slice();
+      for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+
+      // choose traitors
+      const traitors = new Set(a.slice(0, nT));
+
+      const qa = pickQA();
+      const secretQ = qa.q;
+      const secretA = qa.a();
+
+      const invites = document.getElementById('invites');
+      invites.innerHTML = '<div class="small">Invitations :</div>';
+
+      const origin = location.origin || (location.protocol + '//' + location.host);
+      const path = location.pathname.replace(/[^\/]*$/,''); // keep folder
+      const base = origin + path + 'index.html';
+
+      names.forEach(name=>{
+        const role = traitors.has(name) ? 'TRAITRE' : 'LOYAL';
+        const payload = { v:1, name, role };
+        if (role === 'TRAITRE'){ payload.codeQ = secretQ; payload.codeA = secretA; }
+        const token = b64EncodeUnicode(JSON.stringify(payload));
+        const url = base + '?t=' + encodeURIComponent(token);
+
+        const row = document.createElement('div');
+        row.className = 'inv-row';
+        row.innerHTML = `
+          <div class="pill">${name}</div>
+          <div>
+            <a class="btn" href="${url}" target="_blank" rel="noopener">Ouvrir</a>
+            <button class="btn btn-copy" type="button">Copier</button>
+          </div>
+        `;
+        invites.appendChild(row);
+
+        const rawLine = document.createElement('div');
+        rawLine.className = 'url-raw';
+        rawLine.textContent = url;
+        invites.appendChild(rawLine);
+
+        row.querySelector('.btn-copy').addEventListener('click', ()=>{
+          navigator.clipboard?.writeText(url).then(()=>alert('Lien copié')).catch(()=>{
+            const t = document.createElement('textarea'); t.value = url; document.body.appendChild(t); t.select();
+            try{ document.execCommand('copy'); }catch(e){}
+            document.body.removeChild(t); alert('Lien copié');
+          });
+        });
+      });
+    });
+  </script>
+</body>
+</html>
