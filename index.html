@@ -552,8 +552,50 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- ~~~ [P3] ETAPE 3 : 🎭 Découvre ton rôle ~~~ --><!-- [ASTUCE P3/S3] Texte avant le bouton final. --><section class="step" id="p3-s3">
 <h3 class="p3-title" id="p3-playerLine">Es-tu prêt ? Quand tu es seul, découvre ta carte.</h3>
 <div class="p3-actions"><!-- ~~~ [P3] Bouton final : 🎭 Découvre ton rôle (lien / fonction revealRole) ~~~ --><!-- [ASTUCE P3] Si vous avez une fonction revealRole, c'est ici qu'elle est appelée. --><a class="btn" href="#" id="p3-revealLink">🎭 Découvre ton rôle</a></div>
-<p class="p3-note">Petit secret : C’est Franck qui a imaginé, dessiné et écrit chaque ligne que vous venez de découvrir.
-Mais il ne peut pas et surtout ne veut pas connaître vos rôles, afin de vivre pleinement le jeu avec vous.</p>
+<p class="p3-note cinema-fade" id="finalText">
+  Derrière ce scénario, il y a des semaines de travail, d’imagination et de passion.<br>
+  Franck a écrit, monté, et façonné chaque image, chaque son, chaque ligne pour vous faire vivre un week-end unique.<br>
+  À présent, à vous de jouer… et d’aller jusqu’au bout.<br>
+  <span class="quote">
+    « C’est le temps que tu as perdu pour ton ami qui fait ton ami si important. » — Antoine de Saint-Exupéry
+  </span>
+</p>
+
+<style>
+/* Effet cinéma de fin (sans audio) */
+.cinema-fade {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInCine 3s ease-out 1.5s forwards;
+  font-size: 14px;
+  line-height: 1.8;
+  text-align: center;
+  color: #cfd5dc;
+  margin: 100px 0 40px;
+}
+
+.cinema-fade .quote {
+  display: block;
+  margin-top: 20px;
+  font-style: italic;
+  color: #d4af37;
+  opacity: 0;
+  transform: scale(0.98);
+  animation: glowQuote 4s ease-out 3s forwards;
+}
+
+@keyframes fadeInCine {
+  0% { opacity: 0; transform: translateY(20px) scale(0.98); }
+  60% { opacity: 1; transform: translateY(0) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes glowQuote {
+  0% { opacity: 0; text-shadow: none; }
+  40% { opacity: 1; text-shadow: 0 0 10px rgba(212,175,55,0.4); }
+  100% { opacity: 1; text-shadow: 0 0 18px rgba(212,175,55,0.35); }
+}
+</style>
 </section>
 </div>
 </div>
