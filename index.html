@@ -2058,27 +2058,8 @@ function startMainStage(){
     "stephane":"page-stéphane"
   };
 
-  
-  // priorité au paramètre t= (token JSON base64) pour récupérer le prénom
-  function __decodeNameFromT(){
-    try{
-      var t = qparam("t");
-      if(!t) return "";
-      // t peut être déjà encodé dans l'URL. On gère base64 + decodeURIComponent en tolérant les erreurs.
-      var base = t;
-      // Certaines implémentations stockent un contenu déjà encodé. On tente un decodeURIComponent sécurisé.
-      try { base = decodeURIComponent(base); } catch(e){ /* ignore */ }
-      var jsonStr = atob(base);
-      var data = {};
-      try { data = JSON.parse(jsonStr); } catch(e){ return ""; }
-      var name = data && data.name ? String(data.name) : "";
-      return name;
-    }catch(e){ return ""; }
-  }
-function setupPersonalAfterRules(){
-    const fromT = __decodeNameFromT();
-    const fromN = qparam("n");
-    const raw = (fromT || fromN);
+  function setupPersonalAfterRules(){
+    const raw = qparam("n");
     const slug = slugifyName(raw);
     if (!slug || !MAP[slug]) return; // prénom absent ou pas dans la liste -> flow normal
 
@@ -2087,6 +2068,21 @@ function setupPersonalAfterRules(){
     const personalId = MAP[slug];
     const personalStep = document.getElementById(personalId);
     const revealStep = document.getElementById("p3-s3");
+    // Sécurité : s'assurer que la section "Découvre ton rôle" n'est pas imbriquée dans la page perso
+    if (personalStep && revealStep && personalStep.contains(revealStep)){
+      try { personalStep.parentNode.insertBefore(revealStep, personalStep.nextElementSibling); } catch(_){}
+    }
+    // S'assurer que seule une section est "active" à la fois
+    function __onlyActive(target){
+      try{
+        [rulesStep, personalStep, revealStep].forEach(function(s){
+          if(!s) return;
+          if (s === target) s.classList.add("active");
+          else s.classList.remove("active");
+        });
+      }catch(_){}
+    }
+
 
     if (!rulesNext || !personalStep) return;
 
@@ -2106,8 +2102,7 @@ function setupPersonalAfterRules(){
     if (nextBtn && revealStep){
       nextBtn.addEventListener("click", function(ev){
         try{ ev.preventDefault(); }catch(_){}
-        personalStep.classList.remove("active");
-        revealStep.classList.add("active");
+        __onlyActive(revealStep);
         try{ revealStep.scrollIntoView({behavior:'smooth'}); }catch(_){}
       }, {passive:false});
     }
