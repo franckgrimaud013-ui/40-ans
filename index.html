@@ -2191,5 +2191,63 @@ function startMainStage(){
   else { init(); }
 })();
 </script>
+
+<script id="p3-personal-insert">
+(function(){
+  function slug(s){
+    try{
+      return String(s||"").toLowerCase()
+        .normalize("NFKD").replace(/[\u0300-\u036f]/g,"")
+        .replace(/[^a-z0-9]+/g,"-")
+        .replace(/^-+|-+$/g,"");
+    }catch(e){ return ""; }
+  }
+  function decodeNameFromToken(){
+    try{
+      var p = new URLSearchParams(location.search||"");
+      var t = p.get("t");
+      if(!t) return null;
+      var obj = JSON.parse(decodeURIComponent(atob(t)));
+      return obj && obj.name ? obj.name : null;
+    }catch(e){ return null; }
+  }
+  function activate(el, steps){
+    steps.forEach(function(x){ if(x){ x.classList.remove("active"); } });
+    if(el){ el.style.removeProperty("display"); el.classList.add("active"); try{ el.scrollIntoView({behavior:"smooth", block:"start"}); }catch(e){} }
+  }
+  document.addEventListener("DOMContentLoaded", function(){
+    var name = decodeNameFromToken();
+    if(!name) return;
+    var id = "page-" + slug(name);
+    var personal = document.getElementById(id);
+    if(!personal) return;
+    // Keep only this personal page; remove others to avoid duplicates at bottom
+    document.querySelectorAll(".personal-step").forEach(function(el){ if(el!==personal){ try{ el.remove(); }catch(_){ el.style.display="none"; } }});
+    // Ensure it's inserted between p3-s2 and p3-s3
+    var s1 = document.getElementById("p3-s1");
+    var s2 = document.getElementById("p3-s2");
+    var s3 = document.getElementById("p3-s3");
+    var wrap = document.getElementById("p3-steps") || (s3 && s3.parentElement);
+    if(wrap && s3 && personal && personal.parentElement!==wrap){
+      try{ wrap.insertBefore(personal, s3); }catch(e){}
+    }
+    // Build a local step flow including the personal page
+    var steps = [s1, s2, personal, s3].filter(Boolean);
+    // Make sure CSS doesn't keep it hidden
+    personal.style.removeProperty("display");
+    // Rebind next buttons to go through 1 -> 2 -> personal -> 3
+    var b1 = document.getElementById("p3-n1");
+    var b2 = document.getElementById("p3-n2");
+    if(b1 && !b1._p3patched){ b1._p3patched=true; b1.addEventListener("click", function(){ activate(s2, steps); }); }
+    if(b2 && !b2._p3patched){ b2._p3patched=true; b2.addEventListener("click", function(){ activate(personal, steps); }); }
+    var nb = personal.querySelector(".nextBtn");
+    if(nb && !nb._p3patched){ nb._p3patched=true; nb.addEventListener("click", function(){ activate(s3, steps); }); }
+    // Start on step 1 (leave existing logic intact but ensure visibility set)
+    try{ if(s1 && !s1.classList.contains("active") && !(s2&&s2.classList.contains("active")) && !(s3&&s3.classList.contains("active"))){ activate(s1, steps); } }catch(e){}
+  });
+})();
+</script>
+
 </body>
 </html>
+
