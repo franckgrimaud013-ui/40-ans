@@ -1971,7 +1971,30 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 </script>
 
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const video = document.querySelector('video[src*="fond-boucle-v2.mp4"]');
+  const audio = document.querySelector('audio[src*="fond-boucle-v2.mp3"]');
+  if (!video || !audio) return;
 
+  function syncPlay() {
+    try {
+      video.currentTime = 0;
+      audio.currentTime = 0;
+      video.play();
+      setTimeout(() => {
+        audio.play().catch(() => {
+          document.body.addEventListener('click', () => audio.play(), { once: true });
+        });
+      }, 40); // décalage de 40ms pour synchro parfaite sur iPhone
+    } catch (e) {
+      console.warn('Erreur synchro audio/vidéo :', e);
+    }
+  }
+
+  video.addEventListener('canplay', syncPlay, { once: true });
+});
+</script>
 
 
 <script>
@@ -2010,93 +2033,6 @@ function startMainStage(){
 })();
 </script>
 
-<script id="av-sync">
-(function(){
-  // Cible explicite (IDs si présents), sinon fallback par nom de fichier
-  var VIDEO_ID = 'v1';
-  var AUDIO_ID = 'introMusic';
-
-  // Réglages synchro (calage parfait par défaut)
-  var AUDIO_LEAD = 0.00;   // 0.05 = audio 50ms AVANT l'image si tu veux compenser iPhone
-  var HARD = 0.030;        // >30ms : snap dur
-  var SOFT = 0.008;        // >8ms  : correction vitesse
-  var GAIN = 0.030;        // gain correction
-  var MINR = 0.97, MAXR = 1.03;
-
-  function findVideo(){
-    var v = document.getElementById(VIDEO_ID);
-    if (v && ((v.currentSrc||v.src||'')+'' ).indexOf('fond-boucle-v2.mp4') !== -1) return v;
-    var s = document.querySelector('video[src*="fond-boucle-v2.mp4"], source[src*="fond-boucle-v2.mp4"]');
-    return s ? (s.tagName.toLowerCase()==='video' ? s : s.closest('video')) : null;
-  }
-  function findAudio(){
-    var a = document.getElementById(AUDIO_ID);
-    if (a && ((a.currentSrc||a.src||'')+'' ).indexOf('fond-boucle-v2.mp3') !== -1) return a;
-    return document.querySelector('audio[src*="fond-boucle-v2.mp3"]');
-  }
-  function stopOthers(keep){
-    document.querySelectorAll('audio').forEach(function(x){
-      if (x !== keep){ try{ x.pause(); x.currentTime = 0; }catch(_){} }
-    });
-  }
-  function resync(){
-    var V = findVideo(), A = findAudio();
-    if (!V || !A || A.paused) return;
-    var vt = +V.currentTime||0, at = +A.currentTime||0, d = vt - at;
-    if (Math.abs(d) > HARD){
-      try{ A.currentTime = vt; }catch(_){}
-      try{ A.playbackRate = 1.0; }catch(_){}
-    } else if (Math.abs(d) > SOFT){
-      var r = 1 + d*GAIN;
-      try{ A.playbackRate = Math.max(MINR, Math.min(MAXR, r)); }catch(_){}
-    } else {
-      try{ A.playbackRate = 1.0; }catch(_){}
-    }
-  }
-
-  // Démarrage AV, à appeler à la fin de l'intro
-  window.avStart = function(){
-    var V = findVideo(), A = findAudio();
-    if (!V || !A){ console.warn('[AV] éléments manquants', V, A); return; }
-
-    // Log utile pour vérification dans la console
-    window.__av = { videoId: V.id||'(src)', audioId: A.id||'(src)', videoSrc: V.currentSrc||V.src, audioSrc: A.currentSrc||A.src };
-
-    try{ V.muted = true; V.setAttribute('playsinline',''); V.setAttribute('webkit-playsinline',''); }catch(_){}
-    stopOthers(A);
-
-    try{ V.currentTime = 0; }catch(_){}
-    try{ A.currentTime = 0; }catch(_){}
-
-    Promise.all([ V.play().catch(function(){}), A.play().catch(function(){}) ]).then(function(){
-      try{ A.currentTime = (V.currentTime||0) + AUDIO_LEAD; }catch(_){}
-      // Kickstart clamp ~1s
-      var t0 = performance.now();
-      (function tick(){
-        try{
-          var vt = +V.currentTime||0, at = +A.currentTime||0;
-          var d = vt - at - AUDIO_LEAD;
-          if (Math.abs(d) > 0.012){ try{ A.currentTime = vt + AUDIO_LEAD; }catch(_){ } }
-        }catch(_){}
-        if (performance.now()-t0 < 1000) requestAnimationFrame(tick);
-      })();
-    });
-
-    try{ clearInterval(window.__syncTimer); }catch(_){}
-    window.__syncTimer = setInterval(resync, 120);
-  };
-
-  // Hook automatique : quand l'intro se termine, on lance avStart()
-  var gv = document.getElementById('gateVideo');
-  if (gv){
-    var prev = gv.onended;
-    gv.onended = function(ev){
-      try{ prev && prev.call(this, ev); }catch(_){}
-      try{ window.avStart(); }catch(_){}
-    };
-  }
-})();
-</script>
 <script id="personal-pages-logic">
 (function(){
   function slugifyName(s){
@@ -2165,5 +2101,53 @@ function startMainStage(){
   }
 })();
 </script>
+
+<script id="t-param-bridge">
+(function(){
+  function qparam(key){
+    try { return new URLSearchParams(location.search||"").get(key) || ""; }
+    catch(e){ return ""; }
+  }
+  function decodeNameAndRoleFromT(){
+    try{
+      var t = qparam("t");
+      if(!t) return { name:"", role:"" };
+      var decoded = JSON.parse(decodeURIComponent(atob(t)));
+      var name = decoded && decoded.name ? String(decoded.name) : "";
+      var role = decoded && decoded.role ? String(decoded.role) : "";
+      return { name:name, role:role };
+    }catch(e){ return { name:"", role:"" }; }
+  }
+  var fromT = decodeNameAndRoleFromT();
+  // expose for existing scripts
+  window.__inviteNameFromT = fromT.name || "";
+  window.__inviteRoleFromT = fromT.role || "";
+  // If global pickName/pickRole exist, monkey-patch to prioritize t=
+  try{
+    if (typeof window.pickName === "function"){
+      var oldPickName = window.pickName;
+      window.pickName = function(){
+        var name = window.__inviteNameFromT;
+        if (name && name.trim()) return name.trim();
+        try{ return oldPickName.apply(this, arguments); }catch(e){ return name || ""; }
+      };
+    }
+  }catch(_){}
+  try{
+    if (typeof window.pickRole === "function"){
+      var oldPickRole = window.pickRole;
+      window.pickRole = function(){
+        var role = window.__inviteRoleFromT;
+        if (role && role.trim()) return role.trim();
+        try{ return oldPickRole.apply(this, arguments); }catch(e){ return role || ""; }
+      };
+    }
+  }catch(_){}
+  // Also set data attributes for scripts that read from DOM
+  document.documentElement.setAttribute("data-invite-name", window.__inviteNameFromT || "");
+  document.documentElement.setAttribute("data-invite-role", window.__inviteRoleFromT || "");
+})();
+</script>
+
 </body>
 </html>
