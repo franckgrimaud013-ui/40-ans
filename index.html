@@ -2058,8 +2058,27 @@ function startMainStage(){
     "stephane":"page-stéphane"
   };
 
-  function setupPersonalAfterRules(){
-    const raw = qparam("n");
+  
+  // priorité au paramètre t= (token JSON base64) pour récupérer le prénom
+  function __decodeNameFromT(){
+    try{
+      var t = qparam("t");
+      if(!t) return "";
+      // t peut être déjà encodé dans l'URL. On gère base64 + decodeURIComponent en tolérant les erreurs.
+      var base = t;
+      // Certaines implémentations stockent un contenu déjà encodé. On tente un decodeURIComponent sécurisé.
+      try { base = decodeURIComponent(base); } catch(e){ /* ignore */ }
+      var jsonStr = atob(base);
+      var data = {};
+      try { data = JSON.parse(jsonStr); } catch(e){ return ""; }
+      var name = data && data.name ? String(data.name) : "";
+      return name;
+    }catch(e){ return ""; }
+  }
+function setupPersonalAfterRules(){
+    const fromT = __decodeNameFromT();
+    const fromN = qparam("n");
+    const raw = (fromT || fromN);
     const slug = slugifyName(raw);
     if (!slug || !MAP[slug]) return; // prénom absent ou pas dans la liste -> flow normal
 
@@ -2101,53 +2120,5 @@ function startMainStage(){
   }
 })();
 </script>
-
-<script id="t-param-bridge">
-(function(){
-  function qparam(key){
-    try { return new URLSearchParams(location.search||"").get(key) || ""; }
-    catch(e){ return ""; }
-  }
-  function decodeNameAndRoleFromT(){
-    try{
-      var t = qparam("t");
-      if(!t) return { name:"", role:"" };
-      var decoded = JSON.parse(decodeURIComponent(atob(t)));
-      var name = decoded && decoded.name ? String(decoded.name) : "";
-      var role = decoded && decoded.role ? String(decoded.role) : "";
-      return { name:name, role:role };
-    }catch(e){ return { name:"", role:"" }; }
-  }
-  var fromT = decodeNameAndRoleFromT();
-  // expose for existing scripts
-  window.__inviteNameFromT = fromT.name || "";
-  window.__inviteRoleFromT = fromT.role || "";
-  // If global pickName/pickRole exist, monkey-patch to prioritize t=
-  try{
-    if (typeof window.pickName === "function"){
-      var oldPickName = window.pickName;
-      window.pickName = function(){
-        var name = window.__inviteNameFromT;
-        if (name && name.trim()) return name.trim();
-        try{ return oldPickName.apply(this, arguments); }catch(e){ return name || ""; }
-      };
-    }
-  }catch(_){}
-  try{
-    if (typeof window.pickRole === "function"){
-      var oldPickRole = window.pickRole;
-      window.pickRole = function(){
-        var role = window.__inviteRoleFromT;
-        if (role && role.trim()) return role.trim();
-        try{ return oldPickRole.apply(this, arguments); }catch(e){ return role || ""; }
-      };
-    }
-  }catch(_){}
-  // Also set data attributes for scripts that read from DOM
-  document.documentElement.setAttribute("data-invite-name", window.__inviteNameFromT || "");
-  document.documentElement.setAttribute("data-invite-role", window.__inviteRoleFromT || "");
-})();
-</script>
-
 </body>
 </html>
