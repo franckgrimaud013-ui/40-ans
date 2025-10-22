@@ -79,7 +79,13 @@ Arnaud"></textarea>
       return QA[Math.floor(Math.random()*QA.length)];
     }
 
-    function b64EncodeUnicode(str){ return btoa(encodeURIComponent(str)); }
+    // Encodage UTF-8 sûr → base64
+function b64EncodeUTF8(str){
+  const bytes = new TextEncoder().encode(str);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
 
     document.getElementById('genBtn').addEventListener('click', function(){
       const raw = (document.getElementById('names').value || '').trim();
@@ -117,7 +123,7 @@ Arnaud"></textarea>
         const role = traitors.has(name) ? 'TRAITRE' : 'LOYAL';
         const payload = { v:1, name, role };
         if (role === 'TRAITRE'){ payload.codeQ = secretQ; payload.codeA = secretA; }
-        const token = b64EncodeUnicode(JSON.stringify(payload));
+        const token = b64EncodeUTF8(JSON.stringify(payload));
         const url = base + '?t=' + encodeURIComponent(token);
 
         const row = document.createElement('div');
