@@ -2101,25 +2101,56 @@ function startMainStage(){
   }
 })();
 </script>
-<script id="personal-pages-logic-fix">
+
+<script id="p3-steps-exclusive-controller">
 (function(){
   try{
-    var rulesStep = document.getElementById("p3-s2");
-    var revealStep = document.getElementById("p3-s3");
-    // Si jamais "Découvre ton rôle" était resté actif, on le désactive au départ.
-    if (revealStep && revealStep.classList && revealStep.classList.contains("active")){
-      revealStep.classList.remove("active");
+    var container = document.getElementById("p3-steps");
+    if(!container) return;
+
+    function activateStep(stepEl){
+      if(!stepEl) return;
+      try{
+        var actives = container.querySelectorAll(".step.active");
+        actives.forEach(function(s){ s.classList.remove("active"); });
+      }catch(_){}
+      stepEl.classList.add("active");
+      try{ stepEl.scrollIntoView({behavior:'smooth'}); }catch(_){}
     }
-    // Si on passe des Règles à la page perso, forcer la désactivation de p3-s3.
+
+    // 1) Sécurise le passage RÈGLES -> PERSO
     var rulesNext = document.getElementById("p3-n2");
-    if (rulesNext && revealStep){
-      rulesNext.addEventListener("click", function(){
-        try{ revealStep.classList.remove("active"); }catch(_){}
-      }, {passive:true});
+    if (rulesNext){
+      rulesNext.addEventListener("click", function(ev){
+        try{ ev.preventDefault(); }catch(_){}
+        // Cherche la page perso visible (celle qui a .personal-step et qui n'est pas display:none)
+        var personal = Array.prototype.find.call(
+          container.querySelectorAll(".personal-step"),
+          function(el){ return el.style.display !== "none"; }
+        );
+        if(personal){ activateStep(personal); }
+      }, {passive:false});
+    }
+
+    // 2) Délégation pour tous les boutons .nextBtn (dont ceux des pages perso)
+    container.addEventListener("click", function(ev){
+      var btn = ev.target && ev.target.closest && ev.target.closest(".nextBtn");
+      if(!btn) return;
+      var nextId = btn.getAttribute("data-next");
+      if(!nextId) return;
+      var nextEl = document.getElementById(nextId);
+      if(!nextEl) return;
+      try{ ev.preventDefault(); }catch(_){}
+      activateStep(nextEl);
+    }, {passive:false});
+
+    // 3) Au chargement, si plusieurs .step sont actives, on ne garde que la première
+    var activeList = container.querySelectorAll(".step.active");
+    if (activeList.length > 1){
+      for (var i=1;i<activeList.length;i++){ activeList[i].classList.remove("active"); }
     }
   }catch(_){}
 })();
 </script>
-
 </body>
 </html>
