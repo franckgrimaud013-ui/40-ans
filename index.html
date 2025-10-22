@@ -2050,7 +2050,7 @@ function startMainStage(){
       return data && data.name ? String(data.name) : "";
     }catch(_){ return ""; }
   }
-  function pickName(){ var n = decodeNameFromT() || qparam("n"); return (n||"").trim(); }
+  function pickName(){ var n = decodeNameFromT(); return (n||"").trim(); }
   function getContainer(){ return document.getElementById("p3-steps"); }
   function allSteps(){ var c=getContainer(); return c? c.querySelectorAll(".step") : []; }
   function deactivateAll(){ allSteps().forEach(function(s){ s.classList.remove("active"); }); }
