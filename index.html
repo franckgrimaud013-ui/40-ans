@@ -575,42 +575,40 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   <span class="line">Derrière ce scénario, il y a des semaines de travail, d’imagination et de passion.</span>
   <span class="line">Franck a écrit, monté et façonné chaque image, chaque son, chaque ligne pour vous faire vivre un week‑end unique.</span>
   <span class="line">À présent, à vous de jouer… et d’aller jusqu’au bout.</span>
-  <span class="line cite">« C’est le temps que tu as perdu pour ton ami qui fait ton ami si important. » — Antoine de Saint‑Exupéry</span>
+  <span class="line cite">« C’est le temps que tu as perdu pour tes amis, qui fait tes amis si important. » — Antoine de Saint‑Exupéry</span>
 </p>
 
 <style>
 /* Effet cinéma de fin (sans audio) */
-.cinema-fade {
-  opacity: 0;
-  transform: translateY(20px);
-  animation: fadeInCine 3s ease-out 1.5s forwards;
-  font-size: 14px;
-  line-height: 1.8;
+#finalQuote {
   text-align: center;
-  color: #cfd5dc;
-  margin: 100px 0 40px;
+  line-height: 1.8;
+  color: #e8e8e8;
+  margin: 80px auto 60px;
+  max-width: 800px;
 }
 
-.cinema-fade .quote {
+#finalQuote .line {
   display: block;
-  margin-top: 20px;
-  font-style: italic;
-  color: #d4af37;
-  opacity: 0;
-  transform: scale(0.98);
-  animation: glowQuote 4s ease-out 3s forwards;
+  margin-bottom: 14px;
+  font-size: 1.4em; /* citation principale plus grande */
+  text-shadow: 0 0 12px rgba(212,175,55,0.25);
+  animation: glowQuote 4s ease-out 2s forwards;
 }
 
-@keyframes fadeInCine {
-  0% { opacity: 0; transform: translateY(20px) scale(0.98); }
-  60% { opacity: 1; transform: translateY(0) scale(1.02); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+/* auteur plus petit et plus discret */
+#finalQuote .line.cite {
+  font-size: 0.9em;
+  color: rgba(180,180,180,0.6);
+  margin-top: 18px;
+  font-style: italic;
+  text-shadow: none;
 }
 
 @keyframes glowQuote {
   0% { opacity: 0; text-shadow: none; }
-  40% { opacity: 1; text-shadow: 0 0 10px rgba(212,175,55,0.4); }
-  100% { opacity: 1; text-shadow: 0 0 18px rgba(212,175,55,0.35); }
+  40% { opacity: 1; text-shadow: 0 0 10px rgba(212,175,55,0.3); }
+  100% { opacity: 1; text-shadow: 0 0 16px rgba(212,175,55,0.25); }
 }
 </style>
 </section>
