@@ -2102,8 +2102,52 @@ function startMainStage(){
 })();
 </script>
 
-<script id="p3-steps-exclusive-controller">
+<script id="p3-steps-exclusive-controller-v5">
 (function(){
+  function norm(s){
+    try{
+      return (s||"").toString().trim().toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    }catch(e){ return (s||"").toString().trim().toLowerCase(); }
+  }
+  function qparam(k){
+    try{ return new URLSearchParams(location.search||"").get(k) || ""; }catch(e){ return ""; }
+  }
+  function decodeNameFromT(){
+    try{
+      var t = qparam("t"); if(!t) return "";
+      try { t = decodeURIComponent(t); } catch(e){}
+      var data = JSON.parse(atob(t));
+      return data && data.name ? String(data.name) : "";
+    }catch(e){ return ""; }
+  }
+  function pickName(){
+    var fromT = decodeNameFromT();
+    var fromN = qparam("n");
+    return (fromT || fromN || "").trim();
+  }
+  function findPersonalByName(name){
+    var want = norm(name);
+    var list = document.querySelectorAll(".personal-step");
+    var candidate = null;
+    list.forEach(function(sec){
+      var h = sec.querySelector("h3");
+      var txt = h ? h.textContent || "" : "";
+      if (want && norm(txt).indexOf(want) !== -1){ candidate = sec; }
+    });
+    return candidate;
+  }
+  function hideOtherPersonal(exceptEl){
+    document.querySelectorAll(".personal-step").forEach(function(sec){
+      if (exceptEl && sec === exceptEl) return;
+      try{ sec.classList.remove("active"); }catch(_){}
+      sec.style.display = "none";
+    });
+    if (exceptEl){
+      exceptEl.style.display = "";
+    }
+  }
+
   try{
     var container = document.getElementById("p3-steps");
     if(!container) return;
@@ -2118,21 +2162,28 @@ function startMainStage(){
       try{ stepEl.scrollIntoView({behavior:'smooth'}); }catch(_){}
     }
 
-    // 1) Sécurise le passage RÈGLES -> PERSO
+    // Au chargement: ne garder visible que la page perso du bon prénom
+    var name = pickName();
+    var targetPersonal = findPersonalByName(name);
+    if (targetPersonal){
+      hideOtherPersonal(targetPersonal);
+    }
+
+    // RÈGLES -> PERSO : activer uniquement la page perso du bon prénom
     var rulesNext = document.getElementById("p3-n2");
     if (rulesNext){
       rulesNext.addEventListener("click", function(ev){
         try{ ev.preventDefault(); }catch(_){}
-        // Cherche la page perso visible (celle qui a .personal-step et qui n'est pas display:none)
-        var personal = Array.prototype.find.call(
-          container.querySelectorAll(".personal-step"),
-          function(el){ return el.style.display !== "none"; }
-        );
-        if(personal){ activateStep(personal); }
+        var name2 = pickName();
+        var per = findPersonalByName(name2) || targetPersonal;
+        if (per){
+          hideOtherPersonal(per);
+          activateStep(per);
+        }
       }, {passive:false});
     }
 
-    // 2) Délégation pour tous les boutons .nextBtn (dont ceux des pages perso)
+    // PERSO -> RÔLE via .nextBtn
     container.addEventListener("click", function(ev){
       var btn = ev.target && ev.target.closest && ev.target.closest(".nextBtn");
       if(!btn) return;
@@ -2141,10 +2192,12 @@ function startMainStage(){
       var nextEl = document.getElementById(nextId);
       if(!nextEl) return;
       try{ ev.preventDefault(); }catch(_){}
+      // cacher toutes les pages perso quand on passe au rôle
+      hideOtherPersonal(null);
       activateStep(nextEl);
     }, {passive:false});
 
-    // 3) Au chargement, si plusieurs .step sont actives, on ne garde que la première
+    // Sécurité: si plusieurs .step actives, garder uniquement la première
     var activeList = container.querySelectorAll(".step.active");
     if (activeList.length > 1){
       for (var i=1;i<activeList.length;i++){ activeList[i].classList.remove("active"); }
