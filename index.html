@@ -579,36 +579,55 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 </p>
 
 <style>
-/* Effet cinéma de fin (sans audio) */
+/* Bloc de citation final – 3 niveaux : texte / citation / auteur */
 #finalQuote {
   text-align: center;
+  margin: 70px auto 60px;
   line-height: 1.8;
-  color: #e8e8e8;
-  margin: 80px auto 60px;
   max-width: 800px;
+  color: #f5f5f5;
 }
 
+/* --- 1. Texte explicatif --- */
 #finalQuote .line {
   display: block;
-  margin-bottom: 14px;
-  font-size: 1.4em; /* citation principale plus grande */
-  text-shadow: 0 0 12px rgba(212,175,55,0.25);
-  animation: glowQuote 4s ease-out 2s forwards;
+  opacity: 0;
+  transform: translateY(8px);
+  font-size: 1.15rem;
+  color: #f8f8f8;
+  text-shadow: 0 0 8px rgba(212,175,55,0.15);
+  animation: fadeLine 1s ease-out forwards;
 }
 
-/* auteur plus petit et plus discret */
-#finalQuote .line.cite {
-  font-size: 0.9em;
-  color: rgba(180,180,180,0.6);
-  margin-top: 18px;
+#finalQuote .line:nth-child(1) { animation-delay: 0.3s; }
+#finalQuote .line:nth-child(2) { animation-delay: 0.8s; }
+#finalQuote .line:nth-child(3) { animation-delay: 1.3s; }
+
+/* --- 2. Citation principale --- */
+#finalQuote .line.quote {
+  font-size: 1.4rem;
+  margin-top: 25px;
+  color: #d4af37;
+  font-style: italic;
+  text-shadow: 0 0 12px rgba(212,175,55,0.3);
+  animation-delay: 2.1s;
+}
+
+/* --- 3. Auteur (petit, grisé, discret) --- */
+#finalQuote .line.author {
+  font-size: 0.9rem;
+  color: rgba(200,200,200,0.6);
+  margin-top: 10px;
   font-style: italic;
   text-shadow: none;
+  animation-delay: 2.8s;
 }
 
-@keyframes glowQuote {
-  0% { opacity: 0; text-shadow: none; }
-  40% { opacity: 1; text-shadow: 0 0 10px rgba(212,175,55,0.3); }
-  100% { opacity: 1; text-shadow: 0 0 16px rgba(212,175,55,0.25); }
+/* --- Animation d’apparition douce --- */
+@keyframes fadeLine {
+  0%   { opacity: 0; transform: translateY(8px); }
+  60%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 </style>
 </section>
