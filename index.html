@@ -549,6 +549,75 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 }
 </style>
 
+<style id="enter-game-btn-candle">
+/* Apparition et éclat "bougie" pour le bouton ENTRER DANS LE JEU */
+#enterGameBtn {
+  opacity: 0;
+  transform: translateY(25px) scale(0.95);
+  animation: enterCandleAppear 1.8s ease-out 0.8s forwards;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 25px rgba(212,175,55,0);
+}
+
+/* Animation d’apparition: montée + fondu progressif */
+@keyframes enterCandleAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(25px) scale(0.95);
+    filter: brightness(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.03);
+    filter: brightness(1.3);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
+  }
+}
+
+/* Effet de lumière vacillante façon bougie */
+#enterGameBtn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 40%, rgba(255,200,120,0.35) 0%, rgba(255,200,120,0.12) 45%, rgba(0,0,0,0) 80%);
+  opacity: 0.45;
+  animation: candleGlow 3s ease-in-out infinite alternate;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Lueur plus douce et dynamique */
+@keyframes candleGlow {
+  0%   { opacity: 0.30; filter: brightness(0.9) blur(1px); }
+  50%  { opacity: 0.65; filter: brightness(1.35) blur(1.6px); }
+  100% { opacity: 0.42; filter: brightness(1.1) blur(1px); }
+}
+
+/* Un halo léger autour du bouton (effet d'ambiance) */
+#enterGameBtn::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: inherit;
+  box-shadow: 0 0 36px rgba(212,175,55,0.26);
+  animation: candleHalo 4s ease-in-out infinite alternate;
+  z-index: -1;
+}
+
+/* Halo qui palpite lentement */
+@keyframes candleHalo {
+  0%   { opacity: 0.45; transform: scale(0.98); }
+  50%  { opacity: 0.85; transform: scale(1.02); }
+  100% { opacity: 0.55; transform: scale(1.00); }
+}
+</style>
+
 </head>
 <body><!--
 ==================== GUIDE RAPIDE (COMMENT MODIFIER) ====================
@@ -600,7 +669,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 </div>
 </div>
 <!-- CTA après intro -->
-<div id="ctaOverlay"><a class="btn" href="#app">ENTRER DANS LE JEU</a></div>
+<div id="ctaOverlay"><a class="btn" href="#app" id="enterGameBtn">ENTRER DANS LE JEU</a></div>
 <!-- APP -->
 <div class="app" id="app">
 <!-- Planning & Règles -->
