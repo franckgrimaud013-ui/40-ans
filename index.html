@@ -549,6 +549,16 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 }
 </style>
 
+<style id="personal-pages-style">
+.personal-step{ display:none; } /* cachées par défaut */
+.pm-card{
+  margin:16px auto 8px; max-width:780px; padding:22px 18px;
+  border:1px solid rgba(255,255,255,.12); border-radius:12px;
+  background:rgba(255,255,255,.04); box-shadow:inset 0 0 40px rgba(255,255,255,.03);
+}
+.pm-text{ font-size:1.05rem; line-height:1.7; color:#e9edf4; text-align:center; white-space:pre-line; }
+</style>
+
 </head>
 <body><!--
 ==================== GUIDE RAPIDE (COMMENT MODIFIER) ====================
@@ -616,6 +626,81 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- --- [P3] Etapes (planning -> règles -> 'Découvre ton rôle') --- --><!-- [ASTUCE P3] Étapes : éditez les textes dans #p3-s1 (planning), #p3-s2 (règles), #p3-s3 (intro du bouton final). --><div id="p3-steps">
 <!-- ~~~ [P3] ETAPE 1 : Le planning ~~~ --><!-- [ASTUCE P3/S1] Modifiez les <li> pour changer le planning. --><section class="step active" id="p3-s1"><h3 class="p3-photo-title">Planning du jeu</h3><ul class="plan-list"><li class="plan-item"><span class="left">Vendredi soir :</span><span class="dots"></span><span class="right">Premier conseil et vote d’élimination.</span></li><li class="plan-item"><span class="left">Nuit vendredi → samedi :</span><span class="dots"></span><span class="right">Les Traîtres bannissent un loyal via leur lien.</span></li><li class="plan-item"><span class="left">Samedi matin :</span><span class="dots"></span><span class="right">Annonce au groupe du résultat de la nuit.</span></li><li class="plan-item"><span class="left">Samedi midi :</span><span class="dots"></span><span class="right">Second conseil et vote d’élimination.</span></li><li class="plan-item"><span class="left">Samedi soir :</span><span class="dots"></span><span class="right">Troisième conseil et vote d’élimination.</span></li><li class="plan-item"><span class="left">Nuit samedi → dimanche :</span><span class="dots"></span><span class="right">Les Traîtres éliminent à nouveau via leur lien.</span></li><li class="plan-item"><span class="left">Dimanche matin :</span><span class="dots"></span><span class="right">Annonce au groupe de la victime de la nuit.</span></li><li class="plan-item"><span class="left">Dimanche midi :</span><span class="dots"></span><span class="right">Dernier conseil et vote d’élimination.</span></li></ul><div class="p3-actions"><button class="btn" id="p3-n1" type="button">Suivant</button></div></section>
 <!-- ~~~ [P3] ETAPE 2 : Esprit & règles ~~~ --><!-- [ASTUCE P3/S2] Modifiez ou ajoutez des règles ici. --><section class="step" id="p3-s2"><h3 class="p3-photo-title">Esprit et règles</h3><div class="rules-wrap"><p>Les Traîtres jouent en secret via un lien privé.</p><p>Les Loyaux observent, discutent et votent avec stratégie.</p><p>Pas de prise de tête : les écrans clés s’affichent au bon moment.</p><p>On garde la bonne entente : fun et fair‑play.</p><p class="final">Les traîtres devront tous être démasqués le dimanche midi ;<br/>si ce n’est pas le cas, les loyaux auront perdu le jeu.</p></div><div class="p3-actions"><button class="btn" id="p3-n2" type="button">Suivant</button></div></section>
+
+<!-- [P3] PAGES PERSONNALISÉES (cachées par défaut, s’affichent si ?n=...) -->
+<section class="step personal-step" id="page-franck">
+  <h3 class="p3-photo-title">Un mot pour toi, Franck 👋</h3>
+  <div class="pm-card"><p class="pm-text">Franck, profite du jeu… et garde un œil partout 😉</p></div>
+  <div class="p3-actions"><button class="btn nextBtn" data-next="p3-s3" type="button">Suivant</button></div>
+</section>
+
+<section class="step personal-step" id="page-aurélie">
+  <h3 class="p3-photo-title">Un mot pour toi, Aurélie 🌟</h3>
+  <div class="pm-card"><p class="pm-text">Ton intuition va faire des merveilles ce week-end.</p></div>
+  <div class="p3-actions"><button class="btn nextBtn" data-next="p3-s3" type="button">Suivant</button></div>
+</section>
+
+<section class="step personal-step" id="page-thierry">
+  <h3 class="p3-photo-title">Un mot pour toi, Thierry 🛡️</h3>
+  <div class="pm-card"><p class="pm-text">Reste calme, observe… et agis au bon moment.</p></div>
+  <div class="p3-actions"><button class="btn nextBtn" data-next="p3-s3" type="button">Suivant</button></div>
+</section>
+
+<section class="step personal-step" id="page-sandrine">
+  <h3 class="p3-photo-title">Un mot pour toi, Sandrine ✨</h3>
+  <div class="pm-card"><p class="pm-text">Ta discrétion peut devenir ton arme secrète.</p></div>
+  <div class="p3-actions"><button class="btn nextBtn" data-next="p3-s3" type="button">Suivant</button></div>
+</section>
+
+<section class="step personal-step" id="page-arnaud">
+  <h3 class="p3-photo-title">Un mot pour toi, Arnaud 🎯</h3>
+  <div class="pm-card"><p class="pm-text">Garde le cap. Les détails te donneront l’avantage.</p></div>
+  <div class="p3-actions"><button class="btn nextBtn" data-next="p3-s3" type="button">Suivant</button></div>
+</section>
+
+<section class="step personal-step" id="page-sabrina">
+  <h3 class="p3-photo-title">Un mot pour toi, Sabrina 🔍</h3>
+  <div class="pm-card"><p class="pm-text">Lis entre les lignes. Les regards en disent long.</p></div>
+  <div class="p3-actions"><button class="btn nextBtn" data-next="p3-s3" type="button">Suivant</button></div>
+</section>
+
+<section class="step personal-step" id="page-anthony">
+  <h3 class="p3-photo-title">Un mot pour toi, Anthony 🧭</h3>
+  <div class="pm-card"><p class="pm-text">Prends des infos, partage juste ce qu’il faut.</p></div>
+  <div class="p3-actions"><button class="btn nextBtn" data-next="p3-s3" type="button">Suivant</button></div>
+</section>
+
+<section class="step personal-step" id="page-julia">
+  <h3 class="p3-photo-title">Un mot pour toi, Julia 🌙</h3>
+  <div class="pm-card"><p class="pm-text">Ta meilleure force : surprendre sans te trahir.</p></div>
+  <div class="p3-actions"><button class="btn nextBtn" data-next="p3-s3" type="button">Suivant</button></div>
+</section>
+
+<section class="step personal-step" id="page-sébastien">
+  <h3 class="p3-photo-title">Un mot pour toi, Sébastien 🐺</h3>
+  <div class="pm-card"><p class="pm-text">Teste les autres, mais garde tes cartes près du cœur.</p></div>
+  <div class="p3-actions"><button class="btn nextBtn" data-next="p3-s3" type="button">Suivant</button></div>
+</section>
+
+<section class="step personal-step" id="page-coralie">
+  <h3 class="p3-photo-title">Un mot pour toi, Coralie 🌿</h3>
+  <div class="pm-card"><p class="pm-text">Ta sérénité peut déstabiliser n’importe quel traître.</p></div>
+  <div class="p3-actions"><button class="btn nextBtn" data-next="p3-s3" type="button">Suivant</button></div>
+</section>
+
+<section class="step personal-step" id="page-bilou">
+  <h3 class="p3-photo-title">Un mot pour toi, Bilou ⚔️</h3>
+  <div class="pm-card"><p class="pm-text">Sois audacieux : le doute est l’arme des traîtres.</p></div>
+  <div class="p3-actions"><button class="btn nextBtn" data-next="p3-s3" type="button">Suivant</button></div>
+</section>
+
+<section class="step personal-step" id="page-stéphane">
+  <h3 class="p3-photo-title">Un mot pour toi, Stéphane 🗝️</h3>
+  <div class="pm-card"><p class="pm-text">Observe, connecte les points… et tu trouveras la clé.</p></div>
+  <div class="p3-actions"><button class="btn nextBtn" data-next="p3-s3" type="button">Suivant</button></div>
+</section>
+
+
 <!-- ~~~ [P3] ETAPE 3 : 🎭 Découvre ton rôle ~~~ --><!-- [ASTUCE P3/S3] Texte avant le bouton final. --><section class="step" id="p3-s3">
 <h3 class="p3-title" id="p3-playerLine">Es-tu prêt ? Quand tu es seul, découvre ta carte.</h3>
 <div class="p3-actions"><!-- ~~~ [P3] Bouton final : 🎭 Découvre ton rôle (lien / fonction revealRole) ~~~ --><!-- [ASTUCE P3] Si vous avez une fonction revealRole, c'est ici qu'elle est appelée. --><a class="btn" href="#" id="p3-revealLink">🎭 Découvre ton rôle</a></div>
@@ -1886,7 +1971,30 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 </script>
 
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const video = document.querySelector('video[src*="fond-boucle-v2.mp4"]');
+  const audio = document.querySelector('audio[src*="fond-boucle-v2.mp3"]');
+  if (!video || !audio) return;
 
+  function syncPlay() {
+    try {
+      video.currentTime = 0;
+      audio.currentTime = 0;
+      video.play();
+      setTimeout(() => {
+        audio.play().catch(() => {
+          document.body.addEventListener('click', () => audio.play(), { once: true });
+        });
+      }, 40); // décalage de 40ms pour synchro parfaite sur iPhone
+    } catch (e) {
+      console.warn('Erreur synchro audio/vidéo :', e);
+    }
+  }
+
+  video.addEventListener('canplay', syncPlay, { once: true });
+});
+</script>
 
 
 <script>
@@ -1925,90 +2033,71 @@ function startMainStage(){
 })();
 </script>
 
-<script id="av-sync">
+<script id="personal-pages-logic">
 (function(){
-  // Cible explicite (IDs si présents), sinon fallback par nom de fichier
-  var VIDEO_ID = 'v1';
-  var AUDIO_ID = 'introMusic';
+  function slugifyName(s){
+    return (s||"").trim()
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/\s+/g,'');
+  }
+  function qparam(k){ try{ return new URLSearchParams(location.search).get(k) || ""; }catch(e){ return ""; } }
 
-  // Réglages synchro (calage parfait par défaut)
-  var AUDIO_LEAD = 0.00;   // 0.05 = audio 50ms AVANT l'image si tu veux compenser iPhone
-  var HARD = 0.030;        // >30ms : snap dur
-  var SOFT = 0.008;        // >8ms  : correction vitesse
-  var GAIN = 0.030;        // gain correction
-  var MINR = 0.97, MAXR = 1.03;
+  const MAP = {
+    "franck":"page-franck",
+    "aurelie":"page-aurélie",
+    "thierry":"page-thierry",
+    "sandrine":"page-sandrine",
+    "arnaud":"page-arnaud",
+    "sabrina":"page-sabrina",
+    "anthony":"page-anthony",
+    "julia":"page-julia",
+    "sebastien":"page-sébastien",
+    "coralie":"page-coralie",
+    "bilou":"page-bilou",
+    "stephane":"page-stéphane"
+  };
 
-  function findVideo(){
-    var v = document.getElementById(VIDEO_ID);
-    if (v && ((v.currentSrc||v.src||'')+'' ).indexOf('fond-boucle-v2.mp4') !== -1) return v;
-    var s = document.querySelector('video[src*="fond-boucle-v2.mp4"], source[src*="fond-boucle-v2.mp4"]');
-    return s ? (s.tagName.toLowerCase()==='video' ? s : s.closest('video')) : null;
-  }
-  function findAudio(){
-    var a = document.getElementById(AUDIO_ID);
-    if (a && ((a.currentSrc||a.src||'')+'' ).indexOf('fond-boucle-v2.mp3') !== -1) return a;
-    return document.querySelector('audio[src*="fond-boucle-v2.mp3"]');
-  }
-  function stopOthers(keep){
-    document.querySelectorAll('audio').forEach(function(x){
-      if (x !== keep){ try{ x.pause(); x.currentTime = 0; }catch(_){} }
-    });
-  }
-  function resync(){
-    var V = findVideo(), A = findAudio();
-    if (!V || !A || A.paused) return;
-    var vt = +V.currentTime||0, at = +A.currentTime||0, d = vt - at;
-    if (Math.abs(d) > HARD){
-      try{ A.currentTime = vt; }catch(_){}
-      try{ A.playbackRate = 1.0; }catch(_){}
-    } else if (Math.abs(d) > SOFT){
-      var r = 1 + d*GAIN;
-      try{ A.playbackRate = Math.max(MINR, Math.min(MAXR, r)); }catch(_){}
-    } else {
-      try{ A.playbackRate = 1.0; }catch(_){}
+  function setupPersonalAfterRules(){
+    const raw = qparam("n");
+    const slug = slugifyName(raw);
+    if (!slug || !MAP[slug]) return; // prénom absent ou pas dans la liste -> flow normal
+
+    const rulesStep = document.getElementById("p3-s2");
+    const rulesNext = document.getElementById("p3-n2");
+    const personalId = MAP[slug];
+    const personalStep = document.getElementById(personalId);
+    const revealStep = document.getElementById("p3-s3");
+
+    if (!rulesNext || !personalStep) return;
+
+    // rendre la page perso disponible
+    personalStep.style.display = "";
+
+    // RÈGLES -> PAGE PERSO
+    rulesNext.addEventListener("click", function(ev){
+      try{ ev.preventDefault(); }catch(_){}
+      if (rulesStep) rulesStep.classList.remove("active");
+      personalStep.classList.add("active");
+      try{ personalStep.scrollIntoView({behavior:'smooth'}); }catch(_){}
+    }, {passive:false});
+
+    // PAGE PERSO -> DÉCOUVRE TON RÔLE
+    const nextBtn = personalStep.querySelector(".nextBtn");
+    if (nextBtn && revealStep){
+      nextBtn.addEventListener("click", function(ev){
+        try{ ev.preventDefault(); }catch(_){}
+        personalStep.classList.remove("active");
+        revealStep.classList.add("active");
+        try{ revealStep.scrollIntoView({behavior:'smooth'}); }catch(_){}
+      }, {passive:false});
     }
   }
 
-  // Démarrage AV, à appeler à la fin de l'intro
-  window.avStart = function(){
-    var V = findVideo(), A = findAudio();
-    if (!V || !A){ console.warn('[AV] éléments manquants', V, A); return; }
-
-    // Log utile pour vérification dans la console
-    window.__av = { videoId: V.id||'(src)', audioId: A.id||'(src)', videoSrc: V.currentSrc||V.src, audioSrc: A.currentSrc||A.src };
-
-    try{ V.muted = true; V.setAttribute('playsinline',''); V.setAttribute('webkit-playsinline',''); }catch(_){}
-    stopOthers(A);
-
-    try{ V.currentTime = 0; }catch(_){}
-    try{ A.currentTime = 0; }catch(_){}
-
-    Promise.all([ V.play().catch(function(){}), A.play().catch(function(){}) ]).then(function(){
-      try{ A.currentTime = (V.currentTime||0) + AUDIO_LEAD; }catch(_){}
-      // Kickstart clamp ~1s
-      var t0 = performance.now();
-      (function tick(){
-        try{
-          var vt = +V.currentTime||0, at = +A.currentTime||0;
-          var d = vt - at - AUDIO_LEAD;
-          if (Math.abs(d) > 0.012){ try{ A.currentTime = vt + AUDIO_LEAD; }catch(_){ } }
-        }catch(_){}
-        if (performance.now()-t0 < 1000) requestAnimationFrame(tick);
-      })();
-    });
-
-    try{ clearInterval(window.__syncTimer); }catch(_){}
-    window.__syncTimer = setInterval(resync, 120);
-  };
-
-  // Hook automatique : quand l'intro se termine, on lance avStart()
-  var gv = document.getElementById('gateVideo');
-  if (gv){
-    var prev = gv.onended;
-    gv.onended = function(ev){
-      try{ prev && prev.call(this, ev); }catch(_){}
-      try{ window.avStart(); }catch(_){}
-    };
+  if (document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", setupPersonalAfterRules);
+  } else {
+    setupPersonalAfterRules();
   }
 })();
 </script>
