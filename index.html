@@ -571,62 +571,64 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <!-- ~~~ [P3] ETAPE 3 : 🎭 Découvre ton rôle ~~~ --><!-- [ASTUCE P3/S3] Texte avant le bouton final. --><section class="step" id="p3-s3">
 <h3 class="p3-title" id="p3-playerLine">Es-tu prêt ? Quand tu es seul, découvre ta carte.</h3>
 <div class="p3-actions"><!-- ~~~ [P3] Bouton final : 🎭 Découvre ton rôle (lien / fonction revealRole) ~~~ --><!-- [ASTUCE P3] Si vous avez une fonction revealRole, c'est ici qu'elle est appelée. --><a class="btn" href="#" id="p3-revealLink">🎭 Découvre ton rôle</a></div>
-<p class="p3-note quote-block" id="finalQuote">
+<p id="finalQuote">
   <span class="line">Derrière ce scénario, il y a des semaines de travail, d’imagination et de passion.</span>
-  <span class="line">Franck a écrit, monté et façonné chaque image, chaque son, chaque ligne pour vous faire vivre un week‑end unique.</span>
+  <span class="line">Franck a écrit, monté et façonné chaque image, chaque son, chaque ligne pour vous faire vivre un week-end unique.</span>
   <span class="line">À présent, à vous de jouer… et d’aller jusqu’au bout.</span>
-  <span class="line cite">« C’est le temps que tu as perdu pour tes amis, qui fait tes amis si important. » — Antoine de Saint‑Exupéry</span>
+  
+  <span class="line quote">« C’est le temps que tu as perdu pour tes amis, qui fait tes amis si importants. »</span>
+  
+  <span class="line author">— Antoine de Saint-Exupéry</span>
 </p>
 
+
 <style>
-/* Bloc de citation final – 3 niveaux : texte / citation / auteur */
+/* Citation finale – texte explicatif + citation + auteur */
 #finalQuote {
   text-align: center;
   margin: 70px auto 60px;
   line-height: 1.8;
   max-width: 800px;
-  color: #f5f5f5;
 }
 
-/* --- 1. Texte explicatif --- */
+/* 1. Texte explicatif (3 lignes blanches) */
 #finalQuote .line {
   display: block;
   opacity: 0;
   transform: translateY(8px);
   font-size: 1.15rem;
-  color: #f8f8f8;
-  text-shadow: 0 0 8px rgba(212,175,55,0.15);
+  color: #f5f5f5;
   animation: fadeLine 1s ease-out forwards;
 }
 
 #finalQuote .line:nth-child(1) { animation-delay: 0.3s; }
-#finalQuote .line:nth-child(2) { animation-delay: 0.8s; }
-#finalQuote .line:nth-child(3) { animation-delay: 1.3s; }
+#finalQuote .line:nth-child(2) { animation-delay: 0.9s; }
+#finalQuote .line:nth-child(3) { animation-delay: 1.5s; }
 
-/* --- 2. Citation principale --- */
+/* 2. Citation principale (dorée) */
 #finalQuote .line.quote {
-  font-size: 1.4rem;
-  margin-top: 25px;
+  font-size: 1.35rem;
+  margin-top: 30px;
   color: #d4af37;
   font-style: italic;
   text-shadow: 0 0 12px rgba(212,175,55,0.3);
-  animation-delay: 2.1s;
+  animation-delay: 2.2s;
 }
 
-/* --- 3. Auteur (petit, grisé, discret) --- */
+/* 3. Auteur (gris clair, discret) */
 #finalQuote .line.author {
   font-size: 0.9rem;
-  color: rgba(200,200,200,0.6);
+  color: rgba(190,190,190,0.65);
   margin-top: 10px;
   font-style: italic;
   text-shadow: none;
-  animation-delay: 2.8s;
+  animation-delay: 2.9s;
 }
 
-/* --- Animation d’apparition douce --- */
+/* Animation d'apparition douce */
 @keyframes fadeLine {
-  0%   { opacity: 0; transform: translateY(8px); }
-  60%  { opacity: 1; transform: translateY(0); }
+  0% { opacity: 0; transform: translateY(8px); }
+  60% { opacity: 1; transform: translateY(0); }
   100% { opacity: 1; transform: translateY(0); }
 }
 </style>
