@@ -552,6 +552,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 <style id="enter-game-btn-candle">
 /* Apparition et éclat "bougie" pour le bouton ENTRER DANS LE JEU */
 #enterGameBtn {
+  z-index: 1;
   opacity: 0;
   transform: translateY(25px) scale(0.95);
   animation: enterCandleAppear 1.8s ease-out 0.8s forwards;
@@ -600,7 +601,8 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 }
 
 /* Un halo léger autour du bouton (effet d'ambiance) */
-#enterGameBtn::after {
+#enterGameBtn::after { /* ensure no click interception */
+  pointer-events: none;
   content: "";
   position: absolute;
   inset: -8px;
@@ -2014,6 +2016,26 @@ function startMainStage(){
   dot.addEventListener('click', function(e){ showApp(e); }, {passive:false});
   dot.addEventListener('touchstart', function(){ t=setTimeout(function(){ showApp(); },600); }, {passive:true});
   dot.addEventListener('touchend', function(){ clearTimeout(t); }, {passive:true});
+})();
+</script>
+
+
+<script id="enter-game-handler">
+(function(){
+  var btn = document.getElementById('enterGameBtn');
+  if (!btn) return;
+  btn.addEventListener('click', function(ev){
+    // Some themes need preventDefault to avoid hash jump before JS work
+    if (ev && ev.preventDefault) ev.preventDefault();
+    try {
+      var ov = document.getElementById('ctaOverlay') || document.getElementById('enterGameOverlay');
+      if (ov) ov.style.display = 'none';
+    } catch(_){}
+    try { if (typeof startMainStage === 'function') startMainStage(); } catch(_){}
+    // Optional: smooth scroll to app/container if present
+    var target = document.getElementById('app') || document.querySelector('#p3-steps, #planning, #appRoot');
+    if (target && target.scrollIntoView) { try { target.scrollIntoView({behavior:'smooth'}); } catch(_){ target.scrollIntoView(); } }
+  }, {passive:false});
 })();
 </script>
 
