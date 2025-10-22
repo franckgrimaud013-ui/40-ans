@@ -2068,21 +2068,6 @@ function startMainStage(){
     const personalId = MAP[slug];
     const personalStep = document.getElementById(personalId);
     const revealStep = document.getElementById("p3-s3");
-    // Sécurité : s'assurer que la section "Découvre ton rôle" n'est pas imbriquée dans la page perso
-    if (personalStep && revealStep && personalStep.contains(revealStep)){
-      try { personalStep.parentNode.insertBefore(revealStep, personalStep.nextElementSibling); } catch(_){}
-    }
-    // S'assurer que seule une section est "active" à la fois
-    function __onlyActive(target){
-      try{
-        [rulesStep, personalStep, revealStep].forEach(function(s){
-          if(!s) return;
-          if (s === target) s.classList.add("active");
-          else s.classList.remove("active");
-        });
-      }catch(_){}
-    }
-
 
     if (!rulesNext || !personalStep) return;
 
@@ -2102,7 +2087,8 @@ function startMainStage(){
     if (nextBtn && revealStep){
       nextBtn.addEventListener("click", function(ev){
         try{ ev.preventDefault(); }catch(_){}
-        __onlyActive(revealStep);
+        personalStep.classList.remove("active");
+        revealStep.classList.add("active");
         try{ revealStep.scrollIntoView({behavior:'smooth'}); }catch(_){}
       }, {passive:false});
     }
@@ -2115,5 +2101,25 @@ function startMainStage(){
   }
 })();
 </script>
+<script id="personal-pages-logic-fix">
+(function(){
+  try{
+    var rulesStep = document.getElementById("p3-s2");
+    var revealStep = document.getElementById("p3-s3");
+    // Si jamais "Découvre ton rôle" était resté actif, on le désactive au départ.
+    if (revealStep && revealStep.classList && revealStep.classList.contains("active")){
+      revealStep.classList.remove("active");
+    }
+    // Si on passe des Règles à la page perso, forcer la désactivation de p3-s3.
+    var rulesNext = document.getElementById("p3-n2");
+    if (rulesNext && revealStep){
+      rulesNext.addEventListener("click", function(){
+        try{ revealStep.classList.remove("active"); }catch(_){}
+      }, {passive:true});
+    }
+  }catch(_){}
+})();
+</script>
+
 </body>
 </html>
