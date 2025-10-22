@@ -674,32 +674,45 @@ function startIntro(){
       if (!v1) return null;
       try { return v1.currentTime; } catch(e){ return null; }
     }
-    function resync() {
+  function resync(){
   if (!audio || audio.paused) return;
-  const vt = masterTime();
+
+  const vt = masterTime();               // temps vidéo de référence
   if (vt == null || !isFinite(vt)) return;
 
   let at = 0;
-  try { at = audio.currentTime; } catch (e) { return; }
+  try { at = audio.currentTime; } catch(e){ return; }
 
-  const d = vt - at;
+  const d = vt - at;                     // drift vidéo - audio (en secondes)
 
-  if (Math.abs(d) > 0.05) {
-    try { audio.currentTime = vt; } catch (e) {}
-    try { audio.playbackRate = 1.0; } catch (e) {}
-  } else if (Math.abs(d) > 0.015) {
-    const r = 1 + (d * 0.02);
-    try { audio.playbackRate = Math.max(0.98, Math.min(1.02, r)); } catch (e) {}
+  // Réglages plus stricts
+  const HARD = 0.030;    // 30 ms -> snap direct si trop d'écart
+  const SOFT = 0.008;    // 8 ms  -> correction par vitesse
+  const GAIN = 0.030;    // gain de correction (plus grand = recolle plus vite)
+  const MINR = 0.97;     // bornes de vitesse audio
+  const MAXR = 1.03;
+
+  // Petit snap périodique si un doux décalage persiste trop longtemps
+  window.__lastSnap = window.__lastSnap || performance.now();
+
+  if (Math.abs(d) > HARD || (Math.abs(d) > 0.015 && performance.now() - window.__lastSnap > 7000)) {
+    try { audio.currentTime = vt; } catch(e){}
+    try { audio.playbackRate = 1.0; } catch(e){}
+    window.__lastSnap = performance.now();
+  } else if (Math.abs(d) > SOFT) {
+    const r = 1 + d * GAIN;
+    try { audio.playbackRate = Math.max(MINR, Math.min(MAXR, r)); } catch(e){}
   } else {
-    try { audio.playbackRate = 1.0; } catch (e) {}
+    try { audio.playbackRate = 1.0; } catch(e){}
   }
 }
+
 
       if (window.__syncTimer) {
   clearInterval(window.__syncTimer);
   window.__syncTimer = null;
 }
-window.__syncTimer = setInterval(resync, 250);
+window.__syncTimer = setInterval(resync, 120); // vérifie ~8x/s au lieu de 4x/s
 // Lancement du texte inchangé (2s)
     setTimeout(function(){
       document.documentElement.classList.add('intro-text-start');
