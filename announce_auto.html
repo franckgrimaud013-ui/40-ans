@@ -1,195 +1,82 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Annonce du Vote</title>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Annonce — Révélation auto</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: black;
-      color: white;
-      font-family: 'Cinzel', serif;
-      text-align: center;
-    }
+    :root{--bg:#000;--ink:#f3efe6;--mut:#c9c2b5;--gold:#e9d28f}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:'Cormorant Garamond',serif;overflow:hidden}
 
-    video {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: -1;
-      opacity: 0.35;
-    }
+    .video-wrap{position:fixed;inset:0;z-index:0;display:flex;justify-content:center;align-items:flex-start;pointer-events:none;background:#000}
+    .mask-video{margin-top:60px;width:320px;height:auto;opacity:.95;pointer-events:none}
 
-    h1 {
-      margin-top: 60px;
-      font-size: 3em;
-      color: gold;
-      text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-    }
+    .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;color:#fff;text-align:center}
+    .overlay .inner{position:relative;width:100%;max-width:1100px;padding:24px}
 
-    #result {
-      font-size: 2em;
-      margin-top: 40px;
-      color: white;
-      text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
-    }
+    .prologue-wrap{position:relative;min-height:22vh;margin:0 0 10px}
+    .slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .9s ease}
+    .slide.active{opacity:1}
+    .prol1{font-family:'Cinzel',serif;font-weight:900;letter-spacing:.04em;font-size:clamp(22px,3.8vw,42px);color:var(--gold);text-shadow:0 0 18px rgba(233,210,143,.28)}
+    .prol2,.prol3{font-size:clamp(18px,2.8vw,28px);color:var(--ink)}
 
-    #countdown {
-      font-size: 5em;
-      margin-top: 40px;
-      color: gold;
-      text-shadow: 0 0 40px rgba(255, 215, 0, 0.8);
-    }
+    .countdown{font-family:'Cinzel',serif;font-size:clamp(64px,14vw,200px);line-height:.9;font-weight:900;letter-spacing:6px;margin:12px 0 16px;text-shadow:0 0 50px rgba(233,210,143,.35);display:none}
+    .name{font-family:'Cinzel',serif;display:none;font-size:clamp(52px,12vw,160px);line-height:.95;font-weight:900;text-transform:uppercase;color:var(--gold);letter-spacing:.04em;text-shadow:0 0 55px rgba(233,210,143,.45)}
 
-    #clearVotesBtn {
-      margin-top: 80px;
-      background: transparent;
-      color: white;
-      border: 1px solid rgba(255,255,255,0.4);
-      padding: 10px 20px;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
+    .note{color:var(--mut);margin-top:8px;font-size:clamp(14px,2vw,18px)}
 
-    #clearVotesBtn:hover {
-      background: rgba(255,255,255,0.1);
-    }
+    .bar{position:fixed;left:12px;bottom:12px;z-index:10000;display:flex;gap:8px;opacity:.25}
+    .btn-ghost{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:10px 14px;font-weight:900;cursor:pointer}
+    #status{position:fixed;top:10px;right:10px;font-size:13px;color:var(--mut);z-index:10001}
+
+    #clearVotesBtn{position:fixed;bottom:20px;right:20px;background:transparent;border:1px solid rgba(233,210,143,.3);
+      color:var(--ink);padding:8px 14px;border-radius:10px;cursor:pointer;font-family:'Cinzel',serif;font-size:14px;opacity:.5;transition:.3s}
+    #clearVotesBtn:hover{opacity:1;background:rgba(233,210,143,.08)}
   </style>
 </head>
 <body>
-  <video autoplay muted loop playsinline>
-    <source src="videos/role-bg.mp4" type="video/mp4" />
-  </video>
+  <div class="video-wrap" aria-hidden="true">
+    <video class="mask-video" autoplay muted loop playsinline>
+      <source src="videos/role-bg.mp4" type="video/mp4">
+    </video>
+  </div>
 
-  <h1>Révélation</h1>
-  <div id="countdown">5</div>
-  <div id="result">Calcul en cours...</div>
+  <div id="overlay" class="overlay" aria-live="polite">
+    <div class="inner">
+      <div class="prologue-wrap" id="prologue">
+        <div class="slide" id="s1"><div class="prol1">Les Traîtres ont encore frappé cette nuit…</div></div>
+        <div class="slide" id="s2"><div class="prol2">La maison murmure des secrets.</div></div>
+        <div class="slide" id="s3"><div class="prol3">Dans un instant, vous saurez qui a été éliminé.</div></div>
+      </div>
+      <div id="cd" class="countdown">5</div>
+      <div id="name" class="name">—</div>
+      <p class="note">Touchez l’écran pour fermer la révélation.</p>
+    </div>
+  </div>
 
-  <!-- Bouton pour vider les votes -->
+  <div class="bar" aria-hidden="true">
+    <button id="replay" class="btn-ghost">Rejouer</button>
+    <button id="reload" class="btn-ghost">Rafraîchir</button>
+  </div>
+  <div id="status">Initialisation…</div>
+
+  <!-- Bouton vider votes -->
   <button id="clearVotesBtn">Vider les votes du jour</button>
 
   <script>
-    // --- CONFIG FIREBASE ---
-    var firebaseConfig = {
-      apiKey: "AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
-      authDomain: "ans-de-franck.firebaseapp.com",
-      databaseURL: "https://ans-de-franck-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "ans-de-franck",
-      storageBucket: "ans-de-franck.firebasestorage.app",
-      messagingSenderId: "1063437612417",
-      appId: "1:1063437612417:web:812e847dfcd990c6922480"
+    // --- Firebase ---
+    const firebaseConfig={
+      apiKey:"AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
+      authDomain:"ans-de-franck.firebaseapp.com",
+      databaseURL:"https://ans-de-franck-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId:"ans-de-franck",
+      storageBucket:"ans-de-franck.firebasestorage.app",
+      messagingSenderId:"1063437612417",
+      appId:"1:1063437612417:web:812e847dfcd990c6922480"
     };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    const resultDiv = document.getElementById("result");
-    const countdownDiv = document.getElementById("countdown");
-
-    function todayKey() {
-      const d = new Date();
-      return d.getFullYear() + '-' +
-        String(d.getMonth() + 1).padStart(2, '0') + '-' +
-        String(d.getDate()).padStart(2, '0');
-    }
-
-    function currentPeriodKey() {
-      const now = new Date();
-      const halfDay = Math.floor(now.getHours() / 12);
-      return todayKey() + "-P" + halfDay;
-    }
-
-    function seededRand(seedStr) {
-      let seed = 0;
-      for (let i = 0; i < seedStr.length; i++) {
-        seed = (seed * 31 + seedStr.charCodeAt(i)) & 0xffffffff;
-      }
-      seed ^= (seed << 13);
-      seed ^= (seed >>> 17);
-      seed ^= (seed << 5);
-      return (Math.abs(seed) % 100000) / 100000;
-    }
-
-    function computeResult(votesObj) {
-      const count = {};
-      for (const id in votesObj) {
-        let v = (votesObj[id].victim || "").trim();
-        if (!v) continue;
-        v = v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
-        count[v] = (count[v] || 0) + 1;
-      }
-
-      const names = Object.keys(count);
-      if (names.length === 0) {
-        resultDiv.textContent = "Aucun vote enregistré pour le moment.";
-        return;
-      }
-
-      let max = 0;
-      for (const n of names) if (count[n] > max) max = count[n];
-      const ties = names.filter(n => count[n] === max);
-
-      let eliminated;
-      if (ties.length === 1) {
-        eliminated = ties[0];
-        resultDiv.textContent = `${eliminated} a été éliminé(e). (${count[eliminated]} voix)`;
-      } else {
-        const periodSeed = currentPeriodKey();
-        const r = seededRand(periodSeed);
-        const idx = Math.floor(r * ties.length);
-        eliminated = ties[idx];
-        resultDiv.innerHTML =
-          `Égalité entre ${ties.join(" et ")} (${max} voix chacun).<br>` +
-          `Un tirage au sort a désigné <span style="color:gold">${eliminated}</span> comme le joueur éliminé(e).`;
-      }
-
-      startCountdown(eliminated);
-    }
-
-    function startCountdown(name) {
-      let count = 5;
-      countdownDiv.textContent = count;
-      const timer = setInterval(() => {
-        count--;
-        countdownDiv.textContent = count;
-        if (count === 0) {
-          clearInterval(timer);
-          countdownDiv.style.display = "none";
-          resultDiv.innerHTML = `<span style="color:gold;font-size:2em;">${name}</span> a été éliminé(e).`;
-        }
-      }, 1000);
-    }
-
-    const ref = db.ref("nights/" + todayKey() + "/votes");
-    ref.on("value", snapshot => {
-      const data = snapshot.val();
-      if (data) computeResult(data);
-      else resultDiv.textContent = "Aucun vote enregistré.";
-    });
-
-    // --- BOUTON VIDER LES VOTES ---
-    document.getElementById("clearVotesBtn").addEventListener("click", async () => {
-      if (!confirm("Supprimer tous les votes du jour ?")) return;
-      const dateKey = todayKey();
-      try {
-        await db.ref("nights/" + dateKey + "/votes").remove();
-        alert("Votes du jour supprimés !");
-        location.reload();
-      } catch (err) {
-        console.error(err);
-        alert("Erreur lors de la suppression des votes.");
-      }
-    });
-  </script>
-</body>
-</html>
+    try{firebase.initializeApp(firebaseConfig);}catch(e){}
+    const d
