@@ -1,87 +1,87 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Annonce — Révélation auto (fond noir + vidéo masque)</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Annonce du Vote</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
   <style>
-    :root{ --bg:#000; --ink:#f3efe6; --mut:#c9c2b5; --gold:#e9d28f; }
-    html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:'Cormorant Garamond',serif}
-    *{box-sizing:border-box}
-    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:5vh 4vw}
-    .panel{width:min(1000px,94vw);background:rgba(10,10,10,.82);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:22px 26px;box-shadow:0 14px 50px rgba(0,0,0,.6)}
-    .title{font-family:'Cinzel',serif;font-weight:900;letter-spacing:.04em;font-size:clamp(24px,4.2vw,40px);margin:0 0 14px;color:var(--gold);text-align:center}
-    .lead{margin:0 auto 12px;opacity:.9;text-align:center;max-width:62ch}
-    .stage{display:flex;gap:28px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:16px}
-    .stage .col{flex:1 1 360px;min-width:300px}
-    .mask-video{margin-top:10px;width:320px;height:auto;opacity:.95;pointer-events:none}
-    .countdown{font-family:'Cinzel',serif;font-size:clamp(64px,12.4vw,200px);line-height:.9;font-weight:900;letter-spacing:6px;margin:12px 0 16px;text-shadow:0 0 50px rgba(233,210,143,.35);display:none}
-    .name{font-family:'Cinzel',serif;display:none;font-size:clamp(32px,7vw,92px);line-height:.95;font-weight:900;text-transform:uppercase;color:var(--gold);letter-spacing:.04em;text-shadow:0 0 55px rgba(233,210,143,.45)}
-    .note{color:var(--mut);margin-top:8px;font-size:clamp(14px,2vw,18px)}
-    .bar{display:flex;gap:8px;justify-content:center;margin:12px 0 6px}
-    .btn-ghost{appearance:none;background:transparent;border:1px solid rgba(233,210,143,.3);color:var(--ink);padding:8px 12px;border-radius:999px;cursor:pointer}
-    .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;color:#fff;text-align:center;background:radial-gradient(180% 140% at 50% -10%, rgba(233,210,143,.08), rgba(0,0,0,.92))}
-    .overlay .inner{position:relative;width:100%;max-width:1100px;padding:24px}
-    .prologue-wrap{position:relative;min-height:22vh;margin:0 0 10px}
-    .slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .9s ease}
-    .slide.active{opacity:1}
-    .prol1{font-family:'Cinzel',serif;font-weight:900;letter-spacing:.04em;font-size:clamp(22px,3.8vw,42px);color:var(--gold);text-shadow:0 0 18px rgba(233,210,143,.28)}
-    .prol2,.prol3{font-size:clamp(18px,2.8vw,28px);color:var(--ink)}
-    #status{text-align:center;margin:6px 0 0;color:var(--mut)}
-    #clearVotesBtn{margin:36px auto 6px;display:block;appearance:none;background:transparent;border:1px solid rgba(233,210,143,.3);color:var(--ink);padding:8px 14px;border-radius:10px;cursor:pointer;font-family:'Cinzel',serif;transition:.2s}
-    #clearVotesBtn:hover{background:rgba(233,210,143,.08)}
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+      color: white;
+      font-family: 'Cinzel', serif;
+      text-align: center;
+    }
+
+    video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+      opacity: 0.35;
+    }
+
+    h1 {
+      margin-top: 60px;
+      font-size: 3em;
+      color: gold;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    }
+
+    #result {
+      font-size: 2em;
+      margin-top: 40px;
+      color: white;
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+    }
+
+    #countdown {
+      font-size: 5em;
+      margin-top: 40px;
+      color: gold;
+      text-shadow: 0 0 40px rgba(255, 215, 0, 0.8);
+    }
+
+    #clearVotesBtn {
+      margin-top: 80px;
+      background: transparent;
+      color: white;
+      border: 1px solid rgba(255,255,255,0.4);
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    #clearVotesBtn:hover {
+      background: rgba(255,255,255,0.1);
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="panel">
-      <h1 class="title">Révélation</h1>
-      <p class="lead">Préparez-vous. Dans un instant, la victime de la nuit va être révélée.</p>
+  <video autoplay muted loop playsinline>
+    <source src="videos/role-bg.mp4" type="video/mp4" />
+  </video>
 
-      <div class="stage">
-        <div class="col">
-          <video class="mask-video" autoplay muted loop playsinline>
-            <source src="videos/role-bg.mp4" type="video/mp4">
-          </video>
-        </div>
-        <div class="col">
-          <div id="cd" class="countdown">5</div>
-          <div id="name" class="name">—</div>
-          <p class="note">Touchez l’écran pour fermer la révélation.</p>
-        </div>
-      </div>
+  <h1>Révélation</h1>
+  <div id="countdown">5</div>
+  <div id="result">Calcul en cours...</div>
 
-      <div class="bar" aria-hidden="true">
-        <button id="replay" class="btn-ghost">Rejouer</button>
-        <button id="reload" class="btn-ghost">Rafraîchir</button>
-      </div>
-      <div id="status">Initialisation…</div>
-
-      <!-- Bouton pour vider les votes -->
-      <button id="clearVotesBtn">Vider les votes du jour</button>
-    </div>
-  </div>
-
-  <!-- Overlay avec prologue -->
-  <div id="overlay" class="overlay" aria-live="polite">
-    <div class="inner">
-      <div class="prologue-wrap" id="prologue">
-        <div class="slide" id="s1"><div class="prol1">Les Traîtres ont encore frappé cette nuit…</div></div>
-        <div class="slide" id="s2"><div class="prol2">La maison murmure des secrets.</div></div>
-        <div class="slide" id="s3"><div class="prol3">Dans un instant, vous saurez qui a été éliminé.</div></div>
-      </div>
-      <div id="cd2" class="countdown">5</div>
-      <div id="name2" class="name">—</div>
-      <p class="note">Touchez l’écran pour fermer la révélation.</p>
-    </div>
-  </div>
+  <!-- Bouton pour vider les votes -->
+  <button id="clearVotesBtn">Vider les votes du jour</button>
 
   <script>
-    // Firebase config
-    const firebaseConfig = {
+    // --- CONFIG FIREBASE ---
+    var firebaseConfig = {
       apiKey: "AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
       authDomain: "ans-de-franck.firebaseapp.com",
       databaseURL: "https://ans-de-franck-default-rtdb.europe-west1.firebasedatabase.app",
@@ -90,116 +90,102 @@
       messagingSenderId: "1063437612417",
       appId: "1:1063437612417:web:812e847dfcd990c6922480"
     };
-    let db=null;
-    try { firebase.initializeApp(firebaseConfig); } catch(e){}
-    try { db = firebase.database(); } catch(e){ db=null; }
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    const $ = (s)=>document.querySelector(s);
-    const statusEl = $('#status');
-    const cd = $('#cd');
-    const nm = $('#name');
+    const resultDiv = document.getElementById("result");
+    const countdownDiv = document.getElementById("countdown");
 
-    function todayISO(){
-      const dt = new Date();
-      return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+    function todayKey() {
+      const d = new Date();
+      return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
     }
-    function normalizeName(s){
-      s = String(s||'').trim();
-      if(!s) return '';
-      return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
-    }
-    function groupCounts(votes){
-      const map = new Map();
-      votes.forEach(v=>{
-        const name = normalizeName(v && v.victim);
-        if(!name) return;
-        map.set(name, (map.get(name)||0)+1);
-      });
-      return Array.from(map.entries()).sort((a,b)=> b[1]-a[1]);
-    }
-    function currentPeriodKey(){
+
+    function currentPeriodKey() {
       const now = new Date();
-      const halfDay = Math.floor(now.getHours()/12);
-      return todayISO() + '-P' + halfDay;
+      const halfDay = Math.floor(now.getHours() / 12);
+      return todayKey() + "-P" + halfDay;
     }
-    function seededRand(seedStr){
+
+    function seededRand(seedStr) {
       let seed = 0;
-      for (let i=0;i<seedStr.length;i++) seed = (seed*31 + seedStr.charCodeAt(i)) & 0xffffffff;
-      seed ^= (seed<<13); seed ^= (seed>>>17); seed ^= (seed<<5);
-      return (Math.abs(seed)%100000)/100000;
-    }
-
-    async function fetchTopName(){
-      const date = todayISO();
-      statusEl.textContent = 'Chargement des votes ('+date+')…';
-      if(!db){ statusEl.textContent = 'Erreur Firebase.'; return ''; }
-      const snap = await db.ref('nights/'+date+'/votes').get();
-      if(!snap.exists()){ statusEl.textContent = 'Aucun vote enregistré.'; return ''; }
-      const arr = Object.values(snap.val()||{});
-      const counts = groupCounts(arr);
-      if(!counts.length){ statusEl.textContent = 'Aucun vote pour l’instant.'; return ''; }
-
-      const topScore = counts[0][1];
-      const ties = counts.filter(([n,s])=>s===topScore).map(([n])=>n);
-      if(ties.length===1){ statusEl.textContent=''; return ties[0]; }
-      statusEl.textContent=`Égalité entre ${ties.join(' et ')} (${topScore} voix chacun). Tirage au sort…`;
-      const seed=currentPeriodKey();
-      const idx=Math.floor(seededRand(seed)*ties.length);
-      return ties[idx];
-    }
-
-    const slides=['#s1','#s2','#s3'].map(sel=>$(sel));
-    function runPrologue(next){
-      let i=0;
-      function show(idx){
-        slides.forEach((el,j)=>el.classList.toggle('active', j===idx));
-        if(idx<slides.length-1){ setTimeout(()=>show(idx+1),2500); }
-        else{ setTimeout(next,800); }
+      for (let i = 0; i < seedStr.length; i++) {
+        seed = (seed * 31 + seedStr.charCodeAt(i)) & 0xffffffff;
       }
-      show(0);
+      seed ^= (seed << 13);
+      seed ^= (seed >>> 17);
+      seed ^= (seed << 5);
+      return (Math.abs(seed) % 100000) / 100000;
     }
 
-    function playCountdown(name){
-      cd.style.display='block'; nm.style.display='none';
-      let n=5; cd.textContent=n;
-      const t=setInterval(()=>{
-        n--;
-        if(n>0) cd.textContent=n;
-        else{ clearInterval(t); cd.style.display='none'; nm.textContent=name||'—'; nm.style.display='block'; $('#overlay').style.display='none'; }
-      },900);
-    }
-
-    async function startAuto(){
-      const top=await fetchTopName();
-      $('#overlay').style.display='flex';
-      const name2=$('#name2'), cd2=$('#cd2');
-      function playOverlay(){
-        cd2.style.display='block'; name2.style.display='none';
-        let n=5; cd2.textContent=n;
-        const t=setInterval(()=>{
-          n--; if(n>0) cd2.textContent=n;
-          else{ clearInterval(t); cd2.style.display='none'; name2.textContent=top||'—'; name2.style.display='block'; }
-        },900);
+    function computeResult(votesObj) {
+      const count = {};
+      for (const id in votesObj) {
+        let v = (votesObj[id].victim || "").trim();
+        if (!v) continue;
+        v = v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
+        count[v] = (count[v] || 0) + 1;
       }
-      runPrologue(playOverlay);
-      playCountdown(top);
+
+      const names = Object.keys(count);
+      if (names.length === 0) {
+        resultDiv.textContent = "Aucun vote enregistré pour le moment.";
+        return;
+      }
+
+      let max = 0;
+      for (const n of names) if (count[n] > max) max = count[n];
+      const ties = names.filter(n => count[n] === max);
+
+      let eliminated;
+      if (ties.length === 1) {
+        eliminated = ties[0];
+        resultDiv.textContent = `${eliminated} a été éliminé(e). (${count[eliminated]} voix)`;
+      } else {
+        const periodSeed = currentPeriodKey();
+        const r = seededRand(periodSeed);
+        const idx = Math.floor(r * ties.length);
+        eliminated = ties[idx];
+        resultDiv.innerHTML =
+          `Égalité entre ${ties.join(" et ")} (${max} voix chacun).<br>` +
+          `Un tirage au sort a désigné <span style="color:gold">${eliminated}</span> comme le joueur éliminé(e).`;
+      }
+
+      startCountdown(eliminated);
     }
 
-    document.addEventListener('DOMContentLoaded', startAuto);
-    $('#overlay').addEventListener('click', ()=>$('#overlay').style.display='none');
-    $('#replay').addEventListener('click', startAuto);
-    $('#reload').addEventListener('click', ()=>location.reload());
+    function startCountdown(name) {
+      let count = 5;
+      countdownDiv.textContent = count;
+      const timer = setInterval(() => {
+        count--;
+        countdownDiv.textContent = count;
+        if (count === 0) {
+          clearInterval(timer);
+          countdownDiv.style.display = "none";
+          resultDiv.innerHTML = `<span style="color:gold;font-size:2em;">${name}</span> a été éliminé(e).`;
+        }
+      }, 1000);
+    }
 
-    // --- Bouton Vider les votes ---
-    const clearBtn = document.getElementById('clearVotesBtn');
-    clearBtn.addEventListener('click', async ()=>{
-      if(!confirm("Supprimer tous les votes du jour ?")) return;
-      const dateKey = todayISO();
-      try{
-        await db.ref('nights/'+dateKey+'/votes').remove();
+    const ref = db.ref("nights/" + todayKey() + "/votes");
+    ref.on("value", snapshot => {
+      const data = snapshot.val();
+      if (data) computeResult(data);
+      else resultDiv.textContent = "Aucun vote enregistré.";
+    });
+
+    // --- BOUTON VIDER LES VOTES ---
+    document.getElementById("clearVotesBtn").addEventListener("click", async () => {
+      if (!confirm("Supprimer tous les votes du jour ?")) return;
+      const dateKey = todayKey();
+      try {
+        await db.ref("nights/" + dateKey + "/votes").remove();
         alert("Votes du jour supprimés !");
         location.reload();
-      }catch(err){
+      } catch (err) {
         console.error(err);
         alert("Erreur lors de la suppression des votes.");
       }
