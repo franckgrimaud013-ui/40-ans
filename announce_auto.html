@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Annonce — Révélation auto</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Firebase compat SDKs (global "firebase") -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <style>
@@ -12,39 +13,48 @@
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:'Cormorant Garamond',serif;overflow:hidden}
 
+    /* Vidéo de masque derrière */
     .video-wrap{position:fixed;inset:0;z-index:0;display:flex;justify-content:center;align-items:flex-start;pointer-events:none;background:#000}
     .mask-video{margin-top:60px;width:320px;height:auto;opacity:.95;pointer-events:none}
 
-    .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;color:#fff;text-align:center}
+    /* Overlay de révélation */
+    .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;color:#fff;text-align:center;background:transparent}
     .overlay .inner{position:relative;width:100%;max-width:1100px;padding:24px}
 
+    /* Slides du prologue */
     .prologue-wrap{position:relative;min-height:22vh;margin:0 0 10px}
     .slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .9s ease}
     .slide.active{opacity:1}
     .prol1{font-family:'Cinzel',serif;font-weight:900;letter-spacing:.04em;font-size:clamp(22px,3.8vw,42px);color:var(--gold);text-shadow:0 0 18px rgba(233,210,143,.28)}
     .prol2,.prol3{font-size:clamp(18px,2.8vw,28px);color:var(--ink)}
 
+    /* Compte à rebours et nom (rien avant le reveal) */
     .countdown{font-family:'Cinzel',serif;font-size:clamp(64px,14vw,200px);line-height:.9;font-weight:900;letter-spacing:6px;margin:12px 0 16px;text-shadow:0 0 50px rgba(233,210,143,.35);display:none}
     .name{font-family:'Cinzel',serif;display:none;font-size:clamp(52px,12vw,160px);line-height:.95;font-weight:900;text-transform:uppercase;color:var(--gold);letter-spacing:.04em;text-shadow:0 0 55px rgba(233,210,143,.45)}
 
     .note{color:var(--mut);margin-top:8px;font-size:clamp(14px,2vw,18px)}
 
-    .bar{position:fixed;left:12px;bottom:12px;z-index:10000;display:flex;gap:8px;opacity:.25}
+    /* Boutons utils discrets */
+    .bar{position:fixed;left:12px;bottom:12px;z-index:3;display:flex;gap:8px;opacity:.25}
     .btn-ghost{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:10px 14px;font-weight:900;cursor:pointer}
-    #status{position:fixed;top:10px;right:10px;font-size:13px;color:var(--mut);z-index:10001}
 
-    #clearVotesBtn{position:fixed;bottom:20px;right:20px;background:transparent;border:1px solid rgba(233,210,143,.3);
-      color:var(--ink);padding:8px 14px;border-radius:10px;cursor:pointer;font-family:'Cinzel',serif;font-size:14px;opacity:.5;transition:.3s}
+    /* Statut minuscule (debug discret) */
+    #status{position:fixed;top:10px;right:10px;font-size:12px;color:var(--mut);z-index:3}
+
+    /* Bouton “vider votes” discret */
+    #clearVotesBtn{position:fixed;bottom:20px;right:20px;background:transparent;border:1px solid rgba(233,210,143,.3);color:var(--ink);padding:8px 14px;border-radius:10px;cursor:pointer;font-family:'Cinzel',serif;font-size:14px;opacity:.5;transition:.3s;z-index:3}
     #clearVotesBtn:hover{opacity:1;background:rgba(233,210,143,.08)}
   </style>
 </head>
 <body>
+  <!-- Fond noir + vidéo du masque -->
   <div class="video-wrap" aria-hidden="true">
     <video class="mask-video" autoplay muted loop playsinline>
       <source src="videos/role-bg.mp4" type="video/mp4">
     </video>
   </div>
 
+  <!-- Overlay de révélation -->
   <div id="overlay" class="overlay" aria-live="polite">
     <div class="inner">
       <div class="prologue-wrap" id="prologue">
@@ -53,11 +63,12 @@
         <div class="slide" id="s3"><div class="prol3">Dans un instant, vous saurez qui a été éliminé.</div></div>
       </div>
       <div id="cd" class="countdown">5</div>
-      <div id="name" class="name">—</div>
+      <div id="name" class="name" aria-live="polite">—</div>
       <p class="note">Touchez l’écran pour fermer la révélation.</p>
     </div>
   </div>
 
+  <!-- Outils discrets -->
   <div class="bar" aria-hidden="true">
     <button id="replay" class="btn-ghost">Rejouer</button>
     <button id="reload" class="btn-ghost">Rafraîchir</button>
@@ -68,7 +79,7 @@
   <button id="clearVotesBtn">Vider les votes du jour</button>
 
   <script>
-    // --- Firebase ---
+    // Firebase
     const firebaseConfig={
       apiKey:"AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
       authDomain:"ans-de-franck.firebaseapp.com",
@@ -78,5 +89,131 @@
       messagingSenderId:"1063437612417",
       appId:"1:1063437612417:web:812e847dfcd990c6922480"
     };
-    try{firebase.initializeApp(firebaseConfig);}catch(e){}
-    const d
+    let db=null;
+    try{ if(!firebase.apps.length) firebase.initializeApp(firebaseConfig); db=firebase.database(); }
+    catch(e){ console.error(e); }
+
+    // Helpers DOM
+    const $=s=>document.querySelector(s);
+    const overlay=$('#overlay'), cd=$('#cd'), nm=$('#name'), statusEl=$('#status');
+    const slides=['#s1','#s2','#s3'].map(sel=>$(sel));
+
+    // Utilitaires
+    function todayISO(){
+      const d=new Date();
+      return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    }
+    function normalizeName(s){
+      s=String(s||'').trim();
+      if(!s) return '';
+      return s.charAt(0).toUpperCase()+s.slice(1).toLowerCase();
+    }
+    function groupCounts(arr){
+      const map=new Map();
+      arr.forEach(v=>{
+        const name=normalizeName(v && v.victim);
+        if(!name) return;
+        map.set(name,(map.get(name)||0)+1);
+      });
+      return Array.from(map.entries()).sort((a,b)=>b[1]-a[1]);
+    }
+    function currentPeriodKey(){
+      const now=new Date();const half=Math.floor(now.getHours()/12);
+      return todayISO()+'-P'+half;
+    }
+    function seededRand(seedStr){
+      let s=0; for(let i=0;i<seedStr.length;i++) s=(s*31+seedStr.charCodeAt(i))&0xffffffff;
+      s^=(s<<13); s^=(s>>>17); s^=(s<<5);
+      return (Math.abs(s)%100000)/100000;
+    }
+
+    async function fetchTopName(){
+      // Aucun affichage de nom ou de scores ici → on ne montre rien avant le reveal
+      if(!db){ statusEl.textContent='Erreur Firebase'; return ''; }
+      statusEl.textContent='Chargement des votes…';
+      try{
+        const snap=await db.ref('nights/'+todayISO()+'/votes').get();
+        if(!snap.exists()){ statusEl.textContent='Aucun vote pour l’instant'; return ''; }
+        const arr=Object.values(snap.val()||{});
+        const counts=groupCounts(arr);
+        statusEl.textContent='';
+        if(!counts.length) return '';
+        const topScore=counts[0][1];
+        const ties=counts.filter(([n,c])=>c===topScore).map(([n])=>n);
+        if(ties.length===1) return ties[0];
+        const idx=Math.floor(seededRand(currentPeriodKey())*ties.length);
+        return ties[idx];
+      }catch(err){
+        console.error(err);
+        statusEl.textContent='Erreur de lecture des votes';
+        return '';
+      }
+    }
+
+    function runPrologue(next){
+      // Enchaîne 3 slides puis déclenche le décompte
+      function show(i){ slides.forEach((el,j)=>el.classList.toggle('active', j===i)); }
+      show(0);
+      setTimeout(()=>show(1), 2200);
+      setTimeout(()=>show(2), 4400);
+      setTimeout(()=>{ slides[2].classList.remove('active'); next(); }, 6600);
+    }
+
+    function playCountdown(name){
+      // Cache tout, ne montre le prénom qu'après le décompte
+      cd.style.display='block';
+      nm.style.display='none';
+      let n=5; cd.textContent=n;
+      const t=setInterval(()=>{
+        n--;
+        if(n>0){ cd.textContent=n; }
+        else{
+          clearInterval(t);
+          cd.style.display='none';
+          nm.textContent = name || '—';
+          nm.style.display='block';
+          overlay.style.background='transparent';
+        }
+      }, 1000);
+    }
+
+    async function startAuto(){
+      try{
+        // On récupère le nom en parallèle du prologue pour éviter les “blancs”
+        let topNamePromise = fetchTopName();
+        runPrologue(async ()=>{
+          const name = await topNamePromise.catch(()=> '');
+          playCountdown(name);
+        });
+        // L’overlay est visible dès le début
+        overlay.style.display='flex';
+      }catch(e){
+        console.error(e);
+        // En cas de problème, on lance quand même un reveal “—” pour ne pas bloquer
+        runPrologue(()=> playCountdown(''));
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', startAuto);
+
+    // Interactions
+    overlay.addEventListener('click', ()=>{ overlay.style.display='none'; });
+    $('#replay').addEventListener('click', startAuto);
+    $('#reload').addEventListener('click', ()=>location.reload());
+
+    // Vider les votes du jour
+    const clearBtn=$('#clearVotesBtn');
+    clearBtn.addEventListener('click', async ()=>{
+      if(!confirm('Supprimer tous les votes du jour ?')) return;
+      try{
+        await db.ref('nights/'+todayISO()+'/votes').remove();
+        alert('Votes du jour supprimés !');
+        location.reload();
+      }catch(e){
+        console.error(e);
+        alert('Erreur lors de la suppression des votes.');
+      }
+    });
+  </script>
+</body>
+</html>
