@@ -1,119 +1,139 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vote des Traîtres</title>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-  <style>
-    body {
-      background: #111;
-      color: #fff;
-      font-family: 'Cinzel', serif;
-      text-align: center;
-      margin: 0;
-      padding: 48px 20px;
-    }
-    h1 { margin-bottom: 16px; }
-    p { opacity: .9; }
-    select, button {
-      font-size: 18px;
-      padding: 10px 12px;
-      margin: 10px;
-      border-radius: 10px;
-      border: none;
-    }
-    select { min-width: 260px; }
-    button {
-      background: #c0392b;
-      color: #fff;
-      cursor: pointer;
-      transition: transform .1s ease, opacity .2s ease, background .2s ease;
-    }
-    button:hover { background: #e74c3c; }
-    button:active { transform: translateY(1px); }
-    #message {
-      margin-top: 18px;
-      font-size: 18px;
-      color: limegreen;
-      opacity: 0;
-      transition: opacity .4s ease;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vote — Les Traîtres</title>
+
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="dns-prefetch" href="https://www.gstatic.com">
+<link rel="dns-prefetch" href="https://www.googleapis.com">
+
+<style>
+  :root{--gold:rgba(255,215,0,.8);}
+  html,body{margin:0;height:100%;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial;color-scheme:dark;overscroll-behavior:none}
+  .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:8vh 4vw}
+  .panel{width:min(92vw,720px);background:rgba(12,16,20,.88);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:22px 22px 18px;box-shadow:0 10px 40px rgba(0,0,0,.45)}
+  h1{margin:.2em 0 .6em;font-size:clamp(22px,4.5vw,36px)}
+  p, label{font-size:clamp(15px,2.6vw,18px)}
+  .field{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 14px}
+  select{flex:1;min-width:220px;background:#0b0f14;border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:12px}
+  .btn{appearance:none;border:1px solid var(--gold);
+        background:radial-gradient(120% 120% at 50% -10%, rgba(255,215,0,.18), rgba(255,215,0,.06));
+        color:#fff;padding:12px 22px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase;
+        font-weight:700;box-shadow:0 0 20px rgba(255,215,0,.08) inset, 0 10px 20px rgba(0,0,0,.28);cursor:pointer}
+  .row{display:flex;gap:10px;align-items:center}
+  .hint{opacity:.65;font-size:.95em;margin-top:8px}
+  .mask-video{display:block;margin:18px auto 0;width:220px;opacity:.9;pointer-events:none;filter:drop-shadow(0 10px 30px rgba(0,0,0,.6))}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0c1117;border:1px solid rgba(255,255,255,.18);
+         padding:10px 14px;border-radius:12px;display:none;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+</style>
 </head>
 <body>
-  <h1>Vote des Traîtres</h1>
-  <p>Sélectionne le joueur à éliminer :</p>
+<div class="wrap">
+  <div class="panel">
+    <h1>Vote des Traîtres</h1>
+    <p>Indiquez le nom du joueur à éliminer. Un seul vote par personne.</p>
 
-  <select id="victimSelect">
-    <option value="">-- Choisir un joueur --</option>
-    <option value="Aurélie">Aurélie</option>
-    <option value="Arnaud">Arnaud</option>
-    <option value="Sabrina">Sabrina</option>
-    <option value="Thierry">Thierry</option>
-    <option value="Sandrine">Sandrine</option>
-    <option value="Anthony">Anthony</option>
-    <option value="Julia">Julia</option>
-    <option value="Sébastien">Sébastien</option>
-    <option value="Coralie">Coralie</option>
-    <option value="Bilou">Bilou</option>
-    <option value="Stéphane">Stéphane</option>
-    <option value="Franck">Franck</option>
-  </select>
-  <br />
-  <button id="voteBtn">Envoyer le vote</button>
-  <div id="message">Votre vote a bien été enregistré.</div>
+    <form id="voteForm">
+      <div class="field">
+        <label for="victim" style="min-width:110px">Joueur</label>
+        <select id="victim" name="victim" required>
+          <option value="">— Choisir un joueur —</option>
+          <option>Aurélie</option><option>Arnaud</option><option>Sabrina</option>
+          <option>Thierry</option><option>Sandrine</option><option>Anthony</option>
+          <option>Julia</option><option>Sébastien</option><option>Coralie</option>
+          <option>Bilou</option><option>Stéphane</option><option>Franck</option>
+        </select>
+      </div>
 
-  <script>
-    // Config Firebase
-    var firebaseConfig = {
-      apiKey: "AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
-      authDomain: "ans-de-franck.firebaseapp.com",
-      databaseURL: "https://ans-de-franck-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "ans-de-franck",
-      storageBucket: "ans-de-franck.firebasestorage.app",
-      messagingSenderId: "1063437612417",
-      appId: "1:1063437612417:web:812e847dfcd990c6922480"
-    };
-    try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } catch(e) {}
+      <div class="row">
+        <button id="voteNow" class="btn" type="submit">Voter maintenant</button>
+      </div>
+      <div class="hint">Merci de ne pas recharger la page après avoir voté.</div>
+    </form>
 
-    const db = firebase.database();
+    <video class="mask-video" autoplay muted loop playsinline>
+      <source src="videos/role-bg.mp4" type="video/mp4">
+    </video>
+  </div>
+</div>
 
-    function todayKey() {
-      const d = new Date();
-      return d.getFullYear() + '-' +
-        String(d.getMonth() + 1).padStart(2, '0') + '-' +
-        String(d.getDate()).padStart(2, '0');
+<div id="toast">Message</div>
+
+<!-- Firebase v8 compat -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script>
+(function(){
+  // UI helpers
+  const toast = document.getElementById('toast');
+  function showToast(msg, ms){
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    clearTimeout(toast.__to);
+    toast.__to = setTimeout(()=> toast.style.display='none', ms||2400);
+  }
+
+  const form = document.getElementById('voteForm');
+  const voteBtn = document.getElementById('voteNow');
+  const victimInput = document.getElementById('victim');
+
+  function todayKey(){
+    const d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+
+  // Firebase init (corrigé)
+  var firebaseConfig = {
+    apiKey: "AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
+    authDomain: "ans-de-franck.firebaseapp.com",
+    databaseURL: "https://ans-de-franck-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "ans-de-franck",
+    storageBucket: "ans-de-franck.firebasestorage.app",
+    messagingSenderId: "1063437612417",
+    appId: "1:1063437612417:web:812e847dfcd990c6922480"
+  };
+  try{ if(!firebase.apps.length) firebase.initializeApp(firebaseConfig); }catch(e){}
+
+  function getDb(){ try{ return firebase.database(); }catch(e){ return null; } }
+
+  async function recordVote(name){
+    const db = getDb();
+    if(!db){ showToast('Problème de connexion. Réessaie.', 2600); return; }
+    const ref = db.ref('nights/'+todayKey()+'/votes').push();
+    const payload = { victim: name, ts: Date.now(), ua: navigator.userAgent || '' };
+    try{
+      await ref.set(payload);
+      showToast('Vote enregistré ✓', 2200);
+      if (voteBtn) { voteBtn.disabled = true; voteBtn.textContent = 'Vote enregistré'; }
+      if (victimInput) victimInput.disabled = true;
+    }catch(err){
+      console.error('Firebase write error:', err);
+      showToast('Erreur: vote non enregistré.', 2600);
     }
+  }
 
-    document.getElementById("voteBtn").addEventListener("click", () => {
-      // normalise le nom choisi (évite les différences de casse)
-      let victim = document.getElementById("victimSelect").value.trim();
-      if (!victim) { alert("Choisis une personne avant de voter !"); return; }
-      victim = victim.charAt(0).toUpperCase() + victim.slice(1).toLowerCase();
+  function normalizeName(raw){
+    const s = String(raw||'').trim();
+    if(!s) return '';
+    return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+  }
 
-      const msg = document.getElementById("message");
-      msg.style.opacity = 0;
+  function onSubmit(e){
+    e.preventDefault();
+    const name = normalizeName(victimInput && victimInput.value);
+    if(!name){ showToast('Choisis un joueur avant de voter.', 2000); return; }
+    recordVote(name);
+  }
 
-      const ref = db.ref("nights/" + todayKey() + "/votes").push();
-      ref.set({
-        victim: victim,
-        ts: Date.now(),
-        ua: navigator.userAgent || ""
-      })
-      .then(() => {
-        msg.textContent = "Votre vote a bien été enregistré.";
-        msg.style.color = "limegreen";
-        msg.style.opacity = 1;
-      })
-      .catch((error) => {
-        console.error(error);
-        msg.textContent = "Erreur : le vote n’a pas pu être enregistré.";
-        msg.style.color = "red";
-        msg.style.opacity = 1;
-      });
-    });
-  </script>
+  form && form.addEventListener('submit', onSubmit);
+})();
+</script>
 </body>
 </html>
