@@ -1,140 +1,119 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vote — Les Traîtres</title>
-
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
-<link rel="dns-prefetch" href="https://www.gstatic.com">
-<link rel="dns-prefetch" href="https://www.googleapis.com">
-
-<style>
-  :root{--gold:rgba(255,215,0,.8);}
-  html,body{margin:0;height:100%;background:#000;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial;color-scheme:dark;overscroll-behavior:none}
-  .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:8vh 4vw}
-  .panel{width:min(92vw,720px);background:rgba(12,16,20,.88);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:22px 22px 18px;
-          box-shadow:0 10px 40px rgba(0,0,0,.45);}
-  h1{margin:.2em 0 .6em;font-size:clamp(22px,4.5vw,36px)}
-  p, label{font-size:clamp(15px,2.6vw,18px)}
-  .field{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 14px}
-  input[type="text"], select{flex:1;min-width:220px;background:#0a0f14;border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#fff;padding:12px}
-  .btn{appearance:none;border:1px solid var(--gold);
-        background:radial-gradient(120% 120% at 50% -10%, rgba(255,215,0,.18), rgba(255,215,0,.06));
-        color:#fff;padding:12px 22px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase;
-        font-weight:700;box-shadow:0 0 20px rgba(255,215,0,.22);cursor:pointer;transition:transform .15s ease, box-shadow .2s ease}
-  .btn:hover{transform:translateY(-1px);box-shadow:0 0 28px rgba(255,215,0,.35)}
-  .row{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:10px}
-  #toast{position:fixed;left:50%;bottom:8vh;transform:translateX(-50%);background:rgba(20,24,28,.94);
-          padding:12px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.12);color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.4);
-          font-weight:600;letter-spacing:.02em;z-index:999;display:none;max-width:85vw;text-align:center}
-  .hint{opacity:.75;font-size:.9em;margin-top:.4em}
-
-/* --- Fond noir + vidéo masque superposée (derrière le contenu) --- */
-.video-wrap{position:fixed; inset:0; z-index:0; display:flex; justify-content:center; align-items:flex-start; background:#000; pointer-events:none;}
-.mask-video{margin-top:60px; width:320px; height:auto; opacity:0.95; pointer-events:none;}
-/* Assurer que le contenu principal passe au-dessus de la vidéo */
-.wrap, #toast { position:relative; z-index:1; }
-
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vote des Traîtres</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: 'Cinzel', serif;
+      text-align: center;
+      margin: 0;
+      padding: 48px 20px;
+    }
+    h1 { margin-bottom: 16px; }
+    p { opacity: .9; }
+    select, button {
+      font-size: 18px;
+      padding: 10px 12px;
+      margin: 10px;
+      border-radius: 10px;
+      border: none;
+    }
+    select { min-width: 260px; }
+    button {
+      background: #c0392b;
+      color: #fff;
+      cursor: pointer;
+      transition: transform .1s ease, opacity .2s ease, background .2s ease;
+    }
+    button:hover { background: #e74c3c; }
+    button:active { transform: translateY(1px); }
+    #message {
+      margin-top: 18px;
+      font-size: 18px;
+      color: limegreen;
+      opacity: 0;
+      transition: opacity .4s ease;
+    }
+  </style>
 </head>
 <body>
-  <!-- Fond noir + vidéo du masque -->
-  <div class="video-wrap" aria-hidden="true">
-    <video class="mask-video" autoplay muted loop playsinline>
-      <source src="videos/role-bg.mp4" type="video/mp4">
-    </video>
-  </div>
+  <h1>Vote des Traîtres</h1>
+  <p>Sélectionne le joueur à éliminer :</p>
 
-<div class="wrap">
-  <div class="panel">
-    <h1>Bienvenue mon traitre, vous allez devoir voter...</h1>
-    <p>Choisissez le joueur que vous souhaitez éliminer. Votre vote sera enregistré anonymement.</p>
+  <select id="victimSelect">
+    <option value="">-- Choisir un joueur --</option>
+    <option value="Aurélie">Aurélie</option>
+    <option value="Arnaud">Arnaud</option>
+    <option value="Sabrina">Sabrina</option>
+    <option value="Thierry">Thierry</option>
+    <option value="Sandrine">Sandrine</option>
+    <option value="Anthony">Anthony</option>
+    <option value="Julia">Julia</option>
+    <option value="Sébastien">Sébastien</option>
+    <option value="Coralie">Coralie</option>
+    <option value="Bilou">Bilou</option>
+    <option value="Stéphane">Stéphane</option>
+    <option value="Franck">Franck</option>
+  </select>
+  <br />
+  <button id="voteBtn">Envoyer le vote</button>
+  <div id="message">Votre vote a bien été enregistré.</div>
 
-    <form id="voteForm">
-      <div class="field">
-        <label for="victim" style="min-width:110px">Joueur</label>
-        <input id="victim" name="victim" type="text" placeholder="Nom du joueur" autocomplete="off" required>
-      </div>
+  <script>
+    // Config Firebase
+    var firebaseConfig = {
+      apiKey: "AIzaSyAu4zFpNXwSTSVsw4PZSZ4zKnIGejKRxFo",
+      authDomain: "ans-de-franck.firebaseapp.com",
+      databaseURL: "https://ans-de-franck-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "ans-de-franck",
+      storageBucket: "ans-de-franck.firebasestorage.app",
+      messagingSenderId: "1063437612417",
+      appId: "1:1063437612417:web:812e847dfcd990c6922480"
+    };
+    try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } catch(e) {}
 
-      <!-- Si tu préfères un SELECT fixe, remplace l'input par un <select id='victim'>... -->
+    const db = firebase.database();
 
-      <div class="row">
-        <button id="voteNow" class="btn" type="submit">Voter maintenant</button>
-      </div>
-      <div class="hint">Un seul vote par personne. Merci de ne pas recharger la page après avoir voté.</div>
-    </form>
-  </div>
-</div>
-
-<div id="toast">Message</div>
-
-<!-- Firebase v8 (compat avec ton code existant) -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-<script>
-(function(){
-  // --- UI helpers ---
-  const toast = document.getElementById('toast');
-  function showToast(msg, ms){ toast.textContent = msg; toast.style.display='block'; clearTimeout(toast.__to); toast.__to=setTimeout(()=>toast.style.display='none', ms||2400); }
-
-  const form = document.getElementById('voteForm');
-  const voteBtn = document.getElementById('voteNow');
-  const victimInput = document.getElementById('victim');
-
-  function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-
-  // --- Firebase init ---
-  var firebaseConfig = {
-    apiKey: "FAKE-KEY-FOR-CLIENT-ONLY",
-    authDomain: "ans-de-franck.firebaseapp.com",
-    databaseURL: "https://ans-de-franck-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "ans-de-franck"
-  };
-  try{ if(!firebase.apps.length) firebase.initializeApp(firebaseConfig); }catch(e){ /* ignore double init */ }
-
-  function getDb(){ try{ return firebase.database(); }catch(e){ return null; } }
-
-  async function recordVote(name){ 
-    const db = getDb();
-    if(!db){ 
-      showToast('❌ Problème de connexion. Réessaie dans un instant.', 2600);
-      return;
+    function todayKey() {
+      const d = new Date();
+      return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
     }
-    const key = 'nights/' + todayKey() + '/votes';
-    const ref = db.ref(key).push();
-    const payload = { victim: name, ts: Date.now(), ua: navigator.userAgent || '' };
-    try {
-      await ref.set(payload);
-      showToast('✅ Votre vote a été enregistré.', 2400);
-      if (voteBtn) { voteBtn.disabled = true; voteBtn.textContent = 'Vote enregistré'; }
-      if (victimInput) victimInput.readOnly = true;
-    } catch(err) {
-      console.error('Firebase write error:', err);
-      if (String(err).match(/permission|denied|auth/i)) {
-        showToast('❌ Accès refusé par la base. Vérifie les règles Firebase.', 3200);
-      } else {
-        showToast('❌ Erreur réseau. Réessaie.', 2400);
-      }
-    }
-  }
 
-  function onSubmit(e){ 
-    e.preventDefault();
-    const name = (victimInput && victimInput.value || '').trim();
-    if(!name){ showToast('Indique un nom avant de voter.', 2000); victimInput && victimInput.focus(); return; }
-    recordVote(name);
-  }
+    document.getElementById("voteBtn").addEventListener("click", () => {
+      // normalise le nom choisi (évite les différences de casse)
+      let victim = document.getElementById("victimSelect").value.trim();
+      if (!victim) { alert("Choisis une personne avant de voter !"); return; }
+      victim = victim.charAt(0).toUpperCase() + victim.slice(1).toLowerCase();
 
-  form && form.addEventListener('submit', onSubmit);
-})();
-</script>
+      const msg = document.getElementById("message");
+      msg.style.opacity = 0;
+
+      const ref = db.ref("nights/" + todayKey() + "/votes").push();
+      ref.set({
+        victim: victim,
+        ts: Date.now(),
+        ua: navigator.userAgent || ""
+      })
+      .then(() => {
+        msg.textContent = "Votre vote a bien été enregistré.";
+        msg.style.color = "limegreen";
+        msg.style.opacity = 1;
+      })
+      .catch((error) => {
+        console.error(error);
+        msg.textContent = "Erreur : le vote n’a pas pu être enregistré.";
+        msg.style.color = "red";
+        msg.style.opacity = 1;
+      });
+    });
+  </script>
 </body>
 </html>
