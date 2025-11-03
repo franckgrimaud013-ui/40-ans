@@ -994,23 +994,29 @@ function revealRole(payload){
   var modal=document.getElementById('roleModal'); var inner=document.getElementById('roleInner'); var title=document.getElementById('roleTitle'); var sub=document.getElementById('roleSub'); var extra=document.getElementById('roleExtra');
   modal.style.display='flex';
   if(payload.role==='TRAITRE'){
-    inner.style.background='linear-gradient(180deg,#4a0b0b,#220606)';
-    title.innerHTML='<span class="mask-red">🎭</span> TRAÎTRE'; title.style.color='#fff';
-    var q=payload.codeQ||"Quelle heure est-il ?"; var a=payload.codeA||"11h23";
-    sub.innerHTML='Ton objectif est d’éliminer les Loyaux sans te faire démasquer.<br><br>' +
-      'Pour reconnaître tes alliés traîtres, tu disposes d’une <b>consigne secrète</b> :<br>' +
-      '<b>Question :</b> « '+q+' »<br>' +
-      '<b>Réponse :</b> « '+a+' » (même si c’est faux).<br><br>' +
-      '👉 Tu peux soit <b>poser toi-même la question</b> pour tester quelqu’un,<br>' +
-      '👉 soit <b>répondre avec le code</b> si on te la pose.';
-    extra.innerHTML='<ul style="margin:6px 0 8px 18px">\
-<li><b>Conseils (après repas)</b> : débats + vote → 1 joueur éliminé.</li>\
-<li><b>Nuits (ven & sam)</b> : les traîtres éliminent un Loyal.</li>\
-<li><b>Jeu</b> : reste crédible, évite les certitudes trop rapides.</li>\
-<li><b>Discrétion</b> : ne révèle jamais ton rôle ni ton écran.</li>\
-</ul>\
-<div style="margin-top:6px;color:#f2b3b3"><b>⚠️ Ne révèle jamais ton code directement, utilise-le subtilement.</b></div>';
-  } else {
+  inner.style.background='linear-gradient(180deg,#4a0b0b,#220606)';
+  title.innerHTML='<span class="mask-red">🎭</span> TRAÎTRE';
+  title.style.color='#fff';
+  var q = payload.codeQ || "Quelle heure est-il ?";
+  var a = payload.codeA || "11h23";
+
+  sub.innerHTML =
+    '<span style="display:block;margin-bottom:8px;color:#ffd87a;font-weight:bold;">Bienvenue dans l’ombre...</span>' +
+    'Ton objectif est de tromper les Loyaux sans éveiller les soupçons.<br><br>' +
+    'Pour reconnaître tes alliés, vous partagez un <b>code secret</b> :<br>' +
+    '<b>Question :</b> « ' + q + ' »<br>' +
+    '<b>Réponse :</b> « ' + a + ' » (même si c’est faux).<br><br>' +
+    '👉 Tu peux <b>poser la question</b> pour tester quelqu’un,<br>' +
+    '👉 ou <b>répondre avec le code</b> si on te la pose.<br><br>' +
+    '<span style="color:#ffd87a;">Astuce :</span> si tu veux éviter de revoir toutes les vidéos d’intro et aller directement à la page des votes,<br>' +
+    'un <b>petit bouton jaune discret</b> est visible en haut à gauche de l’écran.<br>' +
+    'Seuls <b>les Traîtres</b> (et <b>Franck</b> bien sûr !) connaissent son existence.<br>' +
+    'Il te permet de passer l’intro et d’accéder directement à la zone de jeu.';
+
+  extra.innerHTML =
+    '<ul style="margin:6px 0 8px 18px"><li><b>Conseils (après repas)</b> : débats + vote → 1 joueur éliminé.</li><li><b>Nuits (ven & sam)</b> : les Traîtres éliminent un Loyal.</li><li><b>Jeu</b> : reste crédible, évite les certitudes trop rapides.</li><li><b>Discrétion</b> : ne révèle jamais ton rôle ni ton écran.</li></ul><div style="margin-top:6px;color:#f2b3b3"><b>⚠️ Ne révèle jamais ton code directement — utilise-le subtilement.</b></div>';
+}
+} else {
     inner.style.background='linear-gradient(180deg,#0b1f4a,#061022)';
     title.innerHTML='<span class="mask-blue">🎭</span> LOYAL'; title.style.color='#fff';
     sub.innerHTML='Ton rôle : observer, discuter et <b>démasquer les traîtres</b>.';
@@ -2250,4 +2256,5 @@ function startMainStage(){
 
 </body>
 </html>
+
 
