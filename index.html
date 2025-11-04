@@ -867,54 +867,6 @@ Ces mots, il ne te les dit pas souvent… mais il les pense fort.</p></div>
 <source src="audio/fond-boucle-v2.mp3" type="audio/mpeg"/>
 </audio>
 <div id="audioUnlock">🔊 Le son est bloqué. <button id="unlockBtn">Activer le son</button></div>
-
-<!-- Personalization helpers (safe) -->
-<script>
-function normalizeName(s){
-  return (s||"").trim().toLocaleLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-}
-const KNOWN_NAMES = ["aurelie","arnaud","sabrina","thierry","sandrine","anthony","julia","sebastien","coralie","bilou","stephane","franck"];
-const NAME_TO_SECTION_ID = {
-  "franck": "page-franck",
-  "aurelie": "page-aurélie",
-  "arnaud": "page-arnaud",
-  "sabrina": "page-sabrina",
-  "thierry": "page-thierry",
-  "sandrine": "page-sandrine",
-  "anthony": "page-anthony",
-  "julia": "page-julia",
-  "sebastien": "page-sébastien",
-  "coralie": "page-coralie",
-  "bilou": "page-bilou",
-  "stephane": "page-stéphane"
-};
-function resolveName(raw){
-  const n = normalizeName(raw);
-  return KNOWN_NAMES.includes(n) ? n : null;
-}
-function showPersonalPage(rawName){
-  try{
-    var all = document.querySelectorAll('.personal-step');
-    all.forEach(function(el){ el.style.display = 'none'; el.removeAttribute('data-name'); });
-    const name = resolveName(rawName);
-    if(!name) return;
-    const id = NAME_TO_SECTION_ID[name];
-    if(!id) return;
-    const el = document.getElementById(id);
-    if(!el) return;
-    el.style.display = 'block';
-    el.setAttribute('data-name', name);
-  }catch(e){ console.error(e); }
-}
-function extractRawNameFromURLOrToken(payload){
-  try{
-    const qs = new URLSearchParams(location.search||'');
-    if(qs.has('n')){ return qs.get('n'); }
-    if(payload && (payload.name || payload.nom)){ return payload.name || payload.nom; }
-  }catch(e){}
-  return null;
-}
-</script>
 <!-- ==================== SCRIPTS (navigation, timings vidéo, rôle, etc.) ==================== --><script>
 function parseToken(){try{var p=new URLSearchParams(location.search||'');if(p.has('t')){return JSON.parse(decodeURIComponent(atob(p.get('t'))));}}catch(e){} return null;}
 var PAYLOAD=null;
@@ -1021,12 +973,7 @@ function onEnterApp(){
         btn.addEventListener('click', function(){ revealRole(PAYLOAD); });
       }
     }
-  
-      try {
-        var raw = (PAYLOAD && (PAYLOAD.name||PAYLOAD.nom)) ? (PAYLOAD.name||PAYLOAD.nom) : null;
-        showPersonalPage(raw);
-      } catch(e){}
-}catch(e){ console.error(e); }
+  }catch(e){ console.error(e); }
 }
 function onHashChange(){ if (location.hash==="#app"){ onEnterApp(); } }
 window.addEventListener('hashchange', onHashChange);
@@ -1035,10 +982,6 @@ window.addEventListener('hashchange', onHashChange);
 document.addEventListener('DOMContentLoaded', function(){
   try{
     PAYLOAD=parseToken();
-    try { if (!window.PAYLOAD) window.PAYLOAD = {}; window.PAYLOAD.name = null; } catch(e){}
-    var rawName = extractRawNameFromURLOrToken(PAYLOAD);
-    showPersonalPage(rawName);
-
     if (location.hash==="#app"){ onEnterApp(); }
 
 
@@ -1957,7 +1900,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 <!-- Overlay d’explication (iPhone Safari uniquement) -->
 <div id="iosGuide" aria-hidden="true">
   <div class="box" role="dialog" aria-modal="true" aria-label="Ajouter à l’écran d’accueil">
-    <header>Bienvenue, Franck à une surprise pour toi, mais pour profiter de l'experience en plein écran sur iPhone (ajoute d’abord à l’écran d’accueil)</header>
+    <header>Bienvenue, Franck à une surprise pour toi. mais d'abord, pour profiter de l'experience en plein écran sur iPhone (ajoute d’abord à l’écran d’accueil)</header>
     <div class="content">
       <ol>
         <li>
@@ -2306,7 +2249,6 @@ function startMainStage(){
 
 </body>
 </html>
-
 
 
 
