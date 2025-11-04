@@ -990,61 +990,36 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 /* Modale rôle */
-
-// === [SAFE TEXTS] Role strings separated for easy editing ===
-const ROLE_TEXT = {
-  TRAITRE: (q, a) => `
-Ton objectif est d’éliminer les Loyaux sans te faire démasquer.<br><br>
-Pour reconnaître tes alliés traîtres, vous disposez d’une <b>consigne secrète</b> :<br>
-<b>Question :</b> « ${q} »<br>
-<b>Réponse :</b> « ${a} » (même si c’est faux).<br><br>
-👉 Tu peux soit <b>poser toi-même la question</b> pour tester quelqu’un,<br>
-👉 soit <b>répondre avec le code</b> si on te la pose.<br><br>
-<span style="color:#ffd87a;">Astuce :</span> si tu veux éviter de revoir toutes les vidéos d’intro et aller directement à la page des votes, un <b>petit bouton jaune discret</b> est visible en haut à gauche de l’écran. Seuls <b>les Traîtres</b> (et <b>Franck</b> bien sûr !) connaissent son existence.
-`,
-  LOYAL: () => `
-Ton rôle : observer, discuter et <b>démasquer les traîtres</b>.
-`
-};
-
-const ROLE_EXTRA = {
-  TRAITRE: `
-<div style="margin-top:6px;color:#f2b3b3">
-  <b>⚠️ Ne révèle jamais ton code directement — utilise-le subtilement.</b>
-</div>`,
-  LOYAL: `
-<ul style="margin:6px 0 0 18px">
-  <li><b>Conseils (après repas)</b> : débats + vote → 1 éliminé.</li>
-  <li><b>Nuits</b> : seuls les traîtres agissent (élimination d’un Loyal).</li>
-  <li><b>Indices</b> : incohérences, alliances soudaines, votes étranges…</li>
-  <li><b>Stratégie</b> : construis une histoire cohérente, ne te fie pas qu’aux apparences.</li>
-</ul>`
-};
-// === [/SAFE TEXTS] ===
-
-
 function revealRole(payload){
-  var modal=document.getElementById('roleModal');
-  var inner=document.getElementById('roleInner');
-  var title=document.getElementById('roleTitle');
-  var sub=document.getElementById('roleSub');
-  var extra=document.getElementById('roleExtra');
+  var modal=document.getElementById('roleModal'); var inner=document.getElementById('roleInner'); var title=document.getElementById('roleTitle'); var sub=document.getElementById('roleSub'); var extra=document.getElementById('roleExtra');
   modal.style.display='flex';
   if(payload.role==='TRAITRE'){
-    inner.style.background='linear-gradient(180deg,#4a0b0b,#220606)';
-    title.innerHTML='<span class="mask-red">🎭</span> TRAÎTRE'; title.style.color='#fff';
-    var q=payload.codeQ||"Quelle heure est-il ?"; var a=payload.codeA||"11h23";
-    sub.innerHTML = ROLE_TEXT.TRAITRE(q,a);
-    extra.innerHTML = ROLE_EXTRA.TRAITRE;
-  } else {
+  inner.style.background='linear-gradient(180deg,#4a0b0b,#220606)';
+  title.innerHTML='<span class="mask-red">🎭</span> TRAÎTRE';
+  title.style.color='#fff';
+  var q=payload.codeQ||"Quelle heure est-il ?";
+  var a=payload.codeA||"11h23";
+
+  sub.innerHTML='Ton objectif est d’éliminer les Loyaux sans te faire démasquer.<br><br>' +
+    'Pour reconnaître tes alliés traîtres, tu disposes d’une <b>consigne secrète</b> :<br>' +
+    '<b>Question :</b> « '+q+' »<br>' +
+    '<b>Réponse :</b> « '+a+' » (même si c’est faux).<br><br>' +
+    '👉 Tu peux soit <b>poser toi-même la question</b> pour tester quelqu’un,<br>' +
+    '👉 soit <b>répondre avec le code</b> si on te la pose.' +
+    '<br><br><span style="color:#ffd87a;">Astuce :</span> si tu veux éviter de revoir toutes les vidéos d’intro et aller directement à la page des votes, un <b>petit bouton jaune discret</b> est visible en haut à gauche de l’écran. Seuls <b>les Traîtres</b> (et <b>Franck</b> bien sûr !) connaissent son existence.';
+
+  extra.innerHTML='<div style="margin-top:6px;color:#f2b3b3"><b>⚠️ Ne révèle jamais ton code directement — utilise-le subtilement.</b></div>';
+} else {
     inner.style.background='linear-gradient(180deg,#0b1f4a,#061022)';
     title.innerHTML='<span class="mask-blue">🎭</span> LOYAL'; title.style.color='#fff';
-    sub.innerHTML = ROLE_TEXT.LOYAL();
-    extra.innerHTML = ROLE_EXTRA.LOYAL;
+    sub.innerHTML='Ton rôle : observer, discuter et <b>démasquer les traîtres</b>.';
+    extra.innerHTML='<ul style="margin:6px 0 0 18px">\
+<li><b>Conseils (après repas)</b> : débats + vote → 1 éliminé.</li>\
+<li><b>Nuits</b> : seuls les traîtres agissent (élimination d’un Loyal).</li>\
+<li><b>Indices</b> : incohérences, alliances soudaines, votes étranges…</li>\
+<li><b>Stratégie</b> : construis une histoire cohérente, ne te fie pas qu’aux apparences.</li>\
+</ul>';
   }
-  document.getElementById('closeRoleBtn').onclick=function(){ modal.style.display='none'; };
-}
-
   document.getElementById('closeRoleBtn').onclick=function(){ modal.style.display='none'; };
 }
 </script>
@@ -2274,6 +2249,7 @@ function startMainStage(){
 
 </body>
 </html>
+
 
 
 
