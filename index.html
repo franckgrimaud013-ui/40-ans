@@ -2,7 +2,6 @@
 
 <html lang="fr">
 <head>
-<meta charset=\"utf-8\">
 <meta content="#000000" media="(prefers-color-scheme: light)" name="theme-color"/>
 <meta content="#000000" media="(prefers-color-scheme: dark)" name="theme-color"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
@@ -868,20 +867,6 @@ Ces mots, il ne te les dit pas souvent… mais il les pense fort.</p></div>
 <source src="audio/fond-boucle-v2.mp3" type="audio/mpeg"/>
 </audio>
 <div id="audioUnlock">🔊 Le son est bloqué. <button id="unlockBtn">Activer le son</button></div>
-<script>
-function b64urlToB64(s){
-  return (s||"").replace(/-/g,'+').replace(/_/g,'/').padEnd(Math.ceil(((s||"").length)/4)*4,'=');
-}
-function atobUtf8(b64){
-  try{
-    const bin = atob(b64);
-    const bytes = Uint8Array.from(bin, ch => ch.charCodeAt(0));
-    return new TextDecoder('utf-8').decode(bytes);
-  }catch(e){
-    try{ return decodeURIComponent(escape(atob(b64))); }catch(_){ return atob(b64); }
-  }
-}
-</script>
 <!-- ==================== SCRIPTS (navigation, timings vidéo, rôle, etc.) ==================== --><script>
 function parseToken(){try{var p=new URLSearchParams(location.search||'');if(p.has('t')){return JSON.parse(decodeURIComponent(atob(p.get('t'))));}}catch(e){} return null;}
 var PAYLOAD=null;
@@ -1019,7 +1004,7 @@ function revealRole(payload){
       '👉 Tu peux soit <b>poser toi-même la question</b> pour tester quelqu’un,<br>' +
       '👉 soit <b>répondre avec le code</b> si on te la pose.';
       sub.innerHTML += '<br><br><span style="color:#ffd87a;">Astuce :</span> si tu veux éviter de revoir toutes les vidéos d’intro et aller directement à la page des votes, un <b>petit bouton jaune discret</b> est visible en haut à gauche de l’écran. Seuls <b>les Traîtres</b> (et <b>Franck</b> bien sûr !) connaissent son existence.';
-    \1'<div style=\"margin-top:6px;color:#f2b3b3\"><b>⚠️ Ne révèle jamais ton code directement — utilise-le subtilement.</b></div>';
+    extra.innerHTML='<div style="margin-top:6px;color:#f2b3b3"><b>⚠️ Ne révèle jamais ton code directement — utilise-le subtilement.</b></div>';
   } else {
     inner.style.background='linear-gradient(180deg,#0b1f4a,#061022)';
     title.innerHTML='<span class="mask-blue">🎭</span> LOYAL'; title.style.color='#fff';
@@ -1911,7 +1896,7 @@ if(bgv1){bgv1.addEventListener('loadeddata',ok);bgv1.addEventListener('canplay',
 <!-- Overlay d’explication (iPhone Safari uniquement) -->
 <div id="iosGuide" aria-hidden="true">
   <div class="box" role="dialog" aria-modal="true" aria-label="Ajouter à l’écran d’accueil">
-    <header>Pour profiter l'experience en plein écran sur iPhone (ajoute d’abord à l’écran d’accueil)</header>
+    <header>Bienvenue, Franck a une surprise pour toi. Mais pour profiter de l'experience en plein écran sur iPhone (ajoute d’abord à l’écran d’accueil)</header>
     <div class="content">
       <ol>
         <li>
@@ -2260,6 +2245,16 @@ function startMainStage(){
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
 
 
 
