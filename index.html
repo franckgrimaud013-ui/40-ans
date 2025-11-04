@@ -193,7 +193,7 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
   #enterGameOverlay.show{display:flex}
   #bgSoundToggle, #audioUnlock { display:none !important; }
   .bg-gate, .bg-intro { filter:none !important;  background:none; }
-  .bg-intro::after, .intro-started </style>
+</style>
 <style id="bg-intro-fix">.bg-intro{background:none!important;}</style>
 <style id="bg-video-visibility-fix">
   #bgv1, #bgv2 { position:fixed; inset:0; width:100%; height:100%; display:block; object-fit:cover; z-index:0; background:#000; }
@@ -756,7 +756,7 @@ Mais au fond, ce n’est pas si terrible, non ? Parce qu’entre rires, apéros 
 
 <section class="step personal-step" id="page-bilou">
   <h3 class="p3-photo-title">Un mot pour toi, Bilou</h3>
-  <div class="pm-card"><p class="pm-text">Franck m’a beaucoup parlé de toi...
+  <div class="pm-card"><p class="pm-text">ranck m’a beaucoup parlé de toi...
 Deux gamins sur un terrain de boules, à Ensues la Redonne. À cet âge-là, on ne mesure pas encore la force d’une amitié… Et pourtant, ce jour-là, sans le savoir, une belle histoire s’est écrite.
 Les années ont filé, les soirées se sont enchaînées, les rires aussi. Des moments simples, des repas, des confidences, des silences partagés… tout cela tisse une amitié que le temps n’a jamais effacée.
 Tu fais partie de ces rares personnes sur qui Franck sait qu’il peut compter, quoi qu’il arrive. Parrain de ton fils, frère de cœur, compagnon de route… il n’y a pas un seul souvenir important sans ton visage quelque part dans le décor.
@@ -1003,6 +1003,8 @@ function revealRole(payload){
       '<b>Réponse :</b> « '+a+' » (même si c’est faux).<br><br>' +
       '👉 Tu peux soit <b>poser toi-même la question</b> pour tester quelqu’un,<br>' +
       '👉 soit <b>répondre avec le code</b> si on te la pose.';
+    sub.innerHTML += '<br><br><span style="color:#ffd87a;">Astuce :</span> si tu veux éviter de revoir toutes les vidéos d’intro et aller directement à la page des votes, un <b>petit bouton jaune discret</b> est visible en haut à gauche de l’écran. Seuls <b>les Traîtres</b> (et <b>Franck</b> bien sûr !) connaissent son existence.';
+
     extra.innerHTML='<ul style="margin:6px 0 8px 18px">\
 <li><b>Conseils (après repas)</b> : débats + vote → 1 joueur éliminé.</li>\
 <li><b>Nuits (ven & sam)</b> : les traîtres éliminent un Loyal.</li>\
@@ -2250,6 +2252,7 @@ function startMainStage(){
 
 </body>
 </html>
+
 
 
 
