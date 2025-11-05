@@ -5,40 +5,69 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Indice des Traîtres</title>
 
-  <!-- mêmes polices que ton site -->
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet"/>
 
   <style>
     :root {
-      --fg:#fff; --mut:#cfd5dc;
-      --accent:#ffd98a;
-      --shade:rgba(0,0,0,.55);
+      --fg:#fff; --mut:#cfd5dc; --accent:#ffd98a;
+      --gold1:#f6e27a; --gold2:#e6c271; --gold3:#b9862a; --gold4:#fff6c9;
     }
-    * {box-sizing:border-box}
-    html,body {height:100%;margin:0;background:#000;color:var(--fg);font-family:'Playfair Display',serif}
-    .stage {position:relative;min-height:100%;overflow:hidden}
-    .bg video {position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-    .overlay {position:absolute;inset:0;background:radial-gradient(transparent 40%, rgba(0,0,0,.5) 65%, rgba(0,0,0,.9) 100%)}
-    .center {position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:24px;text-align:center}
-    .title {font-family:'Cinzel',serif;letter-spacing:.06em;font-weight:900;font-size:28px;margin:0 0 8px}
-    .subtitle {color:var(--mut);font-size:14px;margin:0 0 24px}
-    .btn {appearance:none;border:0;border-radius:14px;background:var(--accent);color:#201a0a;
-         padding:12px 18px;font-weight:700;letter-spacing:.03em;cursor:pointer;transition:.2s transform}
-    .btn:active {transform:scale(.98)}
-    .btn[disabled] {opacity:.5;cursor:not-allowed}
-    .panel {margin-top:18px;max-width:780px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.12);
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:#000;color:var(--fg);font-family:'Playfair Display',serif}
+    .stage{position:relative;min-height:100%;overflow:hidden}
+    .bg video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .overlay{position:absolute;inset:0;background:radial-gradient(transparent 40%,rgba(0,0,0,.5)65%,rgba(0,0,0,.9)100%)}
+    .center{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:24px;text-align:center}
+    .title{font-family:'Cinzel',serif;letter-spacing:.06em;font-weight:900;font-size:28px;margin:0 0 8px}
+    .subtitle{color:var(--mut);font-size:14px;margin:0 0 24px}
+    .btn{appearance:none;border:0;border-radius:14px;background:var(--accent);color:#201a0a;padding:12px 18px;font-weight:700;letter-spacing:.03em;cursor:pointer;transition:.2s transform}
+    .btn:active{transform:scale(.98)}
+    .btn[disabled]{opacity:.5;cursor:not-allowed}
+    .panel{margin-top:18px;max-width:780px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.12);
            backdrop-filter:blur(6px);border-radius:16px;padding:16px;display:none}
-    .panel.open {display:block}
-    .tag {font-size:12px;color:var(--mut);margin-bottom:6px}
-    .hint {font-size:22px;line-height:1.4}
-    .mark {margin-top:12px;font-size:12px;color:var(--mut)}
-    @media (min-width:700px){ .title{font-size:34px} .hint{font-size:24px} }
+    .panel.open{display:block}
+    .tag{font-size:12px;color:var(--mut);margin-bottom:6px}
+
+    /* Effets de révélation + dorure */
+    .hint{
+      font-size:22px;line-height:1.4;margin:0 auto;
+      opacity:0; transform:translateY(6px) scale(.98); filter:blur(2px);
+      background: linear-gradient(90deg,var(--gold3),var(--gold2),var(--gold1),var(--gold4),var(--gold2),var(--gold3));
+      background-size:300% 100%;
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+    }
+    .hint.show{
+      animation: hint-reveal .7s ease-out forwards, hint-shimmer 4.5s ease-in-out .7s infinite;
+    }
+    @keyframes hint-reveal{
+      to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+    }
+    @keyframes hint-shimmer{
+      0%{background-position:0% 50%}
+      50%{background-position:100% 50%}
+      100%{background-position:0% 50%}
+    }
+    /* liseré lumineux discret sous l’indice */
+    .mark{margin-top:12px;font-size:12px;color:var(--mut);position:relative}
+    .mark::before{
+      content:"";position:absolute;left:50%;transform:translateX(-50%);
+      bottom:100%;width:160px;height:1px;
+      background:linear-gradient(90deg,transparent,var(--gold2),transparent);
+      opacity:.6;filter:blur(.3px)
+    }
+
+    /* Accessibilité : réduire les animations si demandé */
+    @media (prefers-reduced-motion:reduce){
+      .hint{animation:none;opacity:1;transform:none;filter:none;background: none;color:#f3e3a2}
+    }
+
+    @media(min-width:700px){.title{font-size:34px}.hint{font-size:24px}}
   </style>
 </head>
 <body>
 <div class="stage">
   <div class="bg" aria-hidden="true">
-    <video id="bgvid" playsinline muted autoplay loop poster="videos/role-bg.jpg">
+    <video playsinline muted autoplay loop poster="videos/role-bg.jpg">
       <source src="videos/role-bg.mp4" type="video/mp4">
     </video>
     <div class="overlay"></div>
@@ -46,7 +75,7 @@
 
   <main class="center">
     <h1 class="title">Révélation — Indice</h1>
-    <p class="subtitle">Déverrouillage samedi 8 novembre 2025, 19:00 (Europe/Paris)</p>
+    <p class="subtitle">Déverrouillage : samedi 8 novembre 2025 à 19 h (Europe/Paris)</p>
 
     <button id="revealBtn" class="btn" disabled>Découvrir l’indice</button>
 
@@ -59,88 +88,93 @@
 </div>
 
 <script>
-const UNLOCK_AT_UTC = Date.UTC(2025, 10, 8, 18, 0, 0);
-const TZ = 'Europe/Paris';
+/* — Réglages — */
+const UNLOCK_AT_UTC = Date.UTC(2025,10,8,18,0,0); // 19h Paris
 const INDICES_NEUTRES = {
-  "Franck":   "On croit à une fête, mais c’est en réalité une stratégie bien préparée.",
-  "Aurélie":  "Quand la parole se fait entendre, tout le monde écoute, même ceux qui ne savent plus où poser le regard.",
-  "Thierry":  "L’ordre passe toujours avant le repos.",
-  "Sandrine": "Savoir quand agir et quand le calme fait mieux le travail.",
-  "Sabrina":  "Avancer sereinement, quitte à laisser quelques traces sur le passage.",
-  "Bilou":    "Naviguer entre les courants, sans jamais vraiment s’y opposer.",
-  "Anthony":  "Transformer tout en opportunité, même les blagues.",
-  "Julia":    "Conduire comme parler : sans détour et sans filtre.",
+  "Franck":"On croit à une fête, mais c’est en réalité une stratégie bien préparée.",
+  "Aurélie":"Quand la parole se fait entendre, tout le monde écoute, même ceux qui ne savent plus où poser le regard.",
+  "Thierry":"L’ordre passe toujours avant le repos.",
+  "Sandrine":"Savoir quand agir et quand le calme fait mieux le travail.",
+  "Sabrina":"Avancer sereinement, quitte à laisser quelques traces sur le passage.",
+  "Bilou":"Naviguer entre les courants, sans jamais vraiment s’y opposer.",
+  "Anthony":"Transformer tout en opportunité, même les blagues.",
+  "Julia":"Conduire comme parler : sans détour et sans filtre.",
   "Sébastien":"Être neutre en apparence, tout en traçant déjà la prochaine ligne de front.",
-  "Stéphane": "Préférer convaincre que se taire, surtout quand le verre est plein.",
-  "Coralie":  "Parler doucement, mais avec des règles écrites au marqueur."
+  "Stéphane":"Préférer convaincre que se taire, surtout quand le verre est plein.",
+  "Coralie":"Parler doucement, mais avec des règles écrites au marqueur."
 };
 
-const state = { traitors: [], picked: null, revealed: false };
+const state={traitors:[],picked:null,revealed:false};
 
-function pick(a){ return a[Math.floor(Math.random()*a.length)] }
-function timeGateOpen(){ return Date.now() >= UNLOCK_AT_UTC; }
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function timeGateOpen(){return Date.now()>=UNLOCK_AT_UTC}
 
 function showHint(name){
-  const hint = INDICES_NEUTRES[name] || "Le silence des pierres en dit déjà beaucoup.";
-  document.getElementById('hint').textContent = hint;
-  document.getElementById('foot').textContent = "Source : liste des Traîtres (tirage aléatoire unique)";
+  const hintText=INDICES_NEUTRES[name]||"Le silence des pierres en dit déjà beaucoup.";
+  const hintEl=document.getElementById('hint');
+  hintEl.textContent=hintText;
+  // lance l’animation d’apparition dorée
+  requestAnimationFrame(()=>hintEl.classList.add('show'));
+  document.getElementById('foot').textContent="Source : liste des Traîtres (tirage aléatoire unique)";
   document.getElementById('panel').classList.add('open');
 }
 
-const LS_KEY = 'indice.reveal.v1';
+const LS_KEY='indice.reveal.v1';
 function loadPersist(){
   try{
-    const raw = localStorage.getItem(LS_KEY);
-    if(!raw) return;
-    const obj = JSON.parse(raw);
-    if(obj && obj.name){
-      state.picked = obj.name;
-      state.revealed = true;
+    const raw=localStorage.getItem(LS_KEY);
+    if(!raw)return;
+    const obj=JSON.parse(raw);
+    if(obj&&obj.name){
+      state.picked=obj.name;state.revealed=true;
       showHint(obj.name);
-      document.getElementById('revealBtn').disabled = true;
+      document.getElementById('revealBtn').disabled=true;
     }
   }catch(_){}
 }
 function savePersist(name){
-  try{ localStorage.setItem(LS_KEY, JSON.stringify({name, t:Date.now()})); }catch(_){}
+  try{localStorage.setItem(LS_KEY,JSON.stringify({name,t:Date.now()}));}catch(_){}
 }
 
-document.getElementById('revealBtn').addEventListener('click', ()=>{
-  if(state.revealed) return;
-  if(!timeGateOpen()) return;
-  if(!state.traitors.length) return;
-  const name = pick(state.traitors);
-  state.picked = name;
-  state.revealed = true;
-  savePersist(name);
-  showHint(name);
+document.getElementById('revealBtn').addEventListener('click',()=>{
+  if(state.revealed)return;
+  if(!timeGateOpen())return;
+  if(!state.traitors.length)return;
+  const name=pick(state.traitors);
+  state.picked=name;state.revealed=true;
+  savePersist(name);showHint(name);
 });
 
 function updateGate(){
-  const btn = document.getElementById('revealBtn');
-  btn.disabled = !timeGateOpen() || !state.traitors.length;
+  const btn=document.getElementById('revealBtn');
+  btn.disabled=!timeGateOpen()||!state.traitors.length;
 }
-setInterval(updateGate, 10000);
+setInterval(updateGate,10000);
 
 async function boot(){
   loadPersist();
   if(window.FB_CONFIG){
     await ensureFirebase();
     await attachFirebase();
-  } else {
+  }else{
     try{
-      const r = await fetch('./data/traitors.json',{cache:'no-store'});
-      const arr = await r.json();
-      state.traitors = Array.isArray(arr)?arr.filter(Boolean):(arr.traitors||[]);
+      const r=await fetch('./data/traitors.json',{cache:'no-store'});
+      const arr=await r.json();
+      state.traitors=Array.isArray(arr)?arr.filter(Boolean):(arr.traitors||[]);
     }catch(_){state.traitors=[];}
   }
   updateGate();
-  if(state.revealed && state.picked){showHint(state.picked);}
+  if(state.revealed&&state.picked)showHint(state.picked);
 }
 boot();
 
 async function ensureFirebase(){
-  async function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
+  async function loadScript(src){
+    return new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);
+    });
+  }
   if(!window.firebase){
     await loadScript('https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js');
     await loadScript('https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js');
@@ -160,19 +194,17 @@ async function attachFirebase(){
 }
 </script>
 
-<!-- colle ici ta config Firebase -->
+<!-- Config Firebase réelle -->
 <script>
-/*
 window.FB_CONFIG = {
-  apiKey: "XXX",
-  authDomain: "XXX.firebaseapp.com",
-  databaseURL: "https://XXX-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "XXX",
-  storageBucket: "XXX.appspot.com",
-  messagingSenderId: "XXX",
-  appId: "1:XXX:web:XXX"
+  apiKey: "AIzaSyA4uZfPnXWSTSv4wPZSZ4zKnIGejRkxFo",
+  authDomain: "ans-de-franck.firebaseapp.com",
+  databaseURL: "https://ans-de-franck-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ans-de-franck",
+  storageBucket: "ans-de-franck.firebasestorage.app",
+  messagingSenderId: "1063437612417",
+  appId: "1:1063437612417:web:81e2847dfcd990c6922480"
 };
-*/
 </script>
 </body>
 </html>
