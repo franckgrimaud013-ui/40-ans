@@ -13,41 +13,32 @@
       --gold1:#f6e27a; --gold2:#e6c271; --gold3:#b9862a; --gold4:#fff6c9;
     }
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:#000;color:var(--fg);font-family:'Playfair Display',serif}
+    html,body{height:100%;margin:0;background:#000;color:var(--fg);font-family:'Playfair Display',serif;overflow:hidden}
     .stage{position:relative;min-height:100%;overflow:hidden}
-    .bg video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-    .overlay{position:absolute;inset:0;background:radial-gradient(transparent 40%,rgba(0,0,0,.5)65%,rgba(0,0,0,.9)100%)}
-    .center{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:24px;text-align:center}
+    .center{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      min-height:100%;padding:24px;text-align:center}
     .title{font-family:'Cinzel',serif;letter-spacing:.06em;font-weight:900;font-size:28px;margin:0 0 8px}
     .subtitle{color:var(--mut);font-size:14px;margin:0 0 24px}
-    .btn{appearance:none;border:0;border-radius:14px;background:var(--accent);color:#201a0a;padding:12px 18px;font-weight:700;letter-spacing:.03em;cursor:pointer;transition:.2s transform}
+    .btn{appearance:none;border:0;border-radius:14px;background:var(--accent);color:#201a0a;
+      padding:12px 18px;font-weight:700;letter-spacing:.03em;cursor:pointer;transition:.2s transform}
     .btn:active{transform:scale(.98)}
     .btn[disabled]{opacity:.5;cursor:not-allowed}
-    .panel{margin-top:18px;max-width:780px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.12);
-           backdrop-filter:blur(6px);border-radius:16px;padding:16px;display:none}
+    .panel{margin-top:18px;max-width:780px;background:rgba(0,0,0,.55);
+      border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(6px);border-radius:16px;padding:16px;display:none}
     .panel.open{display:block}
     .tag{font-size:12px;color:var(--mut);margin-bottom:6px}
 
-    /* Effets de révélation + dorure */
+    /* Animation dorée de l’indice */
     .hint{
       font-size:22px;line-height:1.4;margin:0 auto;
-      opacity:0; transform:translateY(6px) scale(.98); filter:blur(2px);
-      background: linear-gradient(90deg,var(--gold3),var(--gold2),var(--gold1),var(--gold4),var(--gold2),var(--gold3));
-      background-size:300% 100%;
-      -webkit-background-clip:text; background-clip:text; color:transparent;
+      opacity:0;transform:translateY(6px) scale(.98);filter:blur(2px);
+      background:linear-gradient(90deg,var(--gold3),var(--gold2),var(--gold1),var(--gold4),var(--gold2),var(--gold3));
+      background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
     }
-    .hint.show{
-      animation: hint-reveal .7s ease-out forwards, hint-shimmer 4.5s ease-in-out .7s infinite;
-    }
-    @keyframes hint-reveal{
-      to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
-    }
-    @keyframes hint-shimmer{
-      0%{background-position:0% 50%}
-      50%{background-position:100% 50%}
-      100%{background-position:0% 50%}
-    }
-    /* liseré lumineux discret sous l’indice */
+    .hint.show{animation:hint-reveal .7s ease-out forwards, hint-shimmer 4.5s ease-in-out .7s infinite;}
+    @keyframes hint-reveal{to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+    @keyframes hint-shimmer{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
     .mark{margin-top:12px;font-size:12px;color:var(--mut);position:relative}
     .mark::before{
       content:"";position:absolute;left:50%;transform:translateX(-50%);
@@ -56,22 +47,27 @@
       opacity:.6;filter:blur(.3px)
     }
 
-    /* Accessibilité : réduire les animations si demandé */
-    @media (prefers-reduced-motion:reduce){
-      .hint{animation:none;opacity:1;transform:none;filter:none;background: none;color:#f3e3a2}
+    /* Vidéo du masque placée en bas */
+    .mask-video{
+      position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+      width:100%;max-width:900px;opacity:.45;z-index:1;
+      pointer-events:none;filter:drop-shadow(0 0 10px rgba(255,215,150,.25));
     }
 
-    @media(min-width:700px){.title{font-size:34px}.hint{font-size:24px}}
+    @media(min-width:700px){
+      .title{font-size:34px}
+      .hint{font-size:24px}
+      .mask-video{max-width:700px;opacity:.5;}
+    }
   </style>
 </head>
 <body>
 <div class="stage">
-  <div class="bg" aria-hidden="true">
-    <video playsinline muted autoplay loop poster="videos/role-bg.jpg">
-      <source src="videos/role-bg.mp4" type="video/mp4">
-    </video>
-    <div class="overlay"></div>
-  </div>
+
+  <!-- vidéo du masque visible uniquement en bas -->
+  <video class="mask-video" playsinline muted autoplay loop>
+    <source src="videos/role-bg.mp4" type="video/mp4">
+  </video>
 
   <main class="center">
     <h1 class="title">Révélation — Indice</h1>
@@ -88,7 +84,6 @@
 </div>
 
 <script>
-/* — Réglages — */
 const UNLOCK_AT_UTC = Date.UTC(2025,10,8,18,0,0); // 19h Paris
 const INDICES_NEUTRES = {
   "Franck":"On croit à une fête, mais c’est en réalité une stratégie bien préparée.",
@@ -113,7 +108,6 @@ function showHint(name){
   const hintText=INDICES_NEUTRES[name]||"Le silence des pierres en dit déjà beaucoup.";
   const hintEl=document.getElementById('hint');
   hintEl.textContent=hintText;
-  // lance l’animation d’apparition dorée
   requestAnimationFrame(()=>hintEl.classList.add('show'));
   document.getElementById('foot').textContent="Source : liste des Traîtres (tirage aléatoire unique)";
   document.getElementById('panel').classList.add('open');
@@ -194,7 +188,7 @@ async function attachFirebase(){
 }
 </script>
 
-<!-- Config Firebase réelle -->
+<!-- Config Firebase -->
 <script>
 window.FB_CONFIG = {
   apiKey: "AIzaSyA4uZfPnXWSTSv4wPZSZ4zKnIGejRkxFo",
