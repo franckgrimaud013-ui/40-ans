@@ -2243,33 +2243,20 @@ function startMainStage(){
 })();
 </script>
 
-
-<script>
-(function(){
-  var ua = navigator.userAgent || '';
-  var isAndroid = /android/i.test(ua);
-  // Detect common in-app browsers / webviews that break fullscreen and "app" flows
-  var isWebView = /; wv\)/i.test(ua) || /(FB_IAB|FBAN|Instagram|Line|GSA|Gmail|Twitter|WhatsApp)/i.test(ua);
-
-  function goFS(){
-    if (!(isAndroid && !isWebView)) return; // allow fullscreen only in real browsers
-    var el = document.documentElement;
-    var req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen || el.mozRequestFullScreen;
-    if (req) { try { req.call(el); } catch(e){} }
-  }
-
-  document.addEventListener('DOMContentLoaded', function(){
-    var btn = document.getElementById('startBtn');
-    if (btn && !btn.__fsBound){
-      btn.__fsBound = true;
-      btn.addEventListener('click', goFS, { once:true });
-    }
-  });
-})();
-</script>
-
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
