@@ -2246,7 +2246,8 @@ function startMainStage(){
 
 <script>
 (function(){
-  var isAndroid = /android/i.test(navigator.userAgent);
+  var ua = navigator.userAgent || "";
+  var isAndroid = /android/i.test(ua);
   function goFS(){
     if (!isAndroid) return;
     var el = document.documentElement;
@@ -2265,6 +2266,13 @@ function startMainStage(){
 
 </body>
 </html>
+
+
+
+
+
+
+
 
 
 
