@@ -1,0 +1,52 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Unregister Service Workers</title>
+<style>
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 20px; }
+  .ok { color: #0a7f2e; }
+  .err { color: #b00020; }
+  pre { background:#111; color:#eee; padding:10px; border-radius:8px; overflow:auto; }
+</style>
+<h1>Désinstallation du mode application</h1>
+<p>Cette page va désinscrire les Service Workers et vider les caches pour ce domaine.</p>
+<button id="run">Lancer le nettoyage</button>
+<pre id="log"></pre>
+<script>
+(async function(){
+  const log = (m, cls='') => {
+    const el = document.getElementById('log');
+    el.innerHTML += (cls ? '['+cls+'] ' : '') + m + '\n';
+  };
+  document.getElementById('run').onclick = async () => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        if (regs.length === 0) {
+          log('Aucun service worker actif.');
+        } else {
+          for (const r of regs) {
+            try { await r.unregister(); log('Service worker désinscrit: ' + (r.scope || ''), 'ok'); }
+            catch(e){ log('Erreur désinscription: ' + e.message, 'err'); }
+          }
+        }
+      } else {
+        log('Service workers non pris en charge.');
+      }
+      if (window.caches && caches.keys) {
+        const keys = await caches.keys();
+        for (const k of keys) {
+          try { await caches.delete(k); log('Cache supprimé: ' + k, 'ok'); }
+          catch(e){ log('Erreur suppression cache ' + k + ': ' + e.message, 'err'); }
+        }
+      }
+      try {
+        localStorage.clear(); sessionStorage.clear();
+        log('localStorage/sessionStorage vidés.', 'ok');
+      } catch(e){}
+      log('Nettoyage terminé. Recharge la page du jeu dans Chrome.');
+    } catch(e){
+      log('Erreur: ' + e.message, 'err');
+    }
+  };
+})();
+</script>
