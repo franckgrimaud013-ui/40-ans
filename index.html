@@ -559,11 +559,10 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 .pm-text{ font-size:0.9rem; line-height:1.7; color:#e9edf4; text-align:center; white-space:pre-line; }
 </style>
 
-
 <link rel="manifest" href="manifest.json">
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(console.error);
+  navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(function(e){ console.warn('SW', e); });
 }
 </script>
 </head>
@@ -2254,22 +2253,45 @@ function startMainStage(){
 <script>
 (function(){
   const ua = navigator.userAgent.toLowerCase();
-  const isIOS = /iphone|ipad|ipod/.test(ua);
-  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  const isAndroid = ua.includes('android');
+  function goFullscreen(){
+    if (!isAndroid) return;
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen || el.mozRequestFullScreen;
+    if (req) { try { req.call(el); } catch(e) { /* ignore */ } }
+  }
   document.addEventListener('DOMContentLoaded', function(){
-    if (isIOS && isSafari && !isStandalone) {
-      var g = document.getElementById('iosGuide');
-      if (g){ g.classList.add('show'); }
-      var d = document.getElementById('iosDismiss'); if(d){ d.onclick = ()=> g.classList.remove('show'); }
-      var o = document.getElementById('iosOk'); if(o){ o.onclick = ()=> g.classList.remove('show'); }
-    }
+    // Try to bind to your common start controls without changing their logic
+    const ids = ['startBtn','p3-n1','p3-n2','p3-revealLink'];
+    ids.forEach(function(id){
+      const el = document.getElementById(id);
+      if (el && !el.__fsBound){
+        el.__fsBound = true;
+        el.addEventListener('click', goFullscreen, { once: true });
+      }
+    });
+    // Safety: if the start button is dynamically shown, capture first click anywhere on it
+    document.body.addEventListener('click', function onBodyClick(ev){
+      const t = ev.target;
+      if (t && (t.id === 'startBtn' || t.closest && t.closest('#startBtn'))) {
+        goFullscreen();
+        document.body.removeEventListener('click', onBodyClick, true);
+      }
+    }, true);
   });
 })();
 </script>
 
 </body>
 </html>
+
+
+
+
+
+
+
+
 
 
 
