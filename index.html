@@ -559,12 +559,6 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 .pm-text{ font-size:0.9rem; line-height:1.7; color:#e9edf4; text-align:center; white-space:pre-line; }
 </style>
 
-<link rel="manifest" href="manifest.json">
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(function(e){ console.warn('SW', e); });
-}
-</script>
 </head>
 <body><!--
 ==================== GUIDE RAPIDE (COMMENT MODIFIER) ====================
@@ -2252,24 +2246,20 @@ function startMainStage(){
 
 <script>
 (function(){
-  // Fullscreen ONLY on Android, and ONLY right after your startIntro() runs
-  const isAndroid = /android/i.test(navigator.userAgent);
-  const docEl = document.documentElement;
-  const reqFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen || docEl.mozRequestFullScreen;
-  if (!reqFS) return;
-
-  const _origStart = window.startIntro;
-  if (typeof _origStart === 'function') {
-    window.startIntro = function(){
-      // Call your original logic first (unchanged)
-      const ret = _origStart.apply(this, arguments);
-      // Then request fullscreen, but only on Android and after a tiny delay
-      if (isAndroid) {
-        setTimeout(function(){ try { reqFS.call(docEl); } catch(e){} }, 60);
-      }
-      return ret;
-    };
+  var isAndroid = /android/i.test(navigator.userAgent);
+  function goFS(){
+    if (!isAndroid) return;
+    var el = document.documentElement;
+    var req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen || el.mozRequestFullScreen;
+    if (req) { try { req.call(el); } catch(e){} }
   }
+  document.addEventListener('DOMContentLoaded', function(){
+    var btn = document.getElementById('startBtn');
+    if (btn && !btn.__fsBound){
+      btn.__fsBound = true;
+      btn.addEventListener('click', goFS, { once:true });
+    }
+  });
 })();
 </script>
 
