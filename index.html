@@ -2252,36 +2252,31 @@ function startMainStage(){
 
 <script>
 (function(){
+  // Fullscreen ONLY on Android, and ONLY right after your startIntro() runs
   const isAndroid = /android/i.test(navigator.userAgent);
-  function goFS(){
-    if (!isAndroid) return;
-    const el = document.documentElement;
-    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen || el.mozRequestFullScreen;
-    if (req) { try { req.call(el); } catch(e){} }
+  const docEl = document.documentElement;
+  const reqFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen || docEl.mozRequestFullScreen;
+  if (!reqFS) return;
+
+  const _origStart = window.startIntro;
+  if (typeof _origStart === 'function') {
+    window.startIntro = function(){
+      // Call your original logic first (unchanged)
+      const ret = _origStart.apply(this, arguments);
+      // Then request fullscreen, but only on Android and after a tiny delay
+      if (isAndroid) {
+        setTimeout(function(){ try { reqFS.call(docEl); } catch(e){} }, 60);
+      }
+      return ret;
+    };
   }
-  document.addEventListener('DOMContentLoaded', function(){
-    const start = document.getElementById('startBtn');
-    if (start && !start.__fsBound){
-      start.__fsBound = true;
-      start.addEventListener('click', goFS, { once:true });
-    } else if (!start) {
-      // If startBtn is created/shown later
-      const mo = new MutationObserver(() => {
-        const btn = document.getElementById('startBtn');
-        if (btn && !btn.__fsBound){
-          btn.__fsBound = true;
-          btn.addEventListener('click', goFS, { once:true });
-          mo.disconnect();
-        }
-      });
-      mo.observe(document.documentElement, { childList:true, subtree:true });
-    }
-  });
 })();
 </script>
 
 </body>
 </html>
+
+
 
 
 
