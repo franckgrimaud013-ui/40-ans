@@ -2245,6 +2245,16 @@ function startMainStage(){
 
 
 <script>
+// Purge any prior PWA behavior: unregister service workers for this origin/scope.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations && navigator.serviceWorker.getRegistrations().then(function(regs){
+    regs.forEach(function(r){ try { r.unregister(); } catch(e){} });
+  });
+}
+</script>
+
+
+<script>
 (function(){
   var ua = navigator.userAgent || "";
   var isAndroid = /android/i.test(ua);
@@ -2266,6 +2276,7 @@ function startMainStage(){
 
 </body>
 </html>
+
 
 
 
