@@ -5,24 +5,19 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>40 ans Franck</title>
 
-  <!-- Couleurs barre système -->
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#000000" />
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
 
-  <!-- iOS: plein écran -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Les 40 ans de Franck" />
   <link rel="apple-touch-icon" sizes="180x180" href="icon-512.png" />
 
-  <!-- Fav/manifest PWA -->
   <link rel="icon" sizes="512x512" href="icon-512.png" />
   <link rel="manifest" href="manifest.json" />
 
-  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
 
-  <!-- Enregistrement du service worker (au plus tôt) -->
   <script>
     (function() {
       if ('serviceWorker' in navigator) {
@@ -36,10 +31,8 @@
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;font-family:'Playfair Display',serif;color:var(--fg);background:#000}
 
-    /* Fallback si image manquante */
     .bg-fallback{background:radial-gradient(ellipse at center,#0a0d12 0%,#05070b 60%,#000 100%)}
 
-    /* Arrière-plans */
     .bg-gate,.bg-intro{
       position:fixed; inset:0;
       background-size:cover; background-position:center;
@@ -56,20 +49,17 @@
     .player-focus .bg-role{ display:block; }
     .player-focus .bg-gate, .player-focus .bg-intro{ display:none !important; }
 
-    /* Boutons */
     .btn{padding:12px 18px;border-radius:14px;font-size:clamp(16px,2.6vw,22px);color:#fff;text-decoration:none;cursor:pointer;
       background:linear-gradient(180deg,rgba(212,175,55,.25),rgba(212,175,55,.12));border:1px solid rgba(212,175,55,.9);
       box-shadow:0 0 0 2px rgba(212,175,55,.15) inset,0 10px 30px rgba(0,0,0,.45),0 0 22px rgba(212,175,55,.35);
       transition:transform .15s ease, box-shadow .15s ease}
     .btn:hover{transform:translateY(-2px);box-shadow:0 0 0 2px rgba(212,175,55,.2) inset,0 14px 36px rgba(0,0,0,.5),0 0 28px rgba(212,175,55,.45)}
 
-    /* Gate */
     #gate{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:30vh;z-index:6}
     #gate .panel{text-align:center}
     #gate h1{font-family:Cinzel,serif;margin:0 0 8px 0;font-size:clamp(26px,5vw,40px)}
     #gate p{margin:6px 0 14px 0;font-size:clamp(16px,2.5vw,20px);color:var(--mut)}
 
-    /* Intro ciné */
     .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:20px;z-index:5}
     .slide{position:relative;max-width:980px;width:100%;min-height:60vh;display:flex;align-items:center;justify-content:center}
     .slide p{position:absolute;width:min(92%,900px);margin:0;text-align:center;font-size:clamp(22px,4vw,34px);line-height:1.6;color:#fff;
@@ -78,13 +68,11 @@
     .intro-text-start .slide p{animation:onebyone var(--per) ease-in-out both;animation-delay:calc(var(--i)*var(--per));}
     .intro-text-start .overlay{display:flex}
 
-    /* CTA après intro */
     #ctaOverlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;opacity:0;pointer-events:none;z-index:6;transition:.4s ease;transform:translateY(6px)}
     .intro-text-start #ctaOverlay{display:flex;animation:enableCTA 0s linear var(--total) forwards,fadeCTA .8s ease var(--total) forwards}
     @keyframes enableCTA{to{pointer-events:auto}}
     @keyframes fadeCTA{to{opacity:1}}
 
-    /* App */
     .app{display:none;max-width:1100px;margin:3px auto;padding:5px;position:relative;z-index:7}
     #app:target{display:block}
     .grid{display:grid;gap:16px}
@@ -99,7 +87,6 @@
     .centered{min-height:50vh;display:flex;align-items:center;justify-content:center;text-align:center}
     #playerIntro{font-size:clamp(20px,4vw,28px);text-align:center;margin:0 auto;line-height:1.5;color:#d4af37;text-shadow:0 0 6px rgba(0,0,0,.8),0 0 12px rgba(212,175,55,.5)}
 
-    /* Modale rôle */
     .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.75);z-index:9;padding:20px}
     .modal .inner{background:#0b0f18;color:#fff;padding:24px;border-radius:16px;max-width:820px;width:100%;max-height:90vh;overflow:auto;border:1px solid rgba(255,255,255,.08)}
     .role-title{font-family:Cinzel,serif;font-size:34px;margin:6px 0;display:flex;align-items:center;justify-content:center;gap:12px}
@@ -107,14 +94,12 @@
     .mask-red{filter:drop-shadow(0 0 8px rgba(255,59,59,.45));color:#ff3b3b}
     .mask-blue{filter:drop-shadow(0 0 8px rgba(23,183,255,.45));color:#17b7ff}
 
-    /* Secret skip */
     .secret-fixed{position:fixed;top:12px;left:12px;width:20px;height:20px;border-radius:50%;z-index:9999;cursor:pointer;opacity:.25;
       background:radial-gradient(circle at 30% 30%, rgba(212,175,55,.95) 0%, rgba(212,175,55,.45) 45%, rgba(0,0,0,0) 60%);
       box-shadow:0 0 14px rgba(212,175,55,.55), 0 0 28px rgba(212,175,55,.35);
     }
     .app-shown .secret-fixed{display:none}
 
-    /* P3 mise en page */
     .welcome-section{margin:14px auto;width:min(92%,960px);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:16px;color:#eaf0f8}
     .layout-simple{background:#000}
     .top-video{max-width:1100px;margin:0 auto;padding-top:0}
@@ -138,17 +123,14 @@
 
     .p3-actions{display:flex;justify-content:center;margin:14px 0 0}
 
-    /* Audio notice */
     #audioUnlock{display:none;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9999;background:rgba(0,0,0,.7);color:#fff;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(3px);font-size:14px;white-space:nowrap}
     #audioUnlock button{margin-left:8px;padding:6px 10px;border-radius:10px;border:1px solid rgba(212,175,55,.9);background:linear-gradient(180deg,rgba(212,175,55,.25),rgba(212,175,55,.12));color:#fff;cursor:pointer}
 
-    /* Effet bouton start */
     #startBtn{opacity:0;transform:translateY(30px) scale(0.95);animation:revealButton 1.6s ease-out 1s forwards;position:relative;overflow:hidden}
     @keyframes revealButton{0%{opacity:0;transform:translateY(30px) scale(0.95);filter:brightness(0.85)}60%{opacity:1;transform:translateY(-5px) scale(1.05);filter:brightness(1.15)}100%{opacity:1;transform:translateY(0) scale(1);filter:brightness(1)}}
     #startBtn::after{content:"";position:absolute;top:0;left:-75%;width:50%;height:100%;background:linear-gradient(120deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.0) 100%);transform:skewX(-20deg);animation:shineEffect 2.5s ease-in-out 2s forwards}
     @keyframes shineEffect{0%{left:-75%}50%{left:120%}100%{left:120%}}
 
-    /* Pages perso */
     .personal-step{display:none}
     .pm-card{margin:16px auto 8px;max-width:780px;padding:22px 18px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.04);box-shadow:inset 0 0 40px rgba(255,255,255,.03)}
     .pm-text{font-size:.9rem;line-height:1.7;color:#e9edf4;text-align:center;white-space:pre-line}
@@ -159,14 +141,12 @@
 <body>
   <div id="secretFixed" class="secret-fixed" title="Passer l'intro"></div>
 
-  <!-- Fond Gate vidéo -->
   <section class="bg-gate" aria-hidden="true" style="position:fixed;inset:0;z-index:0;">
     <video id="gateVideo" autoplay muted playsinline preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" webkit-playsinline>
       <source src="videos/intro-gate.mp4" type="video/mp4" />
     </video>
   </section>
 
-  <!-- Fond intro boucles -->
   <div id="bgVideoLayer" class="bg-intro" aria-hidden="true" style="position:fixed;inset:0;z-index:0;opacity:0;transition:opacity 1200ms ease;">
     <video id="bgv1" class="bgv" muted playsinline preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;" webkit-playsinline>
       <source src="videos/fond-boucle-v2.mp4" type="video/mp4" />
@@ -178,23 +158,18 @@
 
   <div class="bg-role bg-fallback" aria-hidden="true"></div>
 
-  <!-- Gate (bouton start) -->
   <div id="gate">
     <div class="panel">
       <button id="startBtn" class="btn" type="button" onclick="startIntro()" style="display:none">Lancez-vous</button>
     </div>
   </div>
 
-  <!-- Overlay texte intro -->
   <div class="overlay"><div class="slide"></div></div>
 
-  <!-- CTA après intro -->
   <div id="ctaOverlay"><a class="btn" href="#app">Entrer dans le jeu</a></div>
 
-  <!-- App -->
   <div id="app" class="app">
     <section id="welcomeSection" class="welcome-section layout-simple" style="background:#000; padding:0 16px 24px;">
-      <!-- Petite vidéo haut -->
       <div class="top-video">
         <div class="video-frame">
           <video class="p3-topvid" autoplay loop muted playsinline preload="auto">
@@ -205,7 +180,6 @@
 
       <div class="bottom-steps">
         <div id="p3-steps">
-          <!-- Étape 1: planning -->
           <section id="p3-s1" class="step active">
             <h3 class="p3-photo-title">Planning du jeu</h3>
             <ul class="plan-list">
@@ -221,7 +195,6 @@
             <div class="p3-actions"><button id="p3-n1" class="btn" type="button">Suivant</button></div>
           </section>
 
-          <!-- Étape 2: règles -->
           <section id="p3-s2" class="step">
             <h3 class="p3-photo-title">Esprit et règles</h3>
             <div class="rules-wrap">
@@ -234,7 +207,6 @@
             <div class="p3-actions"><button id="p3-n2" class="btn" type="button">Suivant</button></div>
           </section>
 
-          <!-- Étape 3: découvre ton rôle -->
           <section id="p3-s3" class="step">
             <h3 id="p3-playerLine" class="p3-title">Es-tu prêt? Quand tu es seul, découvre ton rôle.</h3>
             <div class="p3-actions"><a id="p3-revealLink" class="btn" href="#">🎭 Découvre ton rôle</a></div>
@@ -252,26 +224,22 @@
               #finalQuote .line:nth-child(1){animation-delay:.3s}
               #finalQuote .line:nth-child(2){animation-delay:.9s}
               #finalQuote .line:nth-child(3){animation-delay:1.5s}
-              #finalQuote .line.quote{ font-size:.9rem; margin-top:30px; color:#d4af37; font-style:italic; text-shadow:0 0 12px rgba(212,175,55,.3); animation-delay:2.2s }
+              #finalQuote .line.quote{ font-size:.9rem; margin-top:30px; color:#d4af37; font-style:italic; text-shadow: 0 0 12px rgba(212,175,55,.3); animation-delay:2.2s }
               #finalQuote .line.author{ font-size:.6rem; color:rgba(190,190,190,.65); margin-top:10px; font-style:italic; text-shadow:none; animation-delay:2.9s }
               @keyframes fadeLine{0%{opacity:0;transform:translateY(8px)}60%{opacity:1;transform:translateY(0)}100%{opacity:1;transform:translateY(0)}}
             </style>
           </section>
 
-          <!-- Exemples de pages personnalisées (conservent tes ids) -->
           <section id="page-franck" class="step personal-step">
             <h3 class="p3-photo-title">Un mot pour toi, Franck</h3>
             <div class="pm-card"><p class="pm-text">Franck, profite du jeu… et garde un œil partout 😉</p></div>
             <div class="p3-actions"><button class="btn nextBtn" data-next="p3-s3" type="button">Suivant</button></div>
           </section>
-
-          <!-- Ajoute ici les autres sections page-aurélie, page-sébastien, etc. comme dans ta version -->
         </div>
       </div>
     </section>
   </div>
 
-  <!-- Modale rôle -->
   <div id="roleModal" class="modal" aria-hidden="true">
     <div id="roleInner" class="inner">
       <div id="roleTitle" class="role-title">Votre rôle</div>
@@ -281,13 +249,11 @@
     </div>
   </div>
 
-  <!-- Audio principal -->
   <audio id="introMusic" playsinline preload="auto">
     <source src="audio/fond-boucle-v2.mp3" type="audio/mpeg" />
   </audio>
   <div id="audioUnlock">🔊 Le son est bloqué. <button id="unlockBtn">Activer le son</button></div>
 
-  <!-- Scripts principaux: intro, synchro audio/vidéo, navigation, rôle -->
   <script>
     function parseToken(){
       try{
@@ -369,7 +335,6 @@
       try{
         PAYLOAD=parseToken();
         if (location.hash==="#app"){ onEnterApp(); }
-        // Affiche le bouton start sur interaction iOS/Android
         setTimeout(function(){ var sb=document.getElementById('startBtn'); if(sb) sb.style.display='inline-block'; }, 300);
       }catch(e){ console.error(e); }
     });
@@ -381,11 +346,11 @@
         inner.style.background='linear-gradient(180deg,#4a0b0b,#220606)';
         title.innerHTML='<span class="mask-red">🎭</span> TRAÎTRE'; title.style.color='#fff';
         var q=payload.codeQ||"Quelle heure est-il ?"; var a=payload.codeA||"11h23";
-        sub.innerHTML='Ton objectif est d’éliminer les Loyaux sans te faire démasquer.<br><br>'+
-          'Pour reconnaître tes alliés traîtres, tu disposes d’une consigne secrète :<br>'+
-          'Question: « '+q+' »<br>'+
-          'Réponse: « '+a+' » (même si c’est faux).<br><br>'+
-          'Tu peux soit poser toi-même la question pour tester quelqu’un, soit répondre avec le code si on te la pose.'+
+        sub.innerHTML='Ton objectif est d’éliminer les Loyaux sans te faire démasquer.<br><br>' +
+          'Pour reconnaître tes alliés traîtres, tu disposes d’une consigne secrète :<br>' +
+          'Question: « '+q+' »<br>' +
+          'Réponse: « '+a+' » (même si c’est faux).<br><br>' +
+          'Tu peux soit poser toi-même la question pour tester quelqu’un, soit répondre avec le code si on te la pose.' +
           '<br><br><span style="color:#ffd87a;">Astuce:</span> si tu veux éviter de revoir toutes les vidéos d’intro et aller directement à la page des votes, un petit bouton jaune discret est visible en haut à gauche de l’écran.';
         extra.innerHTML='<div style="margin-top:6px;color:#f2b3b3">Ne révèle jamais ton code directement — utilise‑le subtilement.</div>';
       } else {
@@ -398,7 +363,6 @@
     }
   </script>
 
-  <!-- Invite d'installation Android si non installé -->
   <script>
     (function () {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -421,7 +385,7 @@
               <button id="pwaCloseBtn" style="padding:10px 14px;border:1px solid rgba(255,255,255,.25);border-radius:10px;background:transparent;color:#fff;cursor:pointer;">Plus tard</button>
             </div>
           </div>`;
-        document.body.appendChild(wap = wrap);
+        document.body.appendChild(wrap);
         const close = () => { if (wrap && wrap.parentNode) wrap.parentNode.removeChild(wrap); };
         document.getElementById('pwaCloseBtn').addEventListener('click', close);
         document.getElementById('pwaInstallBtn').addEventListener('click', async () => {
@@ -434,7 +398,6 @@
   </script>
 </body>
 </html>
-
 
 
 
