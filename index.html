@@ -559,6 +559,12 @@ html, body { background:#000 !important; color-scheme: dark; overscroll-behavior
 .pm-text{ font-size:0.9rem; line-height:1.7; color:#e9edf4; text-align:center; white-space:pre-line; }
 </style>
 
+<link rel="manifest" href="manifest.json">
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(function(e){ console.warn('SW', e); });
+}
+</script>
 </head>
 <body><!--
 ==================== GUIDE RAPIDE (COMMENT MODIFIER) ====================
@@ -2239,6 +2245,37 @@ function startMainStage(){
     if(nb && !nb._p3patched){ nb._p3patched=true; nb.addEventListener("click", function(){ activate(s3, steps); }); }
     // Start on step 1 (leave existing logic intact but ensure visibility set)
     try{ if(s1 && !s1.classList.contains("active") && !(s2&&s2.classList.contains("active")) && !(s3&&s3.classList.contains("active"))){ activate(s1, steps); } }catch(e){}
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  const isAndroid = /android/i.test(navigator.userAgent);
+  function goFS(){
+    if (!isAndroid) return;
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen || el.mozRequestFullScreen;
+    if (req) { try { req.call(el); } catch(e){} }
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    const start = document.getElementById('startBtn');
+    if (start && !start.__fsBound){
+      start.__fsBound = true;
+      start.addEventListener('click', goFS, { once:true });
+    } else if (!start) {
+      // If startBtn is created/shown later
+      const mo = new MutationObserver(() => {
+        const btn = document.getElementById('startBtn');
+        if (btn && !btn.__fsBound){
+          btn.__fsBound = true;
+          btn.addEventListener('click', goFS, { once:true });
+          mo.disconnect();
+        }
+      });
+      mo.observe(document.documentElement, { childList:true, subtree:true });
+    }
   });
 })();
 </script>
