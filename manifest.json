@@ -1,13 +1,19 @@
 {
   "name": "Les 40 ans de Franck",
   "short_name": "40 ans Franck",
-  "start_url": "index.html",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#000000",
   "theme_color": "#000000",
   "description": "Le week-end anniversaire des 40 ans de Franck — mystère, trahisons et ambiance médiévale !",
   "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
