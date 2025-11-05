@@ -136,6 +136,18 @@
     .pm-text{font-size:.9rem;line-height:1.7;color:#e9edf4;text-align:center;white-space:pre-line}
 
     html, body { background:#000 !important; color-scheme: dark; overscroll-behavior: none; }
+
+    /* iOS guide overlay */
+    #iosGuide{position:fixed;inset:0;z-index:99998;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.85);backdrop-filter:blur(4px)}
+    #iosGuide.show{display:flex}
+    #iosGuide .box{width:min(92vw,600px);max-height:92vh;background:#0b0b0b;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6);display:grid;grid-template-rows:auto 1fr auto}
+    #iosGuide header{padding:14px 16px;color:#ffd98a;font-family:Cinzel,serif;font-size:18px;text-align:center;border-bottom:1px solid rgba(255,255,255,.09)}
+    #iosGuide .content{padding:14px 16px;color:#e6e6e6;line-height:1.45;text-align:center}
+    #iosGuide .hint{color:#bfc6cf;font-size:13px;opacity:.85;margin-top:8px;text-align:center}
+    #iosGuide footer{display:flex;gap:10px;justify-content:center;padding:12px;border-top:1px solid rgba(255,255,255,.09)}
+    #iosGuide .btn{appearance:none;border:0;border-radius:10px;padding:10px 14px;cursor:pointer}
+    #iosGuide .btn.primary{background:#ffd98a;color:#1a1a1a;font-weight:700}
+    #iosGuide .btn.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.25)}
   </style>
 </head>
 <body>
@@ -201,7 +213,7 @@
               <p>Les Traîtres jouent en secret via un lien privé.</p>
               <p>Les Loyaux observent, discutent et votent avec stratégie.</p>
               <p>Pas de prise de tête: les écrans clés s’affichent au bon moment.</p>
-              <p>On garde la bonne entente: fun et fair‑play.</p>
+              <p>On garde la bonne entente: fun et fair-play.</p>
               <p class="final">Les traîtres devront tous être démasqués le dimanche midi; si ce n’est pas le cas, les loyaux auront perdu le jeu.</p>
             </div>
             <div class="p3-actions"><button id="p3-n2" class="btn" type="button">Suivant</button></div>
@@ -253,6 +265,22 @@
     <source src="audio/fond-boucle-v2.mp3" type="audio/mpeg" />
   </audio>
   <div id="audioUnlock">🔊 Le son est bloqué. <button id="unlockBtn">Activer le son</button></div>
+
+  <!-- iOS guide overlay -->
+  <div id="iosGuide" role="dialog" aria-modal="true" aria-labelledby="iosGuideTitle">
+    <div class="box">
+      <header id="iosGuideTitle">Astuce iPhone</header>
+      <div class="content">
+        <p>Pour une expérience optimale, ajoute ce site à l’écran d’accueil.</p>
+        <p>Ouvre le bouton Partager puis choisis Sur l’écran d’accueil.</p>
+        <p class="hint">Après installation, le site s’ouvrira en plein écran comme une application.</p>
+      </div>
+      <footer>
+        <button class="btn ghost" id="iosDismiss">Plus tard</button>
+        <button class="btn primary" id="iosOk">J’ai compris</button>
+      </footer>
+    </div>
+  </div>
 
   <script>
     function parseToken(){
@@ -328,13 +356,13 @@
         }
       }catch(e){ console.error(e); }
     }
-    function onHashChange(){ if (location.hash==="#app"){ onEnterApp(); } }
+    function onHashChange(){ if (location.hash==="#app\"){ onEnterApp(); } }
     window.addEventListener('hashchange', onHashChange);
 
     document.addEventListener('DOMContentLoaded', function(){
       try{
         PAYLOAD=parseToken();
-        if (location.hash==="#app"){ onEnterApp(); }
+        if (location.hash===\"#app\"){ onEnterApp(); }
         setTimeout(function(){ var sb=document.getElementById('startBtn'); if(sb) sb.style.display='inline-block'; }, 300);
       }catch(e){ console.error(e); }
     });
@@ -344,18 +372,18 @@
       modal.style.display='flex';
       if(payload && payload.role==='TRAITRE'){
         inner.style.background='linear-gradient(180deg,#4a0b0b,#220606)';
-        title.innerHTML='<span class="mask-red">🎭</span> TRAÎTRE'; title.style.color='#fff';
-        var q=payload.codeQ||"Quelle heure est-il ?"; var a=payload.codeA||"11h23";
+        title.innerHTML='<span class=\"mask-red\">🎭</span> TRAÎTRE'; title.style.color='#fff';
+        var q=payload.codeQ||\"Quelle heure est-il ?\"; var a=payload.codeA||\"11h23\";
         sub.innerHTML='Ton objectif est d’éliminer les Loyaux sans te faire démasquer.<br><br>' +
           'Pour reconnaître tes alliés traîtres, tu disposes d’une consigne secrète :<br>' +
           'Question: « '+q+' »<br>' +
           'Réponse: « '+a+' » (même si c’est faux).<br><br>' +
           'Tu peux soit poser toi-même la question pour tester quelqu’un, soit répondre avec le code si on te la pose.' +
-          '<br><br><span style="color:#ffd87a;">Astuce:</span> si tu veux éviter de revoir toutes les vidéos d’intro et aller directement à la page des votes, un petit bouton jaune discret est visible en haut à gauche de l’écran.';
-        extra.innerHTML='<div style="margin-top:6px;color:#f2b3b3">Ne révèle jamais ton code directement — utilise‑le subtilement.</div>';
+          '<br><br><span style=\"color:#ffd87a;\">Astuce:</span> si tu veux éviter de revoir toutes les vidéos d’intro et aller directement à la page des votes, un petit bouton jaune discret est visible en haut à gauche de l’écran.';
+        extra.innerHTML='<div style=\"margin-top:6px;color:#f2b3b3\">Ne révèle jamais ton code directement — utilise-le subtilement.</div>';
       } else {
         inner.style.background='linear-gradient(180deg,#0b1f4a,#061022)';
-        title.innerHTML='<span class="mask-blue">🎭</span> LOYAL'; title.style.color='#fff';
+        title.innerHTML='<span class=\"mask-blue\">🎭</span> LOYAL'; title.style.color='#fff';
         sub.innerHTML='Ton rôle: observer, discuter et démasquer les traîtres.';
         extra.innerHTML='';
       }
@@ -363,36 +391,30 @@
     }
   </script>
 
+  <!-- Android prompt and iOS guide logic -->
   <script>
     (function () {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
       const ua = navigator.userAgent.toLowerCase();
       const isAndroid = ua.includes('android');
-      let deferredPrompt = null;
+      const isIOS = /iphone|ipad|ipod/.test(ua);
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
+      let deferredPrompt = null;
       window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
 
       document.addEventListener('DOMContentLoaded', () => {
-        if (!isAndroid || isStandalone) return;
-        const wrap = document.createElement('div');
-        wrap.style.cssText = "position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);";
-        wrap.innerHTML = `
-          <div style="max-width:520px;color:#fff;text-align:center;padding:20px;">
-            <p style="font-size:18px;margin:0 0 12px;">Pour une meilleure expérience, installe l’application.</p>
-            <p style="font-size:15px;opacity:.85;margin:0 0 18px;">Ouvre le menu ⋮ puis choisis « Installer l’application » ou « Ajouter à l’écran d’accueil ».</p>
-            <div style="display:flex;gap:10px;justify-content:center;">
-              <button id="pwaInstallBtn" style="padding:10px 14px;border:none;border-radius:10px;background:#d4af37;color:#000;font-weight:800;cursor:pointer;">Installer</button>
-              <button id="pwaCloseBtn" style="padding:10px 14px;border:1px solid rgba(255,255,255,.25);border-radius:10px;background:transparent;color:#fff;cursor:pointer;">Plus tard</button>
-            </div>
-          </div>`;
-        document.body.appendChild(wrap);
-        const close = () => { if (wrap && wrap.parentNode) wrap.parentNode.removeChild(wrap); };
-        document.getElementById('pwaCloseBtn').addEventListener('click', close);
-        document.getElementById('pwaInstallBtn').addEventListener('click', async () => {
-          if (deferredPrompt) { try { deferredPrompt.prompt(); await deferredPrompt.userChoice; } catch(e) {} deferredPrompt = null; }
-          else { alert("Dans le menu ⋮ de Chrome, choisis « Installer l’application ». "); }
-          close();
-        });
+        // Android: no prompt wanted — do nothing on Android here.
+
+        // iOS Safari: show add-to-home-screen guide when not installed
+        if (isIOS && isSafari && !isStandalone) {
+          const iosGuide = document.getElementById('iosGuide');
+          if (iosGuide) {
+            iosGuide.classList.add('show');
+            document.getElementById('iosDismiss').addEventListener('click', () => iosGuide.classList.remove('show'));
+            document.getElementById('iosOk').addEventListener('click', () => iosGuide.classList.remove('show'));
+          }
+        }
       });
     })();
   </script>
